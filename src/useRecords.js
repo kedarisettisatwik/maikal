@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { collection, doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, setDoc, where } from 'firebase/firestore';
 import { db } from './firebase';
 import { mergeRecords } from './model';
 
@@ -34,7 +34,7 @@ export default function useRecords(uid, notify) {
   }
   useEffect(() => {
     alive.current = true; ready.current = false;
-    const stop = onSnapshot(collection(db, 'users', uid, 'maikalRecords'), { includeMetadataChanges: true }, snapshot => {
+    const stop = onSnapshot(query(collection(db, 'users', uid, 'maikalRecords'), where('type', 'in', ['goal', 'event', 'category', 'transaction', 'progress'])), { includeMetadataChanges: true }, snapshot => {
       if (!alive.current) return;
       persist(mergeRecords(ref.current.records, ref.current.dirty, snapshot.docs.filter(d => !d.metadata.hasPendingWrites).map(d => d.data())));
       setConnected(!snapshot.metadata.fromCache);

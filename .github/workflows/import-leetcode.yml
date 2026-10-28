@@ -1,0 +1,39 @@
+name: One-time LeetCode import
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: leetcode-import
+  cancel-in-progress: false
+
+jobs:
+  import-problems:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Import and verify problem documents
+        run: node scripts/import-leetcode.mjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          LEETCODE_IMPORT_1: ${{ secrets.LEETCODE_IMPORT_1 }}
+          LEETCODE_IMPORT_2: ${{ secrets.LEETCODE_IMPORT_2 }}
+          LEETCODE_IMPORT_3: ${{ secrets.LEETCODE_IMPORT_3 }}
+          LEETCODE_IMPORT_4: ${{ secrets.LEETCODE_IMPORT_4 }}
+          LEETCODE_IMPORT_5: ${{ secrets.LEETCODE_IMPORT_5 }}
+          LEETCODE_IMPORT_6: ${{ secrets.LEETCODE_IMPORT_6 }}
+          LEETCODE_IMPORT_7: ${{ secrets.LEETCODE_IMPORT_7 }}
+          LEETCODE_IMPORT_8: ${{ secrets.LEETCODE_IMPORT_8 }}

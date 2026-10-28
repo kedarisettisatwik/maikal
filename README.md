@@ -125,3 +125,27 @@ The importer reuses the encrypted server secrets already used by the news schedu
 npm run jobs:check  # read-only live LinkedIn validation
 npm run jobs:sync   # import to Firebase using server credentials
 ```
+
+## LeetCode — Firestore-only daily problems
+
+The supplied JSON is imported **once** into Firestore for account `0kX2kfDq3KV9MIhtDV7IDpuXnfJ3`. The dataset is not committed to GitHub, published as a static asset, bundled into JavaScript, or fetched as JSON by the website. Temporary encrypted import inputs are removed after successful verification.
+
+Each of the 4,096 problem documents lives at `users/{uid}/maikalRecords/leetcode_problem_{originalId}` with the original `id`, title, difficulty, tags, link, premium flag, and a **`completed` boolean**. `recordId`, `problemId`, and `type` are metadata for the app. Re-importing does not reset existing completion flags or the daily-assignment cursor.
+
+The private **leetcode - problem of the day** section appears above News. Opening the app assigns one unused problem for the current **Asia/Kolkata calendar date**, using a Firestore transaction. Reloading or opening another device on the same date returns the same assignment. Missed days are not backfilled. Free problems are assigned first, in problem-ID order; premium problems remain in the imported catalog for later.
+
+The **History** dropdown lists past assigned dates with title, difficulty, tags, original LeetCode link, and completion status. Marking a problem complete updates both the dated assignment and its catalog document in one atomic batch. The catalog and assignment state stay in Firestore; the browser caches only assigned history for display. A connection is required to assign a new day's problem and confirm completion updates.
+
+Daily records are stored as `leetcode_day_YYYY-MM-DD`, and `leetcode_state` stores the Firestore problem-document IDs and next position. The normal goals/money listener filters its record types so it does not download all 4,096 problem documents. Only the designated UID renders the section or runs its queries.
+
+`.github/workflows/import-leetcode.yml` is manual-only; it is not a daily scheduler. `scripts/import-leetcode.mjs` can also accept `--file /path/to/problems.json` for an explicit future one-time import with matching server credentials. Daily runtime never uses that file.
+
+## Install Maikal as an app
+
+Maikal includes an install manifest, a scoped service worker, logo-based 192px/512px icons, a maskable Android icon, and an Apple home-screen icon. Both `start_url` and service-worker scope use `/maikal/` for GitHub Pages. The app shell is cached; Firebase authentication and fresh cloud data still require a connection.
+
+- **Android / Chrome or Edge:** open the HTTPS site directly in the browser, tap **Install app**, or use the browser menu → Add to Home screen → Install.
+- **iPhone / iPad:** open the site in Safari, then Share → Add to Home Screen → Add.
+- In-app browsers may not offer installation; open the site in the device's main browser first.
+
+New versions display a reload notification instead of interrupting a partially completed form. The service worker caches static application assets, not Firebase API responses or private authentication requests.
