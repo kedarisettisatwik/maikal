@@ -6,6 +6,7 @@ import useRecords from '../useRecords';
 import { activeRecords, describe, due, localDate, offsetDate, prettyDate } from '../model';
 import NewsSection from './NewsSection';
 import LeetcodeSection from './LeetcodeSection';
+import ReportsSection from './ReportsSection';
 import InstallAppButton from './InstallAppButton';
 import { canReadLeetcode } from '../leetcode-model';
 import JobsSection from './JobsSection';
@@ -41,7 +42,7 @@ export default function Dashboard({ user, notify }) {
         <details style={{ marginTop: 18 }}><summary>All saved plans</summary>{plans.length ? plans.map(event => <div className="item" key={event.id}><div className="body"><h3 className="saved-title">{event.title}</h3><small>{event.kind} · {describe(event.schedule)} · {event.allDay ? 'All day' : `${event.startTime} – ${event.endTime}`}</small></div><button className="mini" onClick={() => remove(event.id)}>Delete</button></div>) : <p className="empty">No plans created yet.</p>}</details>
       </section></div><div className="column right"><section className="story"><div className="heading-line"><span className="section-number">03 / THE RECAP</span></div><h2>About yesterday</h2><YesterdayReport date={yesterday} goals={yesterdayGoals} records={records} transactions={yesterdayTransactions} /></section>
       <section className="story"><div className="heading-line"><span className="section-number">04 / THE MONEY DIARY</span></div><h2>Recent transactions</h2><DailyTransactions label="Today" transactions={todayTransactions} records={records} onEdit={onEdit} remove={remove} /><DailyTransactions label="Yesterday" transactions={yesterdayTransactions} records={records} onEdit={onEdit} remove={remove} /></section></div></div>
-    <MoneySection month={month} setMonth={setMonth} transactions={transactions} records={records} onEdit={onEdit} remove={remove} />{canReadLeetcode(user.uid) && <LeetcodeSection uid={user.uid} notify={notify} />}{canReadNews(user.uid) && <NewsSection uid={user.uid} />}{canReadJobs(user.uid) && <JobsSection uid={user.uid} />}<footer className="footer"><span>THE MAIKAL DAILY · A personal record, one day at a time.</span><span className="status" role="status">{status}</span></footer>
+    <MoneySection month={month} setMonth={setMonth} transactions={transactions} records={records} onEdit={onEdit} remove={remove} />{canReadLeetcode(user.uid) && <LeetcodeSection uid={user.uid} notify={notify} />}<ReportsSection goals={goals} records={records} date={date} />{canReadNews(user.uid) && <NewsSection uid={user.uid} />}{canReadJobs(user.uid) && <JobsSection uid={user.uid} />}<footer className="footer"><span>THE MAIKAL DAILY · A personal record, one day at a time.</span><span className="status" role="status">{status}</span></footer>
     {entry?.type === 'new' ? <NewDialog onClose={() => setEntry(null)} onChoose={type => setEntry({ type })} /> : entry && <EntryDialog key={`${entry.type}-${entry.transaction?.id || 'new'}`} entry={entry} categories={categories} save={saveEntry} removeCategory={removeCategory} notify={notify} onClose={() => setEntry(null)} />}
   </main>;
 }

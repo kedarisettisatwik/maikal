@@ -149,3 +149,12 @@ Maikal includes an install manifest, a scoped service worker, logo-based 192px/5
 - In-app browsers may not offer installation; open the site in the device's main browser first.
 
 New versions display a reload notification instead of interrupting a partially completed form. The service worker caches static application assets, not Firebase API responses or private authentication requests.
+
+
+## Goal reports
+
+A collapsed **Reports** section follows Daily Practice (or the money section for users without Daily Practice). It is available to every signed-in account and reads only that account's existing goals and daily progress. Charts are mounted only after expanding the dropdown.
+
+Choose any month to see one square for each actual day (28, 29, 30, or 31), aligned Monday–Sunday. Checkbox reports show completed days in green, scheduled but uncompleted days in black, and non-applicable dates at 0.1 opacity. Goal creation dates and daily/weekday/date/range schedules are respected. Future applicable days remain uncompleted, not labelled as missed.
+
+Tracker reports plot daily count/minute values as proportional bars with dates, accessible values, and monthly totals. Non-applicable days are dimmed. The chart scrolls horizontally on narrow screens. Reports are read-only and update when the existing daily progress changes; no additional Firestore collection is required.

@@ -21,4 +21,5 @@ it('keeps other accounts functional without rendering News', () => {
   expect(screen.queryByRole('heading', { name: /Leetcode for/ })).toBeNull();
   expect(screen.getByRole('heading', { name: 'Today’s goals' })).toBeTruthy();
   expect(screen.getByRole('heading', { name: 'Recent transactions' })).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Reports' })).toBeTruthy();
 });
