@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { Parser } from 'htmlparser2';
+import { plainText } from '../src/text.js';
 import { isRecentNews, safeNewsUrl } from '../src/news-model.js';
 
 export function plainFeedContent(html = '') {
@@ -19,7 +20,7 @@ export function plainFeedContent(html = '') {
     },
   }, { decodeEntities: true });
   parser.write(String(html)); parser.end();
-  return { text: text.replace(/\s+/g, ' ').trim(), links };
+  return { text: plainText(text), links: links.map(link => ({ ...link, label: plainText(link.label) })) };
 }
 export function canonicalUrl(value) {
   const link = safeNewsUrl(value);

@@ -15,6 +15,7 @@
     "jobs:check": "node scripts/sync-jobs.mjs --dry-run"
   },
   "dependencies": {
+    "entities": "^8.1.0",
     "firebase": "^13.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

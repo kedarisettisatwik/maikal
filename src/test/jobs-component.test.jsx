@@ -12,3 +12,10 @@ it('does not render non-LinkedIn listings', () => {
   render(<JobsEdition edition={{ jobs: [{ id: 'bad', title: 'Wrong source', url: 'https://other.example/jobs' }] }} />);
   expect(screen.queryByText('Wrong source')).toBeNull(); expect(screen.getByText(/No new matching LinkedIn/)).toBeTruthy();
 });
+
+it('cleans HTML and repeatedly encoded markup in saved job descriptions', () => {
+  render(<JobsEdition edition={{ jobs: [{ id: 'encoded', title: 'Developer', company: 'Pallav Technologies', url: 'https://in.linkedin.com/jobs/view/developer-456', summary: '&amp;lt;p&amp;gt;&amp;lt;strong&amp;gt;Nine million calls a day. Profitable. Built lean.&amp;lt;/strong&amp;gt;&amp;lt;/p&amp;gt;&lt;p&gt;2–4 years · Gurgaon&lt;/p&gt;' }] }} />);
+  const summary = document.querySelector('.job-summary');
+  expect(summary.textContent).toBe('Nine million calls a day. Profitable. Built lean. 2–4 years · Gurgaon');
+  expect(summary.querySelector('strong')).toBeNull();
+});
