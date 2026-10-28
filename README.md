@@ -77,3 +77,29 @@ Meetings and reminders are saved plans; background notifications are not impleme
 - `src/assets.js`: deployment-aware asset paths.
 - `src/styles.css`: responsive newspaper design.
 - `src/test/`: model and interaction tests; auth calls are mocked and do not create real accounts or send real emails.
+
+## Daily News — 6:00 AM India time
+
+The final **News** section covers India, World, Technology, Business, and Layoffs. It displays publisher attribution, publication times, original-coverage links, short feed-provided snippets, and reference-report links when a feed provides them. Report links are not invented or inferred as citations to a story. Headlines come from Google News India/layoffs feeds and BBC World/Technology/Business feeds, listed in `scripts/news-sources.json`.
+
+`.github/workflows/news.yml` runs at `30 0 * * *` UTC, which is **06:00 Asia/Kolkata** daily. GitHub may delay scheduled jobs; the page shows the actual edition-update time. Manual runs are supported.
+
+### Enable the server-side Firebase write
+
+1. In Firebase Console, open **Project settings → Service accounts → Generate new private key** for this project.
+2. Open [repository Actions secrets](https://github.com/kedarisettisatwik/maikal/settings/secrets/actions/new).
+3. Add a secret named **`FIREBASE_SERVICE_ACCOUNT`** containing the entire downloaded JSON file. This is different from the web app's `firebaseConfig`. Do not commit the JSON or paste it into chat.
+4. Under [Actions](https://github.com/kedarisettisatwik/maikal/actions), select **Update morning news → Run workflow** on `main`. Leave **dry_run** unchecked to save the first edition to Firebase.
+
+The service account needs Firestore data access and Firebase Authentication user-list access. Use a service account from this app's Firebase project. The script validates its type and project ID and never logs the private key. It reads the project ID from the existing `VITE_FIREBASE_PROJECT_ID` repository secret.
+
+The importer saves the shared current edition to `newsEditions/latest` and an edition copy to each existing, enabled account at `users/{uid}/maikalRecords/news_latest`. The UI reads only its own account's edition, using the existing Firestore rules. A new account receives news on the next import; manually rerun the workflow to deliver it sooner. The shared admin document does not require any new public read rule.
+
+Stories are limited to five per category from the last 48 hours and deduplicated by URL. Failed categories can retain recent stories from the previous edition. If all feeds fail or no recent stories are found, the previous edition is preserved. News is cached separately per account for offline reading; its timestamps remain visible.
+
+```powershell
+npm run news:check  # fetch and validate current feeds; no Firebase writes
+npm run news:sync   # server import; requires FIREBASE_SERVICE_ACCOUNT and FIREBASE_PROJECT_ID
+```
+
+The server-only Firebase Admin SDK, RSS parser, and HTML parser are development dependencies used by the scheduled job; they are not bundled into the browser application. Server credentials must never use a `VITE_` prefix.

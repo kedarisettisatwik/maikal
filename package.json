@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "news:sync": "node scripts/sync-news.mjs",
+    "news:check": "node scripts/sync-news.mjs --dry-run"
   },
   "dependencies": {
     "firebase": "^13.1.0",
@@ -20,7 +22,10 @@
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
     "@vitejs/plugin-react": "^5.0.0",
+    "firebase-admin": "^14.5.0",
+    "htmlparser2": "^12.0.0",
     "jsdom": "^30.1.3",
+    "rss-parser": "^3.13.0",
     "vite": "^7.0.0",
     "vitest": "^5.0.5"
   },

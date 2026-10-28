@@ -22,3 +22,8 @@ coverage/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Server credentials must never be committed
+*firebase-adminsdk*.json
+*service-account*.json
+*serviceAccount*.json

@@ -1,0 +1,7 @@
+[
+  { "id": "india", "name": "Google News India", "url": "https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en", "sourceUrl": "https://news.google.com/" },
+  { "id": "world", "name": "BBC News", "url": "https://feeds.bbci.co.uk/news/world/rss.xml", "sourceUrl": "https://www.bbc.com/news" },
+  { "id": "technology", "name": "BBC News", "url": "https://feeds.bbci.co.uk/news/technology/rss.xml", "sourceUrl": "https://www.bbc.com/news" },
+  { "id": "business", "name": "BBC News", "url": "https://feeds.bbci.co.uk/news/business/rss.xml", "sourceUrl": "https://www.bbc.com/news" },
+  { "id": "layoffs", "name": "Google News", "url": "https://news.google.com/rss/search?q=layoffs%20when%3A2d&hl=en-IN&gl=IN&ceid=IN:en", "sourceUrl": "https://news.google.com/" }
+]
