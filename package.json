@@ -10,7 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "news:sync": "node scripts/sync-news.mjs",
-    "news:check": "node scripts/sync-news.mjs --dry-run"
+    "news:check": "node scripts/sync-news.mjs --dry-run",
+    "jobs:sync": "node scripts/sync-jobs.mjs",
+    "jobs:check": "node scripts/sync-jobs.mjs --dry-run"
   },
   "dependencies": {
     "firebase": "^13.1.0",

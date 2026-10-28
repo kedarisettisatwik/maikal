@@ -103,3 +103,25 @@ npm run news:sync   # server import; requires FIREBASE_SERVICE_ACCOUNT and FIREB
 ```
 
 The server-only Firebase Admin SDK, RSS parser, and HTML parser are development dependencies used by the scheduled job; they are not bundled into the browser application. Server credentials must never use a `VITE_` prefix.
+
+
+## LinkedIn-only morning job openings
+
+A **Job openings** section follows News and is visible only to account `0kX2kfDq3KV9MIhtDV7IDpuXnfJ3`. The reader hook and server delivery use the same account restriction.
+
+`.github/workflows/jobs.yml` runs at **06:00 Asia/Kolkata** (`30 0 * * *` UTC), independently of the news job. It reads publicly accessible LinkedIn search and listing pages for Full Stack Developer, Backend Engineer, Forward Deployed Engineer (FDE), and Software Development Engineer roles in India. No employer feeds or other job boards are substituted. The connected LinkedIn plugin does not expose job search, so the scheduler does not call that plugin or claim to use a supported LinkedIn search API.
+
+The target profile is a **2024 graduate with two years of experience**. Listings with higher stated minimum experience, conflicting graduation batches, senior/lead/intern titles, expired dates, closed applications, or non-India locations are excluded. Explicit two-year-compatible requirements rank first. If a posting does not state a graduation year or exact experience, the UI labels that uncertainty; a bachelor's degree alone is not treated as proof that 2024 graduates are eligible.
+
+The daily edition contains **up to 10** distinct new matching openings, not filler entries. Search pages request postings from the last 24 hours; a 48-hour timestamp validation window accommodates LinkedIn's date-only metadata. Posting IDs seen in an earlier daily edition are not reintroduced as new. Same-day reruns can retain the current edition's matches. Each card includes company, title, location, posting date, experience, graduation-year disclosure, and a LinkedIn application link.
+
+CTC is shown only when explicitly stated as CTC in the posting. Separately listed base pay is labelled as base pay and is never presented as total CTC. Missing compensation is labelled **Not disclosed**.
+
+Only public pages are read, with conservative sequential requests and no LinkedIn login, cookies, proxy rotation, or access-control bypass. If LinkedIn restricts access or changes its public pages, the job fails clearly and retains the previous edition; the UI shows the last check time and marks older editions. GitHub scheduled runs may be delayed.
+
+The importer reuses the encrypted server secrets already used by the news scheduler. It saves private tracking state in `jobEditions/latest` and the reader copy in `users/{uid}/maikalRecords/jobs_latest`; server credentials are never sent to the browser.
+
+```powershell
+npm run jobs:check  # read-only live LinkedIn validation
+npm run jobs:sync   # import to Firebase using server credentials
+```
