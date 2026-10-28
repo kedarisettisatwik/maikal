@@ -6,6 +6,7 @@ export const newsCategories = [
   { id: 'technology', label: 'Technology' },
   { id: 'business', label: 'Business' },
   { id: 'layoffs', label: 'Layoffs' },
+  { id: 'sports', label: 'Sports', description: 'India cricket · matches, series & results' },
 ];
 export function safeNewsUrl(value) {
   if (typeof value !== 'string') return '';

@@ -5,10 +5,10 @@ import { NewsEdition } from '../components/NewsSection';
 
 const now = Date.parse('2026-10-29T00:30:00Z');
 const article = { id: 'a', title: 'New research published', categories: ['technology'], url: 'https://example.com/story', source: 'Example News', sourceUrl: 'https://example.com', publishedAt: now - 3600000, summary: 'A short attributed summary.', references: [{ label: 'Research report', url: 'https://example.com/report.pdf' }, { label: 'Unsafe link', url: 'javascript:alert(1)' }] };
-it('renders the News section, five categories, source, time, and safe report links', () => {
+it('renders the News section, six categories, source, time, and safe report links', () => {
   render(<NewsEdition edition={{ fetchedAt: now, articles: [article], sources: [] }} now={now} />);
   expect(screen.getByRole('heading', { name: 'News', level: 2 })).toBeTruthy();
-  for (const category of ['India', 'World', 'Technology', 'Business', 'Layoffs']) expect(screen.getByRole('heading', { name: category, level: 3 })).toBeTruthy();
+  for (const category of ['India', 'World', 'Technology', 'Business', 'Layoffs', 'Sports']) expect(screen.getByRole('heading', { name: category, level: 3 })).toBeTruthy();
   expect(screen.getByRole('link', { name: 'New research published' }).getAttribute('href')).toBe(article.url);
   expect(screen.getByRole('link', { name: 'Example News' })).toBeTruthy();
   expect(screen.getByRole('link', { name: /Research report/ }).getAttribute('href')).toBe('https://example.com/report.pdf');
