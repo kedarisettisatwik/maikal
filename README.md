@@ -95,7 +95,7 @@ The service account needs Firestore data access and Firebase Authentication user
 
 The importer saves the shared current edition to `newsEditions/latest` and an edition copy only to account `0kX2kfDq3KV9MIhtDV7IDpuXnfJ3` at `users/{uid}/maikalRecords/news_latest`. The News section and its Firestore listener are enabled only for that UID. Other accounts do not receive news copies. Shared and reader copies are written atomically, using the existing account-isolation rules. The shared admin document does not require any new public read rule.
 
-Story tiles have equal widths within the responsive column layout and a consistent 400px height; longer headlines/snippets are truncated and original-source links remain available. Stories are limited to three per category from the last 48 hours and deduplicated by URL. Failed categories can retain recent stories from the previous edition. If all feeds fail or no recent stories are found, the previous edition is preserved. News is cached separately per account for offline reading; its timestamps remain visible.
+News categories are stacked vertically in order: India, World, Technology, Business, Layoffs, and Sports. Each category has a responsive row of equal-width stories with automatic heights; headlines, snippets, and report links can expand naturally. Stories are limited to three per category from the last 48 hours and deduplicated by URL. Failed categories can retain recent stories from the previous edition. If all feeds fail or no recent stories are found, the previous edition is preserved. News is cached separately per account for offline reading; its timestamps remain visible.
 
 ```powershell
 npm run news:check  # fetch and validate current feeds; no Firebase writes
