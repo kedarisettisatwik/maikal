@@ -51,11 +51,11 @@ export function buildEdition(results, now = Date.now(), previous = null) {
   for (const result of results) {
     if (result.error) {
       sources.push({ category: result.feed.id, name: result.feed.name, status: 'unavailable' });
-      for (const article of previous?.articles || []) if (article.categories.includes(result.feed.id) && isRecentNews(article, now)) include({ ...article, categories: [result.feed.id] });
+      for (const article of (previous?.articles || []).filter(article => article.categories.includes(result.feed.id) && isRecentNews(article, now)).sort((a, b) => b.publishedAt - a.publishedAt).slice(0, 3)) include({ ...article, categories: [result.feed.id] });
       continue;
     }
     sources.push({ category: result.feed.id, name: result.feed.name, status: 'updated' });
-    result.items.map(item => normalizeArticle(item, result.feed, now)).filter(Boolean).sort((a, b) => b.publishedAt - a.publishedAt).slice(0, 5).forEach(include);
+    result.items.map(item => normalizeArticle(item, result.feed, now)).filter(Boolean).sort((a, b) => b.publishedAt - a.publishedAt).slice(0, 3).forEach(include);
   }
   const editionDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(now));
   return { schemaVersion: 1, editionDate, fetchedAt: now, timezone: 'Asia/Kolkata', articles: [...articles.values()].sort((a, b) => b.publishedAt - a.publishedAt), sources };

@@ -37,8 +37,8 @@ describe('news normalization', () => {
     expect(edition.sources[0].status).toBe('unavailable');
     expect(buildEdition([{ feed, error: true }], now + 3 * 86400000, previous).articles).toHaveLength(0);
   });
-  it('limits each category to five fresh stories', () => {
+  it('limits each category to three fresh stories', () => {
     const items = Array.from({ length: 12 }, (_, i) => ({ ...item, link: `https://example.com/story/${i}` }));
-    expect(buildEdition([{ feed, items }], now).articles).toHaveLength(5);
+    expect(buildEdition([{ feed, items }], now).articles).toHaveLength(3);
   });
 });
