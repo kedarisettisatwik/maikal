@@ -1,3 +1,5 @@
+export const NEWS_READER_UID = '0kX2kfDq3KV9MIhtDV7IDpuXnfJ3';
+export const canReadNews = uid => uid === NEWS_READER_UID;
 export const newsCategories = [
   { id: 'india', label: 'India' },
   { id: 'world', label: 'World' },

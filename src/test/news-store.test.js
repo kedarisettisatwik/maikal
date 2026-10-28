@@ -1,25 +1,27 @@
 import { expect, it, vi } from 'vitest';
 import { deliverEdition } from '../../scripts/news-store.mjs';
+import { NEWS_READER_UID, canReadNews } from '../news-model';
 
 function database() {
-  const shared = vi.fn().mockResolvedValue(), writes = [], commits = [];
-  return { shared, writes, commits, db: { doc: path => ({ path, set: shared }), batch: () => { let count = 0; return { set: (ref, data) => { writes.push({ path: ref.path, data }); count++; }, commit: async () => { commits.push(count); } }; } } };
+  const writes = [], commit = vi.fn().mockResolvedValue();
+  return { writes, commit, db: { doc: path => ({ path }), batch: () => ({ set: (ref, data) => writes.push({ path: ref.path, data }), commit }) } };
 }
-it('delivers across paginated accounts, excluding disabled users', async () => {
-  const store = database(), auth = { listUsers: vi.fn().mockResolvedValueOnce({ users: [{ uid: 'one' }, { uid: 'disabled', disabled: true }], pageToken: 'next' }).mockResolvedValueOnce({ users: [{ uid: 'two' }] }) };
-  const edition = { articles: [], fetchedAt: 123 };
-  expect(await deliverEdition(store.db, auth, edition)).toBe(2);
-  expect(auth.listUsers).toHaveBeenLastCalledWith(1000, 'next');
-  expect(store.writes.map(write => write.path)).toEqual(['users/one/maikalRecords/news_latest', 'users/two/maikalRecords/news_latest']);
-  expect(store.writes[0].data).toEqual({ ...edition, id: 'news_latest', type: 'news', updatedAt: 123 });
+it('delivers only to the designated account and the shared admin document', async () => {
+  const store = database(), auth = { getUser: vi.fn().mockResolvedValue({ uid: NEWS_READER_UID }) }, edition = { articles: [], fetchedAt: 123 };
+  expect(await deliverEdition(store.db, auth, edition)).toBe(1);
+  expect(auth.getUser).toHaveBeenCalledWith(NEWS_READER_UID);
+  expect(store.writes.map(write => write.path)).toEqual(['newsEditions/latest', `users/${NEWS_READER_UID}/maikalRecords/news_latest`]);
+  expect(store.writes[1].data).toEqual({ ...edition, id: 'news_latest', type: 'news', updatedAt: 123 });
+  expect(store.commit).toHaveBeenCalledOnce();
 });
-it('keeps Firestore batches under the write limit', async () => {
+it('does not publish if the designated account is absent or disabled', async () => {
   const store = database();
-  await deliverEdition(store.db, { listUsers: async () => ({ users: Array.from({ length: 805 }, (_, i) => ({ uid: String(i) })) }) }, { fetchedAt: 1 });
-  expect(store.commits).toEqual([400, 400, 5]);
+  await expect(deliverEdition(store.db, { getUser: async () => { throw Error('User not found'); } }, {})).rejects.toThrow('User not found');
+  expect(store.commit).not.toHaveBeenCalled();
+  await expect(deliverEdition(store.db, { getUser: async () => ({ disabled: true }) }, {})).rejects.toThrow('disabled');
 });
-it('does not publish if it cannot enumerate account recipients', async () => {
-  const store = database();
-  await expect(deliverEdition(store.db, { listUsers: async () => { throw Error('Permission denied'); } }, {})).rejects.toThrow('Permission denied');
-  expect(store.shared).not.toHaveBeenCalled();
+it('exposes the News section only to the exact UID', () => {
+  expect(canReadNews('0kX2kfDq3KV9MIhtDV7IDpuXnfJ3')).toBe(true);
+  expect(canReadNews('another-user')).toBe(false);
+  expect(canReadNews(null)).toBe(false);
 });

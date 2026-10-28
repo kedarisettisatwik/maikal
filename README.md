@@ -91,9 +91,9 @@ The final **News** section covers India, World, Technology, Business, and Layoff
 3. Add a secret named **`FIREBASE_SERVICE_ACCOUNT`** containing the entire downloaded JSON file. This is different from the web app's `firebaseConfig`. Do not commit the JSON or paste it into chat.
 4. Under [Actions](https://github.com/kedarisettisatwik/maikal/actions), select **Update morning news → Run workflow** on `main`. Leave **dry_run** unchecked to save the first edition to Firebase.
 
-The service account needs Firestore data access and Firebase Authentication user-list access. Use a service account from this app's Firebase project. The script validates its type and project ID and never logs the private key. It reads the project ID from the existing `VITE_FIREBASE_PROJECT_ID` repository secret.
+The service account needs Firestore data access and Firebase Authentication user-read access. Use a service account from this app's Firebase project. The script validates its type and project ID and never logs the private key. It reads the project ID from the existing `VITE_FIREBASE_PROJECT_ID` repository secret.
 
-The importer saves the shared current edition to `newsEditions/latest` and an edition copy to each existing, enabled account at `users/{uid}/maikalRecords/news_latest`. The UI reads only its own account's edition, using the existing Firestore rules. A new account receives news on the next import; manually rerun the workflow to deliver it sooner. The shared admin document does not require any new public read rule.
+The importer saves the shared current edition to `newsEditions/latest` and an edition copy only to account `0kX2kfDq3KV9MIhtDV7IDpuXnfJ3` at `users/{uid}/maikalRecords/news_latest`. The News section and its Firestore listener are enabled only for that UID. Other accounts do not receive news copies. Shared and reader copies are written atomically, using the existing account-isolation rules. The shared admin document does not require any new public read rule.
 
 Stories are limited to five per category from the last 48 hours and deduplicated by URL. Failed categories can retain recent stories from the previous edition. If all feeds fail or no recent stories are found, the previous edition is preserved. News is cached separately per account for offline reading; its timestamps remain visible.
 
