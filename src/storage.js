@@ -1,8 +1,9 @@
 import { NEWS_READER_UID } from './news-model';
+import { localOnly } from './build-mode';
 
 export const LOCAL_UID = 'local';
 export const localKey = `maikal-v2-${LOCAL_UID}`;
-export const cloudEnabled = uid => uid === NEWS_READER_UID;
+export const cloudEnabled = uid => !localOnly && uid === NEWS_READER_UID;
 export function readCache(key) {
   try { const cache = JSON.parse(localStorage.getItem(key) || '{}'); return { records: cache.records || {}, dirty: cache.dirty || {} }; }
   catch { return { records: {}, dirty: {} }; }

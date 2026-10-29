@@ -13,7 +13,8 @@
     "news:check": "node scripts/sync-news.mjs --dry-run",
     "jobs:sync": "node scripts/sync-jobs.mjs",
     "jobs:check": "node scripts/sync-jobs.mjs --dry-run",
-    "android:sync": "vite build --mode android && cap sync android",
+    "android:sync": "node scripts/build-android.mjs",
+    "android:build": "node scripts/package-android.mjs",
     "android:open": "cap open android"
   },
   "dependencies": {

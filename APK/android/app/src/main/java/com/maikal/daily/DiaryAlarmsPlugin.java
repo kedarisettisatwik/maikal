@@ -10,6 +10,10 @@ import org.json.JSONArray;
 
 @CapacitorPlugin(name = "DiaryAlarms")
 public class DiaryAlarmsPlugin extends Plugin {
+    @PluginMethod public void openAlarms(PluginCall call) {
+        getActivity().startActivity(new Intent(getContext(), AlarmsActivity.class));
+        call.resolve();
+    }
     @PluginMethod
     public void replace(PluginCall call) {
         try {

@@ -1,17 +1,21 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { fileURLToPath } from 'node:url';
 export default defineConfig(({ command, mode }) => {
-  if (command === 'build') {
+  const localOnly = mode === 'android-local';
+  const android = mode.startsWith('android');
+  const localShim = fileURLToPath(new URL('./src/local-firebase.js', import.meta.url));
+  if (command === 'build' && !localOnly) {
     const env = loadEnv(mode, process.cwd(), 'VITE_FIREBASE_');
     const keys = ['API_KEY', 'AUTH_DOMAIN', 'PROJECT_ID', 'STORAGE_BUCKET', 'MESSAGING_SENDER_ID', 'APP_ID'].map(key => `VITE_FIREBASE_${key}`);
     const missing = keys.filter(key => !env[key]);
     if (missing.length) throw new Error(`Missing build environment: ${missing.join(', ')}`);
   }
   return {
-  base: mode === 'android' ? '/' : '/maikal/',
-  plugins: [react(), VitePWA({
-    disable: mode === 'android',
+  base: android ? '/' : '/maikal/',
+  plugins: [localOnly && { name: 'local-only-firebase', enforce: 'pre', resolveId(source) { if (source.startsWith('firebase/') || /^(?:\.\.?\/)+firebase(?:\.js)?$/.test(source)) return localShim; } }, react(), VitePWA({
+    disable: android,
     registerType: 'prompt',
     includeAssets: ['favicon.ico', 'app-icons/*.png'],
     manifest: {
@@ -35,8 +39,7 @@ export default defineConfig(({ command, mode }) => {
   })],
   build: { rollupOptions: { output: { manualChunks: {
     react: ['react', 'react-dom'],
-    'firebase-auth': ['firebase/auth'],
-    'firebase-firestore': ['firebase/firestore'],
+    ...(!localOnly ? { 'firebase-auth': ['firebase/auth'], 'firebase-firestore': ['firebase/firestore'] } : {}),
   } } } },
   test: { environment: 'jsdom', setupFiles: './src/test/setup.js', restoreMocks: true },
   };

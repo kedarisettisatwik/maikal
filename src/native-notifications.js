@@ -3,6 +3,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 
 export const isNative = () => Capacitor.isNativePlatform();
 const DiaryAlarms = registerPlugin('DiaryAlarms');
+export const openAlarms = () => DiaryAlarms.openAlarms();
 export async function enableNotifications() {
   if (!isNative()) throw new Error('Install the Android APK for notifications while the app is closed.');
   const result = await LocalNotifications.requestPermissions();

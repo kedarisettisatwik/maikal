@@ -1,6 +1,23 @@
 # Maikal â€” The Daily Edition
 
-React + Vite planner with Firebase Authentication, Firestore, and top-center `react-hot-toast` notifications.
+React + Vite planner with sign-in-only Firebase Authentication, Firestore, and top-center `react-hot-toast` notifications.
+
+## Android 1.3 — local and Firebase editions
+
+Run `npm run android:build` with Node 24, JDK 21 and Android SDK 36. The existing extracted JDK under `.publish/android-tools/jdk21` is used when JAVA_HOME is unset. `npm run android:sync` only prepares the two isolated web bundles and Capacitor plugins.
+
+- `APK/Maikal-Local.apk`: **Maikal Local**, package `com.maikal.daily.local`. No Firebase SDK, cloud sign-in, news, LinkedIn jobs, or Internet permission. Goals, plans, expenses and reports stay on this device.
+- `APK/Maikal-Firebase.apk`: **Maikal Firebase**, package `com.maikal.daily`, retains authorized-account Firebase sync and cloud sections. Same package as earlier Maikal APKs, so an update with the same signing key preserves data.
+
+Both debug APKs can be installed side by side; their device storage is separate. Local records do not automatically transfer between the two editions. Keep the existing debug signing key. These files are for direct installation, not Play Store release.
+
+**Menu → Alarms** opens a native alarm-clock screen in both editions. Set everyday, selected weekdays, one-time, or particular-date alarms. Each alarm rings through the alarm audio stream, vibrates, and offers **Snooze · 5 minutes** and **Stop**. Snooze stops the sound and schedules another ring five minutes later; Stop dismisses the current ring while retaining future repeating occurrences. A forgotten ring stops after ten minutes. Alarm records stay device-local even in the Firebase edition. Existing goal/plan reminder notifications remain separate.
+
+Use **Alarm permissions / lock-screen access** to enable notifications, exact alarms, and full-screen alarms where required. Android requires an ongoing foreground-service notification for ringing, but these alarms play continuous sound rather than delivering only a notification. Full-screen presentation depends on Android permissions; force-stop and a powered-off phone prevent alarms. Reboot and time changes restore future schedules.
+
+Website and Firebase APK authentication now show email/password sign-in only; sign-up and forgot-password buttons have been removed.
+
+Validation: React tests plus Android emulator tests cover recurrence, actual ringing service, five-minute snooze scheduling, re-ringing, and Stop. The local APK manifest and packaged assets are checked for network permission and Firebase exclusion.
 
 **Live site:** https://kedarisettisatwik.github.io/maikal/
 
@@ -50,7 +67,7 @@ Manage them under Settings â†’ Secrets and variables â†’ Actions. The 
 
 Enable Email/Password in Authentication â†’ Sign-in method. Create a Cloud Firestore database if needed. Merge `firestore.rules` with any existing rules before publishing them in Firebase Console. For hosted authentication flows, add `kedarisettisatwik.github.io` in Authentication â†’ Settings â†’ Authorized domains, and retain localhost for local development.
 
-Sign-up creates and signs in an account. Forgot password sends a Firebase reset link. Firebase remembers the session through browser local storage without storing the password in application storage.
+Only email/password sign-in is exposed. Manage account creation and password recovery through Firebase administration. Firebase remembers the session through browser local storage without storing the password in application storage.
 
 Records sync automatically under `users/{uid}/maikalRecords`. The app retains the former `maikal-v2-{uid}` cache format. Local caches belong to the browser origin; signing in on the published site restores cloud-synced records. Unsynced changes on localhost remain on that origin.
 
@@ -69,7 +86,7 @@ Meetings and reminders are saved plans; background notifications are not impleme
 
 ## Source
 
-- `src/App.jsx`: session state and sign-in/sign-up/password-reset forms.
+- `src/App.jsx`: session state; `src/components/SignInForm.jsx`: email/password sign-in.
 - `src/components/`: dashboard, entries, goals, reports, and money views.
 - `src/model.js`: recurrence, date, progress, money, and sync helpers.
 - `src/useRecords.js`: account-scoped local persistence and Firestore sync.
@@ -174,11 +191,11 @@ Build with Node 24, JDK 21 and Android SDK 36:
 npm ci
 npm run android:sync
 cd APK/android
-# Windows: gradlew.bat assembleDebug
-./gradlew assembleDebug
+# Windows: gradlew.bat assembleLocalDebug assembleFirebaseDebug
+./gradlew assembleLocalDebug assembleFirebaseDebug
 ```
 
-Output: `APK/android/app/build/outputs/apk/debug/app-debug.apk`. The local distributable copy is `APK/Maikal-debug.apk` (ignored). Keep the same local debug signing key to install updates without uninstalling. This is a debug distribution, not a Play Store release.
+Outputs: `APK/android/app/build/outputs/apk/local/debug/app-local-debug.apk` and `APK/android/app/build/outputs/apk/firebase/debug/app-firebase-debug.apk`. The build wrapper copies them to `APK/Maikal-Local.apk` and `APK/Maikal-Firebase.apk` (ignored). Keep the same local debug signing key to install updates without uninstalling. This is a debug distribution, not a Play Store release.
 
 Goals, meetings and reminders support multiple device-local notification times, shown as tags. Edit a saved goal or plan to change them. In the APK, allow notifications and enable Alarms & reminders when prompted (also available from Menu > Enable notifications). Saved native alarms run without the WebView or network, reschedule the next occurrence after delivery, and restore on reboot/time changes. Removal cancels the pending alarms. Denied exact-alarm permission uses Android's inexact fallback; battery restrictions, Doze quotas, a powered-off phone, or force-stop may delay/prevent delivery. Browser/PWA closed-app reminders are not supported by this implementation. Changes made on another device take effect for native reminders after opening this APK and syncing.
 
@@ -211,4 +228,4 @@ The new **Money summary** widget shows **today’s expenses**, **this month’s 
 Android 1.2.1 simplifies the 1×1 transaction widget to a white plus icon on a green tile, retaining the accessible Add transaction label and form shortcut.
 
 
-Android 1.2.2 shows email/password sign-in only in the APK Firebase connection screen. Browser sign-up and password-reset options are unchanged.
+Android 1.2.2 introduced sign-in-only APK authentication. Version 1.3 applies sign-in-only authentication to the website too.

@@ -30,5 +30,7 @@ Thumbs.db
 
 # Android downloads and private signing keys
 APK/*.apk
+APK/android/app/src/local/assets/
+APK/android/app/src/firebase/assets/
 *.jks
 *.keystore
