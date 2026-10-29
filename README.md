@@ -206,3 +206,6 @@ In the APK, creation/edit/sign-in forms occupy the full phone screen at a readab
 The **Quick transaction** widget is now a compact **1×1 Add transaction** shortcut. Its text wraps across two lines; the home-screen launcher determines final cell size. Tapping it opens the transaction form, where either expense or income can be selected. Existing placements can be resized or removed and re-added for the smaller default size.
 
 The new **Money summary** widget shows **today’s expenses**, **this month’s expenses**, **this month’s income**, and **this month’s savings (income − expenses)** in INR. Deleted transactions are excluded. It uses the active diary’s device snapshot and refreshes when transactions change and periodically through Android; cloud changes appear after the APK syncs. Add it through **Home screen → Widgets → Maikal → Money summary**.
+
+
+Android 1.2.1 simplifies the 1×1 transaction widget to a white plus icon on a green tile, retaining the accessible Add transaction label and form shortcut.
