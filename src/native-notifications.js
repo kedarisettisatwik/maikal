@@ -14,7 +14,7 @@ export async function syncNotifications(records, uid = 'local') {
   if (!isNative()) return;
   const entries = Object.values(records).filter(r => !r.deleted && ['goal', 'event'].includes(r.type) && r.notificationTimes?.length)
     .map(r => ({ id: r.id, title: r.title, kind: r.kind || 'goal', goalType: r.goalType || 'checklist', schedule: r.schedule, createdDate: r.createdDate, times: r.notificationTimes }));
-  const snapshot = Object.values(records).filter(r => ['goal', 'event', 'progress'].includes(r.type));
+  const snapshot = Object.values(records).filter(r => ['goal', 'event', 'progress', 'transaction'].includes(r.type));
   await DiaryAlarms.replace({ entries, uid, records: snapshot });
 }
 export const pendingNativeActions = uid => DiaryAlarms.pendingActions({ uid });

@@ -198,3 +198,11 @@ To add home-screen widgets, long-press an empty part of the Android home screen,
 All notifications show the Maikal color logo in their content and a monochrome lotus icon in the Android status bar. Checkbox-goal notifications include **Mark as complete**. The button records completion for the notification's original date without opening the app, updates the Today widget, and suppresses later notifications for that completed goal on that date. The durable Android outbox imports the change into the diary on the next app open/resume and syncs it to Firestore for the authorized account; it is not a background Firestore connection. Failed local saves leave the action queued for retry. Trackers, meetings and reminders do not have the checkbox completion action.
 
 Eight daily greeting notifications use the phone's local time: **06:30, 10:00, 11:00, 12:00, 16:00, 18:00, 21:00, 01:00**. Their dedicated **Daily greetings** Android notification category can be muted independently of goal/plan reminders. Android notification/exact-alarm permissions and battery/force-stop restrictions still apply.
+
+
+### Android 1.2: full-screen forms and money widgets
+In the APK, creation/edit/sign-in forms occupy the full phone screen at a readable mobile scale. The Back button and Android system Back return to the desktop-width diary with its previous viewport restored. Browser dialogs retain their existing layout.
+
+The **Quick transaction** widget is now a compact **1×1 Add transaction** shortcut. Its text wraps across two lines; the home-screen launcher determines final cell size. Tapping it opens the transaction form, where either expense or income can be selected. Existing placements can be resized or removed and re-added for the smaller default size.
+
+The new **Money summary** widget shows **today’s expenses**, **this month’s expenses**, **this month’s income**, and **this month’s savings (income − expenses)** in INR. Deleted transactions are excluded. It uses the active diary’s device snapshot and refreshes when transactions change and periodically through Android; cloud changes appear after the APK syncs. Add it through **Home screen → Widgets → Maikal → Money summary**.

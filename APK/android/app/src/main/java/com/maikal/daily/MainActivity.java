@@ -2,6 +2,7 @@ package com.maikal.daily;
 
 import android.os.Bundle;
 import android.content.Intent;
+import androidx.activity.OnBackPressedCallback;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -14,5 +15,13 @@ public class MainActivity extends BridgeActivity {
         getBridge().getWebView().getSettings().setDisplayZoomControls(false);
         getBridge().getWebView().getSettings().setUseWideViewPort(true);
         getBridge().getWebView().getSettings().setLoadWithOverviewMode(true);
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override public void handleOnBackPressed() {
+                getBridge().getWebView().evaluateJavascript("Boolean(document.querySelector('dialog[open].native-form-page'))", open -> {
+                    if ("true".equals(open)) getBridge().getWebView().evaluateJavascript("document.querySelector('dialog[open].native-form-page')?.dispatchEvent(new Event('cancel',{cancelable:true}))", null);
+                    else { setEnabled(false); getOnBackPressedDispatcher().onBackPressed(); setEnabled(true); }
+                });
+            }
+        });
     }
 }

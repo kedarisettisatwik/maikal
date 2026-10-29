@@ -77,6 +77,7 @@ public class TodayWidgetProvider extends AppWidgetProvider {
         AppWidgetManager manager = AppWidgetManager.getInstance(c);
         int[] ids = manager.getAppWidgetIds(new ComponentName(c, TodayWidgetProvider.class));
         for (int id : ids) try { update(c, manager, id); } catch (Exception e) { android.util.Log.e("Maikal", "Widget update failed", e); }
+        MoneySummaryWidgetProvider.refresh(c);
     }
     @Override public void onUpdate(Context c, AppWidgetManager manager, int[] ids) { refresh(c); }
 }

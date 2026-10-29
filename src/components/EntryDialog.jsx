@@ -1,13 +1,21 @@
 import toast, { Toaster } from 'react-hot-toast';
 import { assetUrl } from '../assets';
-import { useEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { isNative } from '../native-notifications';
 import NotificationTimes from './NotificationTimes';
 import { expenseIcons, goalIcons, localDate, validateSchedule, weekdays } from '../model';
 
 export function Dialog({ children, title = 'A new entry', onClose }) {
   const ref = useRef(null);
-  useEffect(() => { const dialog = ref.current; dialog.showModal(); return () => dialog.close(); }, []);
-  return <dialog ref={ref} onCancel={e => { e.preventDefault(); onClose(); }}><div className="dialoghead"><span className="kicker">{title}</span><button type="button" onClick={onClose} aria-label="Close dialog">×</button></div>{children}<Toaster toasterId="dialog" position="top-center" toastOptions={{ duration: 4200 }} /></dialog>;
+  const native = isNative();
+  useLayoutEffect(() => {
+    const dialog = ref.current, viewport = document.querySelector('meta[name="viewport"]');
+    const previous = viewport?.getAttribute('content');
+    if (native) viewport?.setAttribute('content', 'width=device-width, initial-scale=1, minimum-scale=0.5, maximum-scale=5, user-scalable=yes');
+    dialog.showModal();
+    return () => { dialog.close(); if (native && previous) viewport?.setAttribute('content', previous); };
+  }, [native]);
+  return <dialog ref={ref} className={native ? 'native-form-page' : undefined} onCancel={e => { e.preventDefault(); onClose(); }}><div className="dialoghead"><span className="kicker">{title}</span><button type="button" onClick={onClose} aria-label={native ? 'Back to diary' : 'Close dialog'}>{native ? '← Back' : '×'}</button></div>{children}<Toaster toasterId="dialog" position="top-center" toastOptions={{ duration: 4200 }} /></dialog>;
 }
 export function Icon({ record }) { return record.iconMode === 'emoji' ? <span style={{ fontSize: 26 }}>{record.icon}</span> : record.icon ? <img src={assetUrl(record.icon)} alt="" /> : null; }
 export function IconPicker({ paths, value, onChange }) {

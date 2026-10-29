@@ -33,3 +33,12 @@
 .notification-input { display:flex; gap:8px; align-items:center; margin:12px 0; }
 .notification-input input { width:150px; }
 .menu-panel a { padding:12px; color:inherit; text-decoration:none; font-size:14px; }
+
+/* APK forms use the phone viewport; closing restores the desktop diary viewport. */
+dialog.native-form-page { position:fixed; inset:0; width:100vw; max-width:none; height:100dvh; max-height:none; margin:0; border:0; border-radius:0; padding:20px; background:var(--paper); box-shadow:none; overflow-y:auto; font-size:16px; }
+dialog.native-form-page::backdrop { background:var(--paper); backdrop-filter:none; }
+dialog.native-form-page .dialoghead { position:sticky; top:-20px; background:var(--paper); z-index:2; padding:14px 0; border-bottom:1px solid var(--line); margin-bottom:20px; }
+dialog.native-form-page .dialoghead button { min-height:44px; white-space:nowrap; }
+dialog.native-form-page .signin { max-width:none; width:100%; margin:0; padding:0; border:0; box-shadow:none; }
+dialog.native-form-page .row { grid-template-columns:1fr; }
+dialog.native-form-page input:not([type=checkbox]), dialog.native-form-page select, dialog.native-form-page textarea, dialog.native-form-page button.primary { min-height:48px; font-size:16px; }

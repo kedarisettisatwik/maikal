@@ -4,7 +4,14 @@
     <string name="widget_today_description">Today’s goals, reminders and meetings</string>
     <string name="widget_today_empty">No goals or plans for today. Tap the heading to open Maikal.</string>
     <string name="widget_money_name">Quick transaction</string>
-    <string name="widget_money_description">Quickly add an expense or income</string>
+    <string name="widget_money_description">Open the transaction form</string>
+    <string name="widget_add_transaction">Add\ntransaction</string>
+    <string name="widget_summary_name">Money summary</string>
+    <string name="widget_summary_description">Today’s expenses and monthly expenses, income and savings</string>
+    <string name="widget_day_expense">Today’s expenses</string>
+    <string name="widget_month_expense">Month’s expenses</string>
+    <string name="widget_month_income">Month’s income</string>
+    <string name="widget_month_saving">Month’s savings</string>
     <string name="widget_expense">+ Expense</string>
     <string name="widget_income">+ Income</string>
     <string name="app_name">Maikal</string>

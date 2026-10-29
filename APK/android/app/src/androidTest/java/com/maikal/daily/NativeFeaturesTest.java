@@ -78,13 +78,27 @@ public class NativeFeaturesTest {
             } catch (Exception e) { throw new RuntimeException(e); }
         });
     }
+    @Test public void moneySummaryRespectsDayMonthDeletedRecordsAndPaise() throws Exception {
+        String day = LocalDate.now().toString();
+        String earlier = LocalDate.now().withDayOfMonth(1).toString();
+        JSONArray records = new JSONArray()
+            .put(new JSONObject().put("type", "transaction").put("kind", "expense").put("date", day).put("amount", 10000))
+            .put(new JSONObject().put("type", "transaction").put("kind", "expense").put("date", earlier).put("amount", 30000))
+            .put(new JSONObject().put("type", "transaction").put("kind", "income").put("date", day).put("amount", 50000))
+            .put(new JSONObject().put("type", "transaction").put("kind", "expense").put("date", LocalDate.now().minusMonths(1).toString()).put("amount", 20000))
+            .put(new JSONObject().put("type", "transaction").put("kind", "expense").put("date", day).put("amount", 99999).put("deleted", true));
+        NativeDiaryStore.snapshot(context, "local", records);
+        long expectedToday = LocalDate.now().getDayOfMonth() == 1 ? 40000 : 10000;
+        assertArrayEquals(new long[]{expectedToday, 40000, 50000, 10000}, MoneySummaryWidgetProvider.totals(context, LocalDate.now()));
+    }
     @Test public void androidRegistersBothHomeScreenWidgets() {
-        boolean today = false, transaction = false;
+        boolean today = false, transaction = false, summary = false;
         for (AppWidgetProviderInfo info : AppWidgetManager.getInstance(context).getInstalledProviders()) {
             if (info.provider.getClassName().equals(TodayWidgetProvider.class.getName())) today = true;
             if (info.provider.getClassName().equals(TransactionWidgetProvider.class.getName())) transaction = true;
+            if (info.provider.getClassName().equals(MoneySummaryWidgetProvider.class.getName())) summary = true;
         }
-        assertTrue(today); assertTrue(transaction);
+        assertTrue(today); assertTrue(transaction); assertTrue(summary);
     }
     @Test public void bothWidgetsInflateInAnAndroidWidgetHost() throws Exception {
         android.app.UiAutomation automation = InstrumentationRegistry.getInstrumentation().getUiAutomation();
@@ -92,17 +106,17 @@ public class NativeFeaturesTest {
         AppWidgetHost host = new AppWidgetHost(context, 7041);
         try {
             AppWidgetManager manager = AppWidgetManager.getInstance(context);
-            for (Class<?> provider : new Class<?>[]{TodayWidgetProvider.class, TransactionWidgetProvider.class}) {
+            for (Class<?> provider : new Class<?>[]{TodayWidgetProvider.class, TransactionWidgetProvider.class, MoneySummaryWidgetProvider.class}) {
                 int id = host.allocateAppWidgetId();
                 assertTrue(manager.bindAppWidgetIdIfAllowed(id, new ComponentName(context, provider)));
                 if (provider == TodayWidgetProvider.class) new TodayWidgetProvider().onUpdate(context, manager, new int[]{id});
-                else new TransactionWidgetProvider().onUpdate(context, manager, new int[]{id});
+                else if (provider == TransactionWidgetProvider.class) new TransactionWidgetProvider().onUpdate(context, manager, new int[]{id});
+                else new MoneySummaryWidgetProvider().onUpdate(context, manager, new int[]{id});
                 AppWidgetProviderInfo info = manager.getAppWidgetInfo(id);
                 InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
                     host.startListening();
                     AppWidgetHostView view = host.createView(context, id, info);
-                    assertNotNull(view.findViewById(provider == TodayWidgetProvider.class ? R.id.widget_list : R.id.widget_expense));
-                    if (provider == TransactionWidgetProvider.class) assertNotNull(view.findViewById(R.id.widget_income));
+                    assertNotNull(view.findViewById(provider == TodayWidgetProvider.class ? R.id.widget_list : provider == TransactionWidgetProvider.class ? R.id.widget_add_transaction : R.id.widget_money_summary));
                 });
             }
         } finally { host.stopListening(); host.deleteHost(); automation.dropShellPermissionIdentity(); }
