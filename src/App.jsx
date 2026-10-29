@@ -6,11 +6,14 @@ import { createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEm
 import { auth, authReady } from './firebase';
 import { authError } from './model';
 import Dashboard from './components/Dashboard.jsx';
+import { isNative } from './native-notifications';
 import { Dialog } from './components/EntryDialog';
 import { cloudEnabled, LOCAL_UID, mergeLocalIntoCloud } from './storage';
 
 export function AuthScreen() {
-  const [mode, setMode] = useState('signin');
+  const native = isNative();
+  const [selectedMode, setMode] = useState('signin');
+  const mode = native ? 'signin' : selectedMode;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -51,7 +54,7 @@ export function AuthScreen() {
       </fieldset>
       {error && <div className="error" role="alert">{error}</div>}{message && <p className="auth-success" role="status">{message}</p>}
     </form>
-    <div className="auth-links">{mode === 'signin' ? <><button disabled={busy} onClick={() => changeMode('forgot')}>Forgot password?</button><span>New here? <button disabled={busy} onClick={() => changeMode('signup')}>Create an account</button></span></> : <button disabled={busy} onClick={() => changeMode('signin')}>Back to sign in</button>}</div>
+    {!native && <div className="auth-links">{mode === 'signin' ? <><button disabled={busy} onClick={() => changeMode('forgot')}>Forgot password?</button><span>New here? <button disabled={busy} onClick={() => changeMode('signup')}>Create an account</button></span></> : <button disabled={busy} onClick={() => changeMode('signin')}>Back to sign in</button>}</div>}
     <p className="small" style={{ marginBottom: 0 }}>Your sign-in is remembered on this browser until you sign out.</p>
   </section>;
 }

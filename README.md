@@ -209,3 +209,6 @@ The new **Money summary** widget shows **today’s expenses**, **this month’s 
 
 
 Android 1.2.1 simplifies the 1×1 transaction widget to a white plus icon on a green tile, retaining the accessible Add transaction label and form shortcut.
+
+
+Android 1.2.2 shows email/password sign-in only in the APK Firebase connection screen. Browser sign-up and password-reset options are unchanged.
