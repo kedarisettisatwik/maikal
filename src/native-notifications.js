@@ -10,9 +10,14 @@ export async function enableNotifications() {
   const exact = await LocalNotifications.checkExactNotificationSetting();
   if (exact.exact_alarm !== 'granted') await LocalNotifications.changeExactNotificationSetting();
 }
-export async function syncNotifications(records) {
+export async function syncNotifications(records, uid = 'local') {
   if (!isNative()) return;
   const entries = Object.values(records).filter(r => !r.deleted && ['goal', 'event'].includes(r.type) && r.notificationTimes?.length)
-    .map(r => ({ id: r.id, title: r.title, kind: r.kind || 'goal', schedule: r.schedule, createdDate: r.createdDate, times: r.notificationTimes }));
-  await DiaryAlarms.replace({ entries });
+    .map(r => ({ id: r.id, title: r.title, kind: r.kind || 'goal', goalType: r.goalType || 'checklist', schedule: r.schedule, createdDate: r.createdDate, times: r.notificationTimes }));
+  const snapshot = Object.values(records).filter(r => ['goal', 'event', 'progress'].includes(r.type));
+  await DiaryAlarms.replace({ entries, uid, records: snapshot });
 }
+export const pendingNativeActions = uid => DiaryAlarms.pendingActions({ uid });
+export const acknowledgeNativeActions = ids => DiaryAlarms.acknowledgeActions({ ids });
+export const consumeNativeLaunch = () => DiaryAlarms.consumeLaunch();
+export const acknowledgeNativeLaunch = requestId => DiaryAlarms.acknowledgeLaunch({ requestId });

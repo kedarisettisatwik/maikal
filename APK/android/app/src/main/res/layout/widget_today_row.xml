@@ -1,0 +1,4 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/widget_row" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingTop="10dp" android:paddingBottom="10dp" android:minHeight="52dp">
+    <TextView android:id="@+id/widget_row_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#253439" android:textSize="15sp" android:maxLines="2" android:ellipsize="end" android:textStyle="bold" />
+    <TextView android:id="@+id/widget_row_detail" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#66716A" android:textSize="12sp" android:layout_marginTop="3dp" />
+</LinearLayout>

@@ -1,9 +1,11 @@
 package com.maikal.daily;
 
 import android.os.Bundle;
+import android.content.Intent;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+    @Override protected void onNewIntent(Intent intent) { super.onNewIntent(intent); setIntent(intent); }
     @Override public void onCreate(Bundle state) {
         registerPlugin(DiaryAlarmsPlugin.class);
         super.onCreate(state);

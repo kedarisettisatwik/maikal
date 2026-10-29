@@ -186,3 +186,15 @@ Goals, meetings and reminders support multiple device-local notification times, 
 News and LinkedIn jobs use `30 0 * * *` UTC, which is 6:00 AM IST daily. GitHub Actions may queue scheduled runs later than that time. LinkedIn public access is not guaranteed: stop immediately on restrictions, publish the matching listings already verified even if fewer than ten, and retain the previous edition when none were verified. No access controls are bypassed. Workflow logs report partial or retained editions.
 
 The Firestore rules workflow publishes the account restriction using the existing server service-account secret. Server imports continue to use the Admin SDK. No server key is shipped in the browser or APK.
+
+
+### Android 1.1: widgets and notification actions
+Install the latest APK over the existing Maikal app (same package and signing key); do not uninstall if you want to keep local data. Open it once after updating so Android receives the latest records and alarm schedules.
+
+To add home-screen widgets, long-press an empty part of the Android home screen, choose **Widgets**, then find **Maikal**:
+- **Maikal Today**: resizable, scrollable list of today's goals, reminders and meetings. Checkbox goals show completion; trackers show their current value. Tap a row or heading to open the diary. The widget uses the currently connected diary's device cache; cloud changes appear after the APK syncs. It refreshes when records change, on reminder delivery, and periodically through Android's widget updates.
+- **Quick transaction**: separate **+ Expense** and **+ Income** buttons open the matching transaction form. Choose a category, enter the amount and save. Widget shortcuts work for both a local diary and the authorized Firebase account.
+
+All notifications show the Maikal color logo in their content and a monochrome lotus icon in the Android status bar. Checkbox-goal notifications include **Mark as complete**. The button records completion for the notification's original date without opening the app, updates the Today widget, and suppresses later notifications for that completed goal on that date. The durable Android outbox imports the change into the diary on the next app open/resume and syncs it to Firestore for the authorized account; it is not a background Firestore connection. Failed local saves leave the action queued for retry. Trackers, meetings and reminders do not have the checkbox completion action.
+
+Eight daily greeting notifications use the phone's local time: **06:30, 10:00, 11:00, 12:00, 16:00, 18:00, 21:00, 01:00**. Their dedicated **Daily greetings** Android notification category can be muted independently of goal/plan reminders. Android notification/exact-alarm permissions and battery/force-stop restrictions still apply.

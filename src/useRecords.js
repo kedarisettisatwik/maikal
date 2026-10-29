@@ -3,6 +3,8 @@ import { collection, doc, onSnapshot, query, setDoc, where } from 'firebase/fire
 import { db } from './firebase';
 import { mergeRecords } from './model';
 import { cloudEnabled, readCache } from './storage';
+import { isNative, pendingNativeActions, acknowledgeNativeActions } from './native-notifications';
+import { importNativeCompletions } from './native-actions';
 
 export default function useRecords(uid, notify) {
   const key = `maikal-v2-${uid}`;
@@ -61,6 +63,24 @@ export default function useRecords(uid, notify) {
     push(r);
     return r;
   };
+  useEffect(() => {
+    if (!isNative()) return;
+    let live = true, running = false;
+    const flush = async () => {
+      if (!live || running || document.hidden) return;
+      running = true;
+      try {
+        const { actions = [] } = await pendingNativeActions(uid);
+        if (!live) return;
+        const ids = importNativeCompletions(actions, uid, () => ref.current.records, save);
+        if (ids.length) await acknowledgeNativeActions(ids);
+      } catch { if (live) setError('A notification completion is saved on Android and will retry importing into your diary.'); }
+      finally { running = false; }
+    };
+    flush(); const timer = setInterval(flush, 1500);
+    document.addEventListener('visibilitychange', flush);
+    return () => { live = false; clearInterval(timer); document.removeEventListener('visibilitychange', flush); };
+  }, [uid]);
   const remove = id => { const record = ref.current.records[id]; if (record && window.confirm('Delete this item?')) { save({ ...record, deleted: true }); notify('Deleted'); } };
   const count = Object.keys(cache.dirty).length;
   return { records: cache.records, save, remove, error, status: !cloud ? 'Saved on this device' : count ? `${count} change${count === 1 ? '' : 's'} saved locally · ${connected ? 'syncing' : 'sync pending'}` : connected ? 'All changes synced' : 'Using local records · connecting…' };

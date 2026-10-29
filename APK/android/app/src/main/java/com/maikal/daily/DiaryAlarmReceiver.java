@@ -10,11 +10,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
+import android.service.notification.StatusBarNotification;
 import androidx.core.app.NotificationCompat;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
@@ -32,7 +35,6 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
         AlarmManager manager = (AlarmManager)c.getSystemService(Context.ALARM_SERVICE);
         JSONArray old = new JSONArray(prefs(c).getString("alarms", "[]"));
         for (int i = 0; i < old.length(); i++) { PendingIntent pi = pending(c, i + 1); manager.cancel(pi); pi.cancel(); }
-        ((NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE)).cancelAll();
         JSONArray alarms = new JSONArray();
         for (int i = 0; i < entries.length(); i++) {
             JSONObject entry = entries.getJSONObject(i);
@@ -44,6 +46,18 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
             }
         }
         if (!prefs(c).edit().putString("alarms", alarms.toString()).commit()) throw new Exception("Alarm storage unavailable");
+        NotificationManager notifications = (NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE);
+        for (StatusBarNotification active : notifications.getActiveNotifications()) {
+            Bundle extras = active.getNotification().extras;
+            String account = extras.getString("maikalUid", ""), key = extras.getString("maikalEntry", "");
+            boolean keep = account.equals(NativeDiaryStore.uid(c));
+            boolean present = false;
+            for (int i = 0; i < alarms.length(); i++) {
+                JSONObject alarm = alarms.getJSONObject(i);
+                if (key.equals(alarm.getString("id") + "_" + alarm.getString("time"))) present = true;
+            }
+            if (!keep || !present) notifications.cancel(active.getTag(), active.getId());
+        }
         reschedule(c);
     }
     static LocalDate nextDate(JSONObject entry, LocalDate from) throws Exception {
@@ -96,21 +110,53 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
     }
     @Override public void onReceive(Context c, Intent intent) {
         try {
-            if (!"com.maikal.daily.ALARM".equals(intent.getAction())) { reschedule(c); return; }
+            if ("com.maikal.daily.COMPLETE".equals(intent.getAction())) {
+                if (NativeDiaryStore.complete(c, intent.getStringExtra("uid"), intent.getStringExtra("goalId"), intent.getStringExtra("date"))) {
+                    NotificationManager manager = (NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE);
+                    for (StatusBarNotification active : manager.getActiveNotifications()) {
+                        Bundle extra = active.getNotification().extras;
+                        if (intent.getStringExtra("goalId").equals(extra.getString("maikalGoal")) && intent.getStringExtra("date").equals(extra.getString("maikalDate"))) manager.cancel(active.getTag(), active.getId());
+                    }
+                    TodayWidgetProvider.refresh(c);
+                }
+                return;
+            }
+            if (!"com.maikal.daily.ALARM".equals(intent.getAction())) { reschedule(c); TodayWidgetProvider.refresh(c); return; }
             int id = intent.getIntExtra("alarmId", 0);
             JSONArray alarms = new JSONArray(prefs(c).getString("alarms", "[]"));
             if (id < 1 || id > alarms.length()) return;
             JSONObject entry = alarms.getJSONObject(id - 1);
+            boolean greeting = "greeting".equals(entry.optString("kind"));
+            String day = LocalDate.now().toString();
+            boolean checkbox = "goal".equals(entry.optString("kind")) && "checklist".equals(entry.optString("goalType", "checklist"));
+            if (checkbox && NativeDiaryStore.completed(c, entry.getString("id"), day)) { schedule(c, entry, id); return; }
             NotificationManager manager = (NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE);
             manager.createNotificationChannel(new NotificationChannel("maikal_reminders", "Goals & plans", NotificationManager.IMPORTANCE_HIGH));
+            manager.createNotificationChannel(new NotificationChannel("maikal_greetings", "Daily greetings", NotificationManager.IMPORTANCE_DEFAULT));
             PendingIntent open = PendingIntent.getActivity(c, id, new Intent(c, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
             if (Build.VERSION.SDK_INT < 33 || c.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-                manager.notify(id, new NotificationCompat.Builder(c, "maikal_reminders").setSmallIcon(R.drawable.ic_stat_maikal)
+                Bundle extras = new Bundle();
+                extras.putString("maikalUid", NativeDiaryStore.uid(c)); extras.putString("maikalEntry", entry.getString("id") + "_" + entry.getString("time"));
+                extras.putString("maikalGoal", entry.getString("id")); extras.putString("maikalDate", day);
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(c, greeting ? "maikal_greetings" : "maikal_reminders").setSmallIcon(R.drawable.ic_stat_maikal)
+                    .addExtras(extras)
+                    .setLargeIcon(BitmapFactory.decodeResource(c.getResources(), R.drawable.maikal_logo))
                     .setContentTitle(entry.optString("title", "Maikal"))
-                    .setContentText(entry.optString("kind", "Reminder") + " · " + entry.optString("time"))
-                    .setPriority(NotificationCompat.PRIORITY_HIGH).setContentIntent(open).setAutoCancel(true).build());
+                    .setContentText(entry.optString("body", entry.optString("kind", "Reminder") + " · " + entry.optString("time")))
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText(entry.optString("body", entry.optString("kind", "Reminder") + " · " + entry.optString("time"))))
+                    .setPriority(greeting ? NotificationCompat.PRIORITY_DEFAULT : NotificationCompat.PRIORITY_HIGH).setContentIntent(open).setAutoCancel(true);
+                if (checkbox) {
+                    String uid = NativeDiaryStore.uid(c), goalId = entry.getString("id");
+                    Intent complete = new Intent(c, DiaryAlarmReceiver.class).setAction("com.maikal.daily.COMPLETE")
+                        .setData(new Uri.Builder().scheme("maikal").authority("complete").appendPath(uid).appendPath(goalId).appendPath(day).build())
+                        .putExtra("uid", uid).putExtra("goalId", goalId).putExtra("date", day).putExtra("notificationId", id);
+                    PendingIntent action = PendingIntent.getBroadcast(c, id, complete, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                    builder.addAction(R.drawable.ic_stat_maikal, "Mark as complete", action);
+                }
+                manager.notify(entry.getString("id") + "_" + entry.getString("time"), 0, builder.build());
             }
             schedule(c, entry, id);
+            TodayWidgetProvider.refresh(c);
         } catch (Exception error) { android.util.Log.e("Maikal", "Reminder scheduling failed", error); }
     }
 }

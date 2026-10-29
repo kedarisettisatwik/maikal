@@ -1,0 +1,11 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@drawable/widget_paper" android:padding="14dp">
+    <LinearLayout android:id="@+id/widget_header" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/maikal_logo" android:contentDescription="@string/app_name" />
+        <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="@string/widget_today_name" android:textColor="#253439" android:textSize="19sp" android:fontFamily="serif" android:textStyle="bold" android:layout_marginStart="8dp" />
+    </LinearLayout>
+    <TextView android:id="@+id/widget_date" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#66716A" android:textSize="12sp" android:paddingTop="5dp" android:paddingBottom="8dp" />
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+        <ListView android:id="@+id/widget_list" android:layout_width="match_parent" android:layout_height="match_parent" android:divider="#DDD9CC" android:dividerHeight="1dp" />
+        <TextView android:id="@+id/widget_empty" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:text="@string/widget_today_empty" android:textColor="#66716A" android:textSize="14sp" />
+    </FrameLayout>
+</LinearLayout>
