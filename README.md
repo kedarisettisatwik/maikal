@@ -158,3 +158,31 @@ A collapsed **Reports** section follows Daily Practice (or the money section for
 Choose any month to see one square for each actual day (28, 29, 30, or 31), aligned Monday–Sunday. Checkbox reports show completed days in green, scheduled but uncompleted days in black, and non-applicable dates at 0.1 opacity. Goal creation dates and daily/weekday/date/range schedules are respected. Future applicable days remain uncompleted, not labelled as missed.
 
 Tracker reports plot daily count/minute values as proportional bars with dates, accessible values, and monthly totals. Non-applicable days are dimmed. The chart scrolls horizontally on narrow screens. Reports are read-only and update when the existing daily progress changes; no additional Firestore collection is required.
+
+
+## Local diary and cloud connection
+Maikal opens without sign-in and saves goals, plans, categories, transactions, and progress to this browser/device. Clearing app/browser data or uninstalling removes local data. Menu > Connect Firebase opens email/password authentication. Only `0kX2kfDq3KV9MIhtDV7IDpuXnfJ3` can use Firestore or the private news/jobs/LeetCode sections. Other signed-in accounts are signed out without opening a Firestore listener.
+
+On connection, local diary records are merged into the authorized account cache, marked for cloud upload, and removed from the guest cache only after that cache write succeeds. Record IDs, timestamps, and deletion markers are retained. Newer cloud versions win; offline uploads retry on reconnect. Sign-out returns to a separate local diary; it does not expose cached cloud records. Browser and APK storage are separate; connect Firebase in each to share the authorized account data.
+
+## Android APK
+Native source is in `APK/android`, package `com.maikal.daily`, Android 8.0+ (API 26). The APK uses a 1200px desktop viewport with pinch zoom. The app icon and splash use the Maikal logo. The web menu links to the downloadable debug APK in GitHub Releases.
+
+Build with Node 24, JDK 21 and Android SDK 36:
+
+```sh
+npm ci
+npm run android:sync
+cd APK/android
+# Windows: gradlew.bat assembleDebug
+./gradlew assembleDebug
+```
+
+Output: `APK/android/app/build/outputs/apk/debug/app-debug.apk`. The local distributable copy is `APK/Maikal-debug.apk` (ignored). Keep the same local debug signing key to install updates without uninstalling. This is a debug distribution, not a Play Store release.
+
+Goals, meetings and reminders support multiple device-local notification times, shown as tags. Edit a saved goal or plan to change them. In the APK, allow notifications and enable Alarms & reminders when prompted (also available from Menu > Enable notifications). Saved native alarms run without the WebView or network, reschedule the next occurrence after delivery, and restore on reboot/time changes. Removal cancels the pending alarms. Denied exact-alarm permission uses Android's inexact fallback; battery restrictions, Doze quotas, a powered-off phone, or force-stop may delay/prevent delivery. Browser/PWA closed-app reminders are not supported by this implementation. Changes made on another device take effect for native reminders after opening this APK and syncing.
+
+## Scheduler behavior
+News and LinkedIn jobs use `30 0 * * *` UTC, which is 6:00 AM IST daily. GitHub Actions may queue scheduled runs later than that time. LinkedIn public access is not guaranteed: stop immediately on restrictions, publish the matching listings already verified even if fewer than ten, and retain the previous edition when none were verified. No access controls are bypassed. Workflow logs report partial or retained editions.
+
+The Firestore rules workflow publishes the account restriction using the existing server service-account secret. Server imports continue to use the Admin SDK. No server key is shipped in the browser or APK.

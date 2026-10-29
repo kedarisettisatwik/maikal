@@ -1,10 +1,12 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { NEWS_READER_UID } from '../src/news-model.js';
 import { JOB_PROFILE } from '../src/jobs-model.js';
 import { parseJobPage, parseSearchPage, selectJobs } from './linkedin-model.mjs';
+
+import { verifyCandidates } from './jobs-fetch.mjs';
 
 const dryRun = process.argv.includes('--dry-run') || process.env.JOBS_DRY_RUN === 'true';
 const now = Date.now();
@@ -14,7 +16,7 @@ const keywords = ['Full Stack Developer', 'Backend Engineer', 'Forward Deployed 
 const headers = { 'User-Agent': 'MaikalJobSearch/1.0 (+https://kedarisettisatwik.github.io/maikal/)', Accept: 'text/html' };
 async function publicPage(url) {
   const response = await fetch(url, { headers, signal: AbortSignal.timeout(25000), redirect: 'follow' });
-  if ([401, 403, 429].includes(response.status) || /authwall|checkpoint|\/login/.test(new URL(response.url).pathname)) throw Object.assign(new Error('LinkedIn restricted public access. The previous job edition was retained; no access restrictions were bypassed.'), { restricted: true });
+  if ([401, 403, 429].includes(response.status) || /authwall|checkpoint|\/login/.test(new URL(response.url).pathname)) throw Object.assign(new Error('LinkedIn restricted public access; no access restrictions were bypassed.'), { restricted: true });
   if (!response.ok) throw new Error(`LinkedIn page returned HTTP ${response.status}.`);
   const html = await response.text(); if (html.length > 3000000) throw new Error('LinkedIn page exceeded the size limit.');
   return html;
@@ -32,32 +34,26 @@ async function main() {
     const snapshot = await db.doc('jobEditions/latest').get(); previous = snapshot.exists ? snapshot.data() : null;
   }
   const candidates = new Map();
+  let restricted = false;
   for (const keyword of keywords) {
     const params = new URLSearchParams({ keywords: keyword, location: 'India', f_TPR: 'r86400', f_E: '2,3', sortBy: 'DD', start: '0' });
-    const html = await publicPage(`https://www.linkedin.com/jobs/search/?${params}`);
-    for (const candidate of parseSearchPage(html)) candidates.set(candidate.id, candidate);
+    try {
+      const html = await publicPage(`https://www.linkedin.com/jobs/search/?${params}`);
+      for (const candidate of parseSearchPage(html)) candidates.set(candidate.id, candidate);
+    } catch (error) { if (!error.restricted) throw error; restricted = true; console.warn(error.message); break; }
     await pause(2000);
   }
-  if (!candidates.size) throw new Error('LinkedIn returned no readable public job results. The previous edition was retained.');
+  if (restricted || !candidates.size) { console.warn('No readable LinkedIn results. Previous edition retained.'); return; }
   console.log(`Public LinkedIn search: ${candidates.size} relevant candidate listing(s).`);
-  const matches = [], checked = new Set(), perRole = new Map();
   // Interleave role families so a single search cannot crowd out all FDE/backend listings.
   const groups = [...new Set([...candidates.values()].map(job => job.role))].map(role => [...candidates.values()].filter(job => job.role === role));
   const ordered = []; for (let i = 0; groups.some(group => i < group.length); i++) for (const group of groups) if (group[i]) ordered.push(group[i]);
-  for (const candidate of ordered.slice(0, 50)) {
-    if (checked.has(candidate.id)) continue; checked.add(candidate.id);
-    try {
-      const job = parseJobPage(await publicPage(candidate.url), candidate, now);
-      if (job) { matches.push(job); perRole.set(job.role, (perRole.get(job.role) || 0) + 1); }
-    } catch (error) { if (error.restricted) throw error; console.warn(`A public listing could not be verified (${error.name || 'error'}).`); }
-    if (checked.size % 10 === 0) console.log(`Verified ${checked.size} listing(s); ${matches.length} potential match(es).`);
-    if (selectJobs(matches, previous, editionDate).length >= 10) break;
-    await pause(2000);
-  }
-  const jobs = selectJobs(matches, previous, editionDate);
+  const result = await verifyCandidates(ordered, { readPage: publicPage, parse: parseJobPage, select: selectJobs, previous, editionDate, now, pause });
+  const { jobs, checked } = result; restricted = result.restricted;
+  if (!jobs.length) { console.warn('No new matching listings verified. Previous edition retained.'); return; }
   const seen = Object.fromEntries(Object.entries(previous?.seen || {}).filter(([, time]) => Number(time) > now - 30 * 86400000));
   for (const job of jobs) seen[job.id] = seen[job.id] || now;
-  const edition = { schemaVersion: 1, editionDate, fetchedAt: now, source: 'LinkedIn', profile: JOB_PROFILE, jobs, seen, checked: checked.size, note: jobs.length < 10 ? 'Fewer than 10 new matching public LinkedIn listings could be verified. No unrelated or duplicate jobs were added.' : '' };
+  const edition = { schemaVersion: 1, editionDate, fetchedAt: now, source: 'LinkedIn', profile: JOB_PROFILE, jobs, seen, checked: checked.size, note: restricted ? 'LinkedIn restricted further access. Showing the new matches verified before the restriction.' : jobs.length < 10 ? 'Fewer than 10 new matching public LinkedIn listings could be verified. No unrelated or duplicate jobs were added.' : '' };
   console.log(JSON.stringify({ editionDate, jobs: jobs.length, checked: checked.size, verifiedExperience: jobs.filter(job => job.experienceConfidence === 'explicit').length, dryRun }));
   if (dryRun) {
     if (process.env.JOBS_PREVIEW_PATH) await writeFile(process.env.JOBS_PREVIEW_PATH, JSON.stringify(edition, null, 2));

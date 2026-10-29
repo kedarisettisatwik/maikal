@@ -12,9 +12,14 @@
     "news:sync": "node scripts/sync-news.mjs",
     "news:check": "node scripts/sync-news.mjs --dry-run",
     "jobs:sync": "node scripts/sync-jobs.mjs",
-    "jobs:check": "node scripts/sync-jobs.mjs --dry-run"
+    "jobs:check": "node scripts/sync-jobs.mjs --dry-run",
+    "android:sync": "vite build --mode android && cap sync android",
+    "android:open": "cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/local-notifications": "^8.3.1",
     "entities": "^8.1.0",
     "firebase": "^13.1.0",
     "react": "^19.0.0",
@@ -22,6 +27,7 @@
     "react-hot-toast": "^2.6.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.6.0",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
     "@vitejs/plugin-react": "^5.0.0",

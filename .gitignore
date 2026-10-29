@@ -27,3 +27,8 @@ Thumbs.db
 *firebase-adminsdk*.json
 *service-account*.json
 *serviceAccount*.json
+
+# Android downloads and private signing keys
+APK/*.apk
+*.jks
+*.keystore

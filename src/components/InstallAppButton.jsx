@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { isNative } from '../native-notifications';
 import toast from 'react-hot-toast';
 
 let deferredPrompt = null;
@@ -22,5 +23,5 @@ export default function InstallAppButton() {
     } else if (/iPad|iPhone|iPod/.test(navigator.userAgent) || navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) toast('In Safari: tap Share → Add to Home Screen → Add.', { duration: 6500 });
     else toast('Open Maikal in Chrome or Edge, then use the browser menu → Add to Home screen or Install app.', { duration: 6500 });
   }
-  return standalone ? null : <button type="button" onClick={install}>Install app</button>;
+  return standalone || isNative() ? null : <button type="button" onClick={install}>Install app</button>;
 }

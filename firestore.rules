@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{uid}/maikalRecords/{recordId} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, write: if request.auth != null && request.auth.uid == uid && uid == '0kX2kfDq3KV9MIhtDV7IDpuXnfJ3';
     }
   }
 }

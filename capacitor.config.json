@@ -1,0 +1,14 @@
+{
+  "appId": "com.maikal.daily",
+  "appName": "Maikal",
+  "webDir": "dist",
+  "android": {
+    "path": "APK/android"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_maikal",
+      "iconColor": "#253439"
+    }
+  }
+}

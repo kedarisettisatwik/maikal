@@ -6,7 +6,8 @@ import { createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEm
 import { auth, authReady } from './firebase';
 import { authError } from './model';
 import Dashboard from './components/Dashboard.jsx';
-import InstallAppButton from './components/InstallAppButton';
+import { Dialog } from './components/EntryDialog';
+import { cloudEnabled, LOCAL_UID, mergeLocalIntoCloud } from './storage';
 
 export function AuthScreen() {
   const [mode, setMode] = useState('signin');
@@ -50,17 +51,33 @@ export function AuthScreen() {
       </fieldset>
       {error && <div className="error" role="alert">{error}</div>}{message && <p className="auth-success" role="status">{message}</p>}
     </form>
-    <div className="auth-install"><InstallAppButton /></div><div className="auth-links">{mode === 'signin' ? <><button disabled={busy} onClick={() => changeMode('forgot')}>Forgot password?</button><span>New here? <button disabled={busy} onClick={() => changeMode('signup')}>Create an account</button></span></> : <button disabled={busy} onClick={() => changeMode('signin')}>Back to sign in</button>}</div>
+    <div className="auth-links">{mode === 'signin' ? <><button disabled={busy} onClick={() => changeMode('forgot')}>Forgot password?</button><span>New here? <button disabled={busy} onClick={() => changeMode('signup')}>Create an account</button></span></> : <button disabled={busy} onClick={() => changeMode('signin')}>Back to sign in</button>}</div>
     <p className="small" style={{ marginBottom: 0 }}>Your sign-in is remembered on this browser until you sign out.</p>
   </section>;
 }
 export default function App() {
-  const [session, setSession] = useState({ loading: true, user: null, error: '' });
+  const [user, setUser] = useState(null);
+  const [connecting, setConnecting] = useState(false);
+  const [restoring, setRestoring] = useState(true);
   useEffect(() => {
     let live = true, stop;
-    authReady.then(() => { if (live) stop = onAuthStateChanged(auth, user => { if (user?.isAnonymous) { signOut(auth).catch(() => {}); return; } setSession({ loading: false, user, error: '' }); }, error => setSession({ loading: false, user: null, error: authError(error) })); }).catch(error => { if (live) setSession({ loading: false, user: null, error: authError(error) }); });
+    authReady.then(() => { if (live) stop = onAuthStateChanged(auth, next => {
+      if (!live) return;
+      if (next && !cloudEnabled(next.uid)) {
+        signOut(auth).catch(() => {}); toast.error('Cloud storage is available only for the authorized Maikal account.');
+        setUser(null); setRestoring(false); return;
+      }
+      if (next) {
+        try { mergeLocalIntoCloud(next.uid); }
+        catch { toast.error('Could not merge local data. Free device storage and reconnect.'); setRestoring(false); return; }
+        setConnecting(false);
+      }
+      setUser(next); setRestoring(false);
+    }, () => { setRestoring(false); toast.error('Firebase is unavailable. Your local diary is ready.'); });
+    }).catch(() => { if (live) setRestoring(false); });
     return () => { live = false; stop?.(); };
   }, []);
-  if (session.loading) return <section className="signin"><img className="auth-logo" src={assetUrl('logo.png')} alt="Maikal" /><h1>Your daily edition.</h1><p role="status">Restoring your session…</p></section>;
-  return <>{session.user ? <Dashboard key={session.user.uid} user={session.user} notify={notify} /> : <>{session.error && <p className="error global-error" role="alert">{session.error}</p>}<AuthScreen /></>}</>;
+  return <><Dashboard key={user?.uid || LOCAL_UID} user={user || { uid: LOCAL_UID, email: 'Local diary - this device' }} notify={notify} onConnect={() => setConnecting(true)} restoring={restoring} />
+    {connecting && <Dialog title="Connect Firebase" onClose={() => setConnecting(false)}><AuthScreen /></Dialog>}
+  </>;
 }

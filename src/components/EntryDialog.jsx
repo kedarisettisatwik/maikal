@@ -1,6 +1,7 @@
 import toast, { Toaster } from 'react-hot-toast';
 import { assetUrl } from '../assets';
 import { useEffect, useRef, useState } from 'react';
+import NotificationTimes from './NotificationTimes';
 import { expenseIcons, goalIcons, localDate, validateSchedule, weekdays } from '../model';
 
 export function Dialog({ children, title = 'A new entry', onClose }) {
@@ -24,26 +25,27 @@ export function Schedule({ value, onChange }) {
 const initialSchedule = () => ({ type: 'everyday', days: [], dates: [''], from: '', to: '' });
 export default function EntryDialog({ entry, categories, save, removeCategory, notify, onClose }) {
   const type = entry.type;
-  const editing = entry.transaction;
-  const [schedule, setSchedule] = useState(initialSchedule);
-  const [icon, setIcon] = useState(type === 'category' ? expenseIcons[3] : goalIcons[0]);
-  const [iconMode, setIconMode] = useState('select');
-  const [emoji, setEmoji] = useState('');
-  const [goalType, setGoalType] = useState('checklist');
-  const [allDay, setAllDay] = useState(true);
+  const editing = entry.transaction || entry.record;
+  const [schedule, setSchedule] = useState(() => editing?.schedule || initialSchedule());
+  const [icon, setIcon] = useState(editing?.icon || (type === 'category' ? expenseIcons[3] : goalIcons[0]));
+  const [iconMode, setIconMode] = useState(editing?.iconMode || 'select');
+  const [emoji, setEmoji] = useState(editing?.iconMode === 'emoji' ? editing.icon : '');
+  const [goalType, setGoalType] = useState(editing?.goalType || 'checklist');
+  const [allDay, setAllDay] = useState(editing?.allDay ?? true);
   const [kind, setKind] = useState(editing?.kind || 'expense');
   const [categoryId, setCategoryId] = useState(editing?.categoryId || '');
   const [error, setError] = useState('');
-  const title = type === 'goal' ? 'Create a goal' : type === 'category' ? 'Create a category' : type === 'transaction' ? editing ? 'Edit transaction' : 'Add a transaction' : `Create a ${type}`;
+  const [notificationTimes, setNotificationTimes] = useState(editing?.notificationTimes || []);
+  const title = editing && type !== 'transaction' ? `Edit ${type}` : type === 'goal' ? 'Create a goal' : type === 'category' ? 'Create a category' : type === 'transaction' ? editing ? 'Edit transaction' : 'Add a transaction' : `Create a ${type}`;
   function submit(e) {
     e.preventDefault(); setError('');
     const data = new FormData(e.currentTarget);
     try {
-      let record = { id: editing?.id || crypto.randomUUID(), type };
+      let record = { ...editing, id: editing?.id || crypto.randomUUID(), type };
       if (type === 'goal' || type === 'meeting' || type === 'reminder') {
         const title = data.get('title').trim();
         if (!title) throw new Error('Enter a title.');
-        record = { ...record, title, schedule: validateSchedule(schedule), createdDate: localDate() };
+        record = { ...record, title, schedule: validateSchedule(schedule), createdDate: editing?.createdDate || localDate(), notificationTimes };
         if (type === 'goal') {
           if (iconMode === 'emoji' && !emoji.trim()) throw new Error('Enter an emoji or choose another icon style.');
           record = { ...record, iconMode, icon: iconMode === 'select' ? icon : iconMode === 'emoji' ? emoji.trim() : '', goalType, trackerUnit: data.get('trackerUnit') || 'count' };
@@ -63,20 +65,21 @@ export default function EntryDialog({ entry, categories, save, removeCategory, n
         if (!category) throw new Error('Choose a matching category first.');
         record = { ...record, kind, amount: Math.round(amount * 100), categoryId, date: data.get('date'), note: data.get('note').trim() };
       }
-      save(record); onClose(); toast.success(editing ? 'Transaction updated' : 'Saved');
+      save(record); onClose(); toast.success(editing ? 'Updated' : 'Saved');
     } catch (error) { setError(error.message); toast.error(error.message, { toasterId: 'dialog' }); }
   }
   return <Dialog onClose={onClose}><form onSubmit={submit}><h2>{title}</h2>
     {(type === 'goal' || type === 'meeting' || type === 'reminder') && <>
-      <label className="field"><span>Title</span><input name="title" required maxLength={150} placeholder={type === 'goal' ? 'e.g. Read for 20 minutes' : 'Give your plan a name'} /></label>
-      {type === 'goal' ? <><span className="label">Make it yours</span>{iconMode === 'select' && <IconPicker paths={goalIcons} value={icon} onChange={setIcon} />}<div className="row"><label className="field"><span>Icon style</span><select value={iconMode} onChange={e => setIconMode(e.target.value)}><option value="select">Choose an icon</option><option value="emoji">My own emoji</option><option value="none">No icon</option></select></label>{iconMode === 'emoji' && <label className="field"><span>Your emoji</span><input value={emoji} onChange={e => setEmoji(e.target.value)} maxLength={16} /></label>}</div><div className="row"><label className="field"><span>Goal type</span><select value={goalType} onChange={e => setGoalType(e.target.value)}><option value="checklist">Checkbox</option><option value="tracker">Tracker</option></select></label>{goalType === 'tracker' && <label className="field"><span>Track in</span><select name="trackerUnit"><option value="count">Count</option><option value="time">Minutes</option></select></label>}</div></> : <label className="field"><span>Notes or location</span><textarea name="notes" rows={2} maxLength={1000} placeholder="Add a little context" /></label>}
+      <label className="field"><span>Title</span><input name="title" defaultValue={editing?.title} required maxLength={150} placeholder={type === 'goal' ? 'e.g. Read for 20 minutes' : 'Give your plan a name'} /></label>
+      {type === 'goal' ? <><span className="label">Make it yours</span>{iconMode === 'select' && <IconPicker paths={goalIcons} value={icon} onChange={setIcon} />}<div className="row"><label className="field"><span>Icon style</span><select value={iconMode} onChange={e => setIconMode(e.target.value)}><option value="select">Choose an icon</option><option value="emoji">My own emoji</option><option value="none">No icon</option></select></label>{iconMode === 'emoji' && <label className="field"><span>Your emoji</span><input value={emoji} onChange={e => setEmoji(e.target.value)} maxLength={16} /></label>}</div><div className="row"><label className="field"><span>Goal type</span><select value={goalType} onChange={e => setGoalType(e.target.value)}><option value="checklist">Checkbox</option><option value="tracker">Tracker</option></select></label>{goalType === 'tracker' && <label className="field"><span>Track in</span><select name="trackerUnit" defaultValue={editing?.trackerUnit || 'count'}><option value="count">Count</option><option value="time">Minutes</option></select></label>}</div></> : <label className="field"><span>Notes or location</span><textarea name="notes" defaultValue={editing?.notes} rows={2} maxLength={1000} placeholder="Add a little context" /></label>}
       <Schedule value={schedule} onChange={setSchedule} />
-      {type !== 'goal' && <><label className="field"><input type="checkbox" checked={allDay} onChange={e => setAllDay(e.target.checked)} /> All day</label>{!allDay && <div className="row"><label className="field"><span>Start time</span><input name="startTime" type="time" required /></label><label className="field"><span>End time</span><input name="endTime" type="time" required /></label></div>}<p className="small" style={{ marginBottom: 20 }}>Times use your device’s local timezone. These are saved plans; background notifications are not enabled.</p></>}
+      {type !== 'goal' && <><label className="field"><input type="checkbox" checked={allDay} onChange={e => setAllDay(e.target.checked)} /> All day</label>{!allDay && <div className="row"><label className="field"><span>Start time</span><input name="startTime" defaultValue={editing?.startTime} type="time" required /></label><label className="field"><span>End time</span><input name="endTime" defaultValue={editing?.endTime} type="time" required /></label></div>}<p className="small" style={{ marginBottom: 20 }}>Times use your device’s local timezone. Notifications follow the times selected below.</p></>}
+      <NotificationTimes times={notificationTimes} onChange={setNotificationTimes} />
     </>}
     {type === 'category' && <><div className="row"><label className="field"><span>Name</span><input name="name" maxLength={60} placeholder="e.g. Groceries" required /></label><label className="field"><span>Type</span><select value={kind} onChange={e => setKind(e.target.value)}><option value="expense">Expense</option><option value="income">Income</option></select></label></div><span className="label">Category icon</span><IconPicker paths={expenseIcons} value={icon} onChange={setIcon} /></>}
     {type === 'transaction' && <><div className="row"><label className="field"><span>Type</span><select value={kind} onChange={e => { setKind(e.target.value); setCategoryId(''); }}><option value="expense">Expense</option><option value="income">Income</option></select></label><label className="field"><span>Amount (INR)</span><input name="amount" type="number" min="0.01" max="999999999" step="0.01" defaultValue={editing ? (editing.amount / 100).toFixed(2) : ''} required placeholder="0.00" /></label></div><div className="row"><label className="field"><span>Category</span><select value={categoryId} onChange={e => setCategoryId(e.target.value)} required><option value="">Choose a category</option>{categories.filter(c => c.kind === kind).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label className="field"><span>Date</span><input name="date" type="date" defaultValue={editing?.date || localDate()} required /></label></div>{!categories.some(c => c.kind === kind) && <p className="report-text">Create an {kind} category using New → A category first.</p>}<label className="field"><span>Note (optional)</span><input name="note" maxLength={200} defaultValue={editing?.note || ''} placeholder="What was it for?" /></label></>}
     {error && <p className="error" role="alert" style={{ marginBottom: 14 }}>{error}</p>}
-    <button type="submit" className="primary wide">{type === 'transaction' ? editing ? 'Update transaction' : 'Save transaction' : type === 'category' ? 'Add category' : `Create ${type}`}</button>
+    <button type="submit" className="primary wide">{type === 'transaction' ? editing ? 'Update transaction' : 'Save transaction' : type === 'category' ? 'Add category' : editing ? `Update ${type}` : `Create ${type}`}</button>
     {type === 'category' && <div>{categories.map(c => <div className="item" key={c.id}><Icon record={c} /><div className="body">{c.name}<small>{c.kind}</small></div><button type="button" className="mini" onClick={() => removeCategory(c.id)}>Delete</button></div>)}</div>}
   </form></Dialog>;
 }

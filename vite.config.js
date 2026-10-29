@@ -9,8 +9,9 @@ export default defineConfig(({ command, mode }) => {
     if (missing.length) throw new Error(`Missing build environment: ${missing.join(', ')}`);
   }
   return {
-  base: '/maikal/',
+  base: mode === 'android' ? '/' : '/maikal/',
   plugins: [react(), VitePWA({
+    disable: mode === 'android',
     registerType: 'prompt',
     includeAssets: ['favicon.ico', 'app-icons/*.png'],
     manifest: {
