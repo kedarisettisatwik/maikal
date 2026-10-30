@@ -23,3 +23,15 @@ it('plots daily tracker values with proportional bars and a monthly total', asyn
   expect(screen.getByText('30 mins total · 2 days logged')).toBeTruthy();
   expect(screen.getByLabelText('2026-10-01: 10 mins').style.height).toBe('50%'); expect(screen.getByLabelText('2026-10-02: 20 mins').style.height).toBe('100%');
 });
+it('keeps all dates and both card footers when selecting a six-row calendar month', async () => {
+  const goals=[{id:'room',title:'clean room',goalType:'checklist',schedule:{type:'days',days:[5]}},{id:'push',title:'Pushups',goalType:'tracker',schedule:{type:'everyday'}}];
+  render(<ReportsSection goals={goals} records={{}} date="2026-10-31"/>);
+  await userEvent.click(screen.getByText('Reports'));
+  fireEvent.change(screen.getByLabelText('Report month'),{target:{value:'2026-11'}});
+  const calendar=screen.getByRole('group',{name:'clean room completion calendar'});
+  expect(within(calendar).getAllByRole('img')).toHaveLength(30);
+  expect(within(calendar).getByLabelText('2026-11-27: Not completed')).toBeTruthy();
+  expect(within(calendar).getByLabelText('2026-11-30: Not applicable')).toBeTruthy();
+  expect(screen.getAllByText('November 2026')).toHaveLength(2);
+  expect(within(screen.getByRole('group',{name:'Pushups daily count'})).getAllByRole('img')).toHaveLength(30);
+});

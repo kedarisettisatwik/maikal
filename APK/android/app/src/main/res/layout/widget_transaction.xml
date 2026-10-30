@@ -1,3 +1,3 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent">
-    <ImageView android:id="@+id/widget_add_transaction" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/widget_income_button" android:src="@drawable/widget_plus" android:scaleType="center" android:contentDescription="@string/widget_add_transaction" />
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent">
+    <ImageView android:id="@+id/widget_add_transaction" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" android:src="@drawable/widget_transaction_circle" android:scaleType="fitCenter" android:contentDescription="@string/widget_add_transaction" />
 </FrameLayout>

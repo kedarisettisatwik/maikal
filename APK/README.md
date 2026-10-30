@@ -1,5 +1,7 @@
 # Android downloads
 
+Version **1.10.0** uses compact 300 × 300 px calendar and tracker report cards, with small calendar squares and tighter day spacing. Monthly tracker bars fit inside their card without horizontal scrolling. The Add Transaction home-screen widget is a green circle with a centered white plus, measuring 70% of its shorter side; the surrounding area is transparent. Existing transaction widgets refresh on upgrade. Install the matching edition over your current app; no uninstall is needed.
+
 Version **1.9.2** retains Maikal’s original design. Goal, reminder and meeting listings no longer show notification-time badges; the edit forms retain notification and alarm times. Existing edit/delete actions use accessible pencil/trash icons. The homepage screen-time summary shows its total without the device name, update timestamp, timezone or sync explanation. Screen-time selection and Firebase sync are unchanged.
 
 Version **1.9.1** adds an empty editable square alongside the provided category icons. Type or paste an emoji to use it as the category icon, or select a provided icon to switch back. Custom categories use the existing `iconMode: emoji` format and sync through the Firebase diary like other categories.
