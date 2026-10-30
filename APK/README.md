@@ -1,5 +1,7 @@
 # Android downloads
 
+Version **1.8.1** places notification-time badges beside goal, reminder and meeting titles with a small gap, including the saved-entry lists. Long titles and multiple badges wrap on narrow screens. **Menu → Refresh** reloads the website or APK diary without clearing its saved local records or Firebase sign-in. Both APK launcher names remain **Maikal**.
+
 Version **1.8.0** adds optional **Alarm times** alongside **Notification times** in the APK goal, reminder and meeting forms. Add times in either section or both; leave a section empty to disable that alert type. Alarm times use the entry’s repeat schedule (daily, weekdays, dates or date range) and the device timezone. The browser keeps its existing notification controls and preserves alarm metadata when editing an APK-created entry.
 
 Saving an APK entry creates linked ringing alarms immediately. They appear in the full-screen **Menu → Alarms** list with the entry’s title and a linked-entry label. **Edit linked goal/reminder/meeting** opens the original diary form. Change or remove alarm times there; deleting the entry cancels its linked alarms and snoozes. Standalone alarms are preserved. The alarm-list switch can disable an individual linked alarm on that device; ordinary sync preserves its disabled state, snooze and dismissed advance notice. Changing its repeat schedule resets that linked alarm’s state. Expired dates appear as off.
