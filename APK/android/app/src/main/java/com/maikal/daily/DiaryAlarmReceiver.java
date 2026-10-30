@@ -48,6 +48,8 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
         if (!prefs(c).edit().putString("alarms", alarms.toString()).commit()) throw new Exception("Alarm storage unavailable");
         NotificationManager notifications = (NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE);
         for (StatusBarNotification active : notifications.getActiveNotifications()) {
+            String channel = active.getNotification().getChannelId();
+            if (!"maikal_reminders".equals(channel) && !"maikal_greetings".equals(channel)) continue;
             Bundle extras = active.getNotification().extras;
             String account = extras.getString("maikalUid", ""), key = extras.getString("maikalEntry", "");
             boolean keep = account.equals(NativeDiaryStore.uid(c));
