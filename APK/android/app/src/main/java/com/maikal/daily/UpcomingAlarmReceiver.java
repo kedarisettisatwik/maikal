@@ -33,6 +33,7 @@ public class UpcomingAlarmReceiver extends BroadcastReceiver {
         if(id==null||occurrence==0)return;
         try{
             JSONObject r=ClockAlarms.find(c,id);if(r==null)return;
+            if(!DiaryClockAlarms.current(c,r))return;
             NotificationManager manager=(NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE);
             if(DISMISS.equals(intent.getAction())){
                 // Ignore actions from stale notifications without touching a newer occurrence.

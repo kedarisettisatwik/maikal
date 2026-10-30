@@ -4,6 +4,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 export const isNative = () => Capacitor.isNativePlatform();
 const DiaryAlarms = registerPlugin('DiaryAlarms');
 export const openAlarms = () => DiaryAlarms.openAlarms();
+export const prepareAlarmAccess = () => DiaryAlarms.prepareAlarmAccess();
 export const openTrack = () => DiaryAlarms.openTrack();
 export const screenTimeTotals = () => DiaryAlarms.screenTimeTotals();
 export const pendingNativeShare = () => DiaryAlarms.pendingShare();

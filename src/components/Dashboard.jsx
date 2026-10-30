@@ -1,6 +1,6 @@
 import { assetUrl } from '../assets';
 import { localOnly } from '../build-mode';
-import { openAlarms, openTrack } from '../native-notifications';
+import { openAlarms, openTrack, prepareAlarmAccess } from '../native-notifications';
 import { pendingNativeShare, acknowledgeNativeShare } from '../native-notifications';
 import NotesPage from './NotesPage';
 import ScreenTimeSummary from './ScreenTimeSummary';
@@ -48,7 +48,7 @@ export default function Dashboard({ user, notify, onConnect, restoring }) {
     consume();const timer=setInterval(consume,1000);document.addEventListener('visibilitychange',consume);return()=>{live=false;clearInterval(timer);document.removeEventListener('visibilitychange',consume)};
   },[restoring,records]);
   useEffect(() => { const update = () => setDate(localDate()); const timer = setInterval(update, 30000); document.addEventListener('visibilitychange', update); return () => { clearInterval(timer); document.removeEventListener('visibilitychange', update); }; }, []);
-  useEffect(() => { let live = true; const timer = setTimeout(() => { syncNotifications(records, user.uid).catch(() => { if (live) notify('Android reminders could not be scheduled. Check notification permissions.'); }); }, 500); return () => { live = false; clearTimeout(timer); }; }, [records, user.uid]);
+  useEffect(() => { if(restoring)return; let live = true; const timer = setTimeout(() => { syncNotifications(records, user.uid).catch(() => { if (live) notify('Android alerts could not be scheduled. Check alarm and notification permissions.'); }); }, 500); return () => { live = false; clearTimeout(timer); }; }, [records, user.uid, restoring]);
   useEffect(() => {
     if (!isNative() || restoring) return;
     let live = true, busy = false;
@@ -56,6 +56,15 @@ export default function Dashboard({ user, notify, onConnect, restoring }) {
       if (!live || busy || document.hidden) return;
       busy = true;
       try { const command = await consumeNativeLaunch();
+        if(live && command.type === 'entry') {
+          if(command.uid !== user.uid) {
+            if(requestedWidgetConnect.current !== command.requestId){requestedWidgetConnect.current=command.requestId;notify('Connect the diary used by this alarm.');if(!localOnly)onConnect();}return;
+          }
+          const record=records[command.recordId];
+          if(!record){if(requestedWidgetConnect.current!==command.requestId){requestedWidgetConnect.current=command.requestId;notify('Waiting for the linked entry to sync.');}return;}
+          if(record.deleted){notify('This linked entry has been deleted.');await acknowledgeNativeLaunch(command.requestId);return;}
+          window.location.hash='';setShowNotes(false);setEntry({type:record.type==='event'?record.kind:record.type,record});await acknowledgeNativeLaunch(command.requestId);return;
+        }
         if(live && ['note','notes'].includes(command.type)) {
           if(command.type==='note' && command.uid!==user.uid) {
             if(requestedWidgetConnect.current!==command.requestId){requestedWidgetConnect.current=command.requestId;notify('Connect the diary used by this note widget.');if(!localOnly)onConnect();}return;
@@ -69,7 +78,7 @@ export default function Dashboard({ user, notify, onConnect, restoring }) {
     consume(); const timer = setInterval(consume, 1000);
     document.addEventListener('visibilitychange', consume);
     return () => { live = false; clearInterval(timer); document.removeEventListener('visibilitychange', consume); };
-  }, [restoring]);
+  }, [restoring, records]);
   const yesterday = offsetDate(-1, new Date(date + 'T12:00:00'));
   const goals = activeRecords(records, 'goal'), plans = activeRecords(records, 'event'), categories = activeRecords(records, 'category'), transactions = activeRecords(records, 'transaction');
   const todayGoals = goals.filter(g => due(g, date)), yesterdayGoals = goals.filter(g => due(g, yesterday));
@@ -78,7 +87,16 @@ export default function Dashboard({ user, notify, onConnect, restoring }) {
   const onEdit = transaction => setEntry({ type: 'transaction', transaction });
   function onProgress(goalId, value, day) { if (!records[goalId] || records[goalId].deleted) return; save({ id: `progress_${goalId}_${day}`, type: 'progress', goalId, date: day, value }); notify('Progress saved'); }
   function removeCategory(id) { if (transactions.some(t => t.categoryId === id)) return notify('This category has transactions. Delete those entries first.'); remove(id); }
-  function saveEntry(record) { if (record.type === 'transaction' && entry?.transaction && (!records[record.id] || records[record.id].deleted)) throw new Error('This transaction no longer exists.'); save(record); if (isNative() && record.notificationTimes?.length) enableNotifications().then(() => syncNotifications({ ...records, [record.id]: record }, user.uid)).catch(e => notify(e.message)); }
+  async function saveEntry(record) {
+    if (record.type === 'transaction' && entry?.transaction && (!records[record.id] || records[record.id].deleted)) throw new Error('This transaction no longer exists.');
+    if (isNative() && record.alarmTimes?.length) await prepareAlarmAccess();
+    const saved = save(record);
+    if (isNative()) {
+      if (record.notificationTimes?.length && !record.alarmTimes?.length) enableNotifications().catch(e => notify(e.message));
+      try { await syncNotifications({ ...records, [record.id]: saved }, user.uid); }
+      catch { notify('Entry saved. Android alerts need attention; open Alarms to check permissions.'); }
+    }
+  }
   async function logout() { setSigningOut(true); try { await signOut(auth); notify('Signed out'); } catch { notify('Could not sign out. Please try again.'); setSigningOut(false); } }
   if(showNotes)return <NotesPage records={records} save={save} remove={remove} status={status} error={error} uid={user.uid} notify={notify} shared={sharedNote} openNote={noteLaunch} onShareDone={async id=>{await acknowledgeNativeShare(id);setSharedNote(null);}} onConnect={!localOnly?onConnect:undefined} onBack={()=>{window.location.hash='';setShowNotes(false);}}/>;
   return <main className="sheet"><div className="topbar"><div className="brand-lockup"><img className="app-logo" src={assetUrl('logo.png')} alt="Maikal" /><div><div className="kicker">A journal of everyday progress</div><span className="small">{user.email}</span></div></div><div className="app-menu"><button type="button" className="menu-toggle" aria-label="Open menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>&#9776;</button>{menuOpen && <><button className="menu-backdrop" aria-label="Close menu" onClick={() => setMenuOpen(false)} /><nav className="menu-panel" aria-label="Maikal menu">{[['goal', 'Add goal'], ['meeting', 'Add meeting'], ['reminder', 'Add reminder'], ['category', 'Create category'], ['transaction', 'Add transaction']].map(([type, label]) => <button key={type} onClick={() => { setEntry({ type }); setMenuOpen(false); }}>{label}</button>)}<button onClick={() => { setMenuOpen(false); window.location.hash="notes"; setShowNotes(true); }}>Notes</button><InstallAppButton />{isNative() && <button onClick={() => { setMenuOpen(false); openAlarms().catch(e => notify(e.message)); }}>Alarms</button>}{isNative() && <button onClick={() => { setMenuOpen(false); openTrack().catch(e => notify(e.message)); }}>Track</button>}<ApkDownload uid={user.uid} restoring={restoring} />{isNative() && <button onClick={() => enableNotifications().then(() => syncNotifications(records, user.uid)).then(() => notify('Notifications enabled')).catch(e => notify(e.message))}>Enable notifications</button>}{cloudEnabled(user.uid) ? <button disabled={signingOut} onClick={() => { setMenuOpen(false); logout(); }}>{signingOut ? 'Signing out...' : 'Sign out'}</button> : !localOnly && <button disabled={restoring} onClick={() => { setMenuOpen(false); onConnect(); }}>Connect Firebase</button>}</nav></>}</div></div>

@@ -20,6 +20,15 @@ public final class ClockAlarms {
     private static android.content.SharedPreferences prefs(Context c){return c.getSharedPreferences("maikal_clock_v1",Context.MODE_PRIVATE);}
     static synchronized JSONArray all(Context c){try{return new JSONArray(prefs(c).getString("alarms","[]"));}catch(Exception e){throw new IllegalStateException("Alarm storage could not be read",e);}}
     static synchronized JSONObject find(Context c,String id){JSONArray a=all(c);for(int i=0;i<a.length();i++){JSONObject r=a.optJSONObject(i);if(r!=null&&id.equals(r.optString("id")))return r;}return null;}
+    static synchronized void syncDiary(Context c,String uid,JSONArray records)throws Exception{
+        JSONArray old=all(c),next=DiaryClockAlarms.plan(uid,records,old);java.util.Map<String,JSONObject> desired=new java.util.HashMap<>();for(int i=0;i<next.length();i++)desired.put(next.getJSONObject(i).getString("id"),next.getJSONObject(i));
+        persist(c,next);
+        for(int i=0;i<old.length();i++){JSONObject alarm=old.getJSONObject(i);String id=alarm.getString("id");if(alarm.optBoolean("diaryLinked")&&!desired.containsKey(id)){cancel(c,id);c.startService(new Intent(c,ClockAlarmService.class).setAction("STOP").putExtra("id",id));}}
+        for(int i=0;i<next.length();i++){JSONObject alarm=next.getJSONObject(i);if(alarm.optBoolean("diaryLinked")){
+            for(int j=0;j<old.length();j++){JSONObject previous=old.getJSONObject(j);if(alarm.getString("id").equals(previous.optString("id"))&&!alarm.optString("sourceSignature").equals(previous.optString("sourceSignature"))){cancel(c,alarm.getString("id"));c.startService(new Intent(c,ClockAlarmService.class).setAction("STOP").putExtra("id",alarm.getString("id")));}}
+            schedule(c,alarm);
+        }}
+    }
     private static void persist(Context c,JSONArray records){if(!prefs(c).edit().putString("alarms",records.toString()).commit())throw new IllegalStateException("Alarm storage is full or unavailable");}
     static synchronized void save(Context c,JSONObject record) throws Exception {
         validate(record);
@@ -31,9 +40,10 @@ public final class ClockAlarms {
     static void validate(JSONObject r) throws Exception {
         if(r.getString("id").isEmpty()||r.getString("title").trim().isEmpty())throw new IllegalArgumentException("Enter an alarm name");
         LocalTime.parse(r.getString("time"));JSONObject s=r.getJSONObject("schedule");String type=s.getString("type");
-        if(!java.util.Arrays.asList("everyday","days","dates").contains(type))throw new IllegalArgumentException("Choose an alarm schedule");
+        if(!java.util.Arrays.asList("everyday","days","dates","range").contains(type))throw new IllegalArgumentException("Choose an alarm schedule");
         if("days".equals(type)){JSONArray days=s.getJSONArray("days");if(days.length()==0)throw new IllegalArgumentException("Choose at least one weekday");for(int i=0;i<days.length();i++)if(days.getInt(i)<0||days.getInt(i)>6)throw new IllegalArgumentException("Invalid weekday");}
         if("dates".equals(type)){JSONArray dates=s.getJSONArray("dates");if(dates.length()==0)throw new IllegalArgumentException("Choose at least one date");for(int i=0;i<dates.length();i++)LocalDate.parse(dates.getString(i));}
+        if("range".equals(type)&&LocalDate.parse(s.getString("from")).isAfter(LocalDate.parse(s.getString("to"))))throw new IllegalArgumentException("Choose a valid date range");
         if(r.optBoolean("enabled")&&nextMillis(r,ZonedDateTime.now())==0)throw new IllegalArgumentException("Choose a future alarm time or date");
     }
     static long nextMillis(JSONObject r,ZonedDateTime now) throws Exception {

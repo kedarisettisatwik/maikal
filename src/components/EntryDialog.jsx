@@ -44,9 +44,13 @@ export default function EntryDialog({ entry, categories, save, removeCategory, n
   const [categoryId, setCategoryId] = useState(editing?.categoryId || '');
   const [error, setError] = useState('');
   const [notificationTimes, setNotificationTimes] = useState(editing?.notificationTimes || []);
+  const [alarmTimes, setAlarmTimes] = useState(editing?.alarmTimes || []);
+  const [saving, setSaving] = useState(false);
   const title = editing && type !== 'transaction' ? `Edit ${type}` : type === 'goal' ? 'Create a goal' : type === 'category' ? 'Create a category' : type === 'transaction' ? editing ? 'Edit transaction' : 'Add a transaction' : `Create a ${type}`;
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault(); setError('');
+    if (saving) return;
+    setSaving(true);
     const data = new FormData(e.currentTarget);
     try {
       let record = { ...editing, id: editing?.id || crypto.randomUUID(), type };
@@ -54,6 +58,7 @@ export default function EntryDialog({ entry, categories, save, removeCategory, n
         const title = data.get('title').trim();
         if (!title) throw new Error('Enter a title.');
         record = { ...record, title, schedule: validateSchedule(schedule), createdDate: editing?.createdDate || localDate(), notificationTimes };
+        if (isNative()) record.alarmTimes = [...new Set(alarmTimes)].sort();
         if (type === 'goal') {
           if (iconMode === 'emoji' && !emoji.trim()) throw new Error('Enter an emoji or choose another icon style.');
           record = { ...record, iconMode, icon: iconMode === 'select' ? icon : iconMode === 'emoji' ? emoji.trim() : '', goalType, trackerUnit: data.get('trackerUnit') || 'count' };
@@ -73,8 +78,9 @@ export default function EntryDialog({ entry, categories, save, removeCategory, n
         if (!category) throw new Error('Choose a matching category first.');
         record = { ...record, kind, amount: Math.round(amount * 100), categoryId, date: data.get('date'), note: data.get('note').trim() };
       }
-      save(record); onClose(); toast.success(editing ? 'Updated' : 'Saved');
+      await save(record); onClose(); toast.success(editing ? 'Updated' : 'Saved');
     } catch (error) { setError(error.message); toast.error(error.message, { toasterId: 'dialog' }); }
+    finally { setSaving(false); }
   }
   return <Dialog onClose={onClose}><form onSubmit={submit}><h2>{title}</h2>
     {(type === 'goal' || type === 'meeting' || type === 'reminder') && <>
@@ -83,11 +89,12 @@ export default function EntryDialog({ entry, categories, save, removeCategory, n
       <Schedule value={schedule} onChange={setSchedule} />
       {type !== 'goal' && <><label className="field"><input type="checkbox" checked={allDay} onChange={e => setAllDay(e.target.checked)} /> All day</label>{!allDay && <div className="row"><label className="field"><span>Start time</span><input name="startTime" defaultValue={editing?.startTime} type="time" required /></label><label className="field"><span>End time</span><input name="endTime" defaultValue={editing?.endTime} type="time" required /></label></div>}<p className="small" style={{ marginBottom: 20 }}>Times use your device’s local timezone. Notifications follow the times selected below.</p></>}
       <NotificationTimes times={notificationTimes} onChange={setNotificationTimes} />
+      {isNative() && <NotificationTimes mode="alarm" times={alarmTimes} onChange={setAlarmTimes} />}
     </>}
     {type === 'category' && <><div className="row"><label className="field"><span>Name</span><input name="name" maxLength={60} placeholder="e.g. Groceries" required /></label><label className="field"><span>Type</span><select value={kind} onChange={e => setKind(e.target.value)}><option value="expense">Expense</option><option value="income">Income</option></select></label></div><span className="label">Category icon</span><IconPicker paths={expenseIcons} value={icon} onChange={setIcon} /></>}
     {type === 'transaction' && <><div className="row"><label className="field"><span>Type</span><select value={kind} onChange={e => { setKind(e.target.value); setCategoryId(''); }}><option value="expense">Expense</option><option value="income">Income</option></select></label><label className="field"><span>Amount (INR)</span><input name="amount" type="number" min="0.01" max="999999999" step="0.01" defaultValue={editing ? (editing.amount / 100).toFixed(2) : ''} required placeholder="0.00" /></label></div><div className="row"><label className="field"><span>Category</span><select value={categoryId} onChange={e => setCategoryId(e.target.value)} required><option value="">Choose a category</option>{categories.filter(c => c.kind === kind).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label className="field"><span>Date</span><input name="date" type="date" defaultValue={editing?.date || localDate()} required /></label></div>{!categories.some(c => c.kind === kind) && <p className="report-text">Create an {kind} category using Menu → Create category first.</p>}<label className="field"><span>Note (optional)</span><input name="note" maxLength={200} defaultValue={editing?.note || ''} placeholder="What was it for?" /></label></>}
     {error && <p className="error" role="alert" style={{ marginBottom: 14 }}>{error}</p>}
-    <button type="submit" className="primary wide">{type === 'transaction' ? editing ? 'Update transaction' : 'Save transaction' : type === 'category' ? 'Add category' : editing ? `Update ${type}` : `Create ${type}`}</button>
+    <button type="submit" disabled={saving} className="primary wide">{saving ? 'Saving…' : type === 'transaction' ? editing ? 'Update transaction' : 'Save transaction' : type === 'category' ? 'Add category' : editing ? `Update ${type}` : `Create ${type}`}</button>
     {type === 'category' && <div>{categories.map(c => <div className="item" key={c.id}><Icon record={c} /><div className="body">{c.name}<small>{c.kind}</small></div><button type="button" className="mini" onClick={() => removeCategory(c.id)}>Delete</button></div>)}</div>}
   </form></Dialog>;
 }

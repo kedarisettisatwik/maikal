@@ -8,6 +8,7 @@ public class ClockAlarmReceiver extends BroadcastReceiver {
     @Override public void onReceive(Context c,Intent intent){
         if(!ClockAlarms.FIRE.equals(intent.getAction())&&!ClockAlarms.SNOOZE_FIRE.equals(intent.getAction())){ClockAlarms.restore(c);return;}
         try{JSONObject r=ClockAlarms.find(c,intent.getStringExtra("id"));if(r==null)return;
+            if(!DiaryClockAlarms.current(c,r))return;
             boolean snooze=ClockAlarms.SNOOZE_FIRE.equals(intent.getAction());
             if(snooze?r.optLong("snoozedUntil")==0:!r.optBoolean("enabled"))return;
             UpcomingAlarmReceiver.clearNotifications(c,r.getString("id")); r.put("snoozedUntil",0);if(r.optBoolean("oneTime"))r.put("enabled",false);

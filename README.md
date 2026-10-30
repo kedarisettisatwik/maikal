@@ -4,6 +4,8 @@ React + Vite planner with sign-in-only Firebase Authentication, Firestore, and t
 
 ## Android 1.3 — local and Firebase editions
 
+Android **1.8.0** lets APK goals, reminders and meetings use notifications, ringing alarms or both. Linked alarms appear in the full-screen Alarms list, follow the diary schedule, and are updated or cancelled with their source entry. Existing standalone alarms are preserved. See [Android setup and behavior](APK/README.md).
+
 Android 1.7.0 adds **Menu → Track** and the **Maikal Track** home-screen widget to both editions. Android Usage access is required. App-by-app data remains device-local; daily totals from the connected Firebase APK sync to the website homepage in place of the “Small things” quotation. Open/resume Maikal to sync, or keep the dashboard visible for minute-by-minute reads; closed-app uploads are not implemented. The website shows the latest reporting phone with its update time. Local never uploads these records. See [APK setup and behavior](APK/README.md).
 
 Version 1.4.1 uses Maikal's default cream palette for both editions' alarm list and wheel picker, a dark full-screen ringing view, left-to-snooze/right-to-stop gestures, and ten-minute advance notifications. Dismiss hides only the advance notification for that occurrence; the alarm still rings. See `APK/README.md` for details.
