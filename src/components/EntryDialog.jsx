@@ -3,6 +3,7 @@ import { assetUrl } from '../assets';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { isNative } from '../native-notifications';
 import NotificationTimes from './NotificationTimes';
+import ActionIconButton from './ActionIconButton';
 import { expenseIcons, goalIcons, localDate, validateSchedule, weekdays } from '../model';
 
 export function Dialog({ children, title = 'A new entry', onClose }) {
@@ -98,7 +99,7 @@ export default function EntryDialog({ entry, categories, save, removeCategory, n
     {type === 'transaction' && <><div className="row"><label className="field"><span>Type</span><select value={kind} onChange={e => { setKind(e.target.value); setCategoryId(''); }}><option value="expense">Expense</option><option value="income">Income</option></select></label><label className="field"><span>Amount (INR)</span><input name="amount" type="number" min="0.01" max="999999999" step="0.01" defaultValue={editing ? (editing.amount / 100).toFixed(2) : ''} required placeholder="0.00" /></label></div><div className="row"><label className="field"><span>Category</span><select value={categoryId} onChange={e => setCategoryId(e.target.value)} required><option value="">Choose a category</option>{categories.filter(c => c.kind === kind).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label className="field"><span>Date</span><input name="date" type="date" defaultValue={editing?.date || localDate()} required /></label></div>{!categories.some(c => c.kind === kind) && <p className="report-text">Create an {kind} category using Menu → Create category first.</p>}<label className="field"><span>Note (optional)</span><input name="note" maxLength={200} defaultValue={editing?.note || ''} placeholder="What was it for?" /></label></>}
     {error && <p className="error" role="alert" style={{ marginBottom: 14 }}>{error}</p>}
     <button type="submit" disabled={saving} className="primary wide">{saving ? 'Saving…' : type === 'transaction' ? editing ? 'Update transaction' : 'Save transaction' : type === 'category' ? 'Add category' : editing ? `Update ${type}` : `Create ${type}`}</button>
-    {type === 'category' && <div>{categories.map(c => <div className="item" key={c.id}><Icon record={c} /><div className="body">{c.name}<small>{c.kind}</small></div><button type="button" className="mini" onClick={() => removeCategory(c.id)}>Delete</button></div>)}</div>}
+    {type === 'category' && <div>{categories.map(c => <div className="item" key={c.id}><Icon record={c} /><div className="body">{c.name}<small>{c.kind}</small></div><ActionIconButton action="delete" label={`Delete category ${c.name}`} onClick={() => removeCategory(c.id)} /></div>)}</div>}
   </form></Dialog>;
 }
 export function NewDialog({ onChoose, onClose }) {

@@ -62,3 +62,5 @@ html[data-maikal-view="desktop"]:not([data-maikal-dialog]) .note{margin-top:0}
 html[data-maikal-view="desktop"]:not([data-maikal-dialog]) .masthead h1{font-size:77px;letter-spacing:-4px}
 
 .icons .category-emoji-square{width:100%;min-width:0;height:47px;padding:4px;text-align:center;font-size:26px;line-height:1;border:1px solid var(--line);border-radius:4px;background:transparent}.category-emoji-help{margin:-10px 0 20px}
+
+.action-icon{display:inline-flex;align-items:center;justify-content:center;min-width:30px;min-height:30px;padding:6px}.item .action-icon img,.transaction .action-icon img{width:16px;height:16px;object-fit:contain}.transaction .action-icon{padding:4px;min-width:26px;min-height:26px}

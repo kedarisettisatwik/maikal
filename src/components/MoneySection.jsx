@@ -1,7 +1,8 @@
+import ActionIconButton from './ActionIconButton';
 import { expenseCategories, money, transactionTotals } from '../model';
 
 export function TransactionRows({ transactions, records, onEdit, remove }) {
-  return transactions.length ? transactions.map(t => <div className="transaction" key={t.id}><div><strong>{records[t.categoryId]?.name || 'Uncategorized'}</strong><small>{t.date} · {t.note || t.kind}</small></div><div className={`amount ${t.kind}`}>{t.kind === 'income' ? '+' : '−'}{money(t.amount / 100)}<small><button onClick={() => onEdit(t)} aria-label={`Edit transaction ${t.note || t.date}`}>Edit</button> · <button onClick={() => remove(t.id)} aria-label={`Delete transaction ${t.note || t.date}`}>Delete</button></small></div></div>) : <p className="empty">No entries on this page.</p>;
+  return transactions.length ? transactions.map(t => <div className="transaction" key={t.id}><div><strong>{records[t.categoryId]?.name || 'Uncategorized'}</strong><small>{t.date} · {t.note || t.kind}</small></div><div className={`amount ${t.kind}`}>{t.kind === 'income' ? '+' : '−'}{money(t.amount / 100)}<small><ActionIconButton action="edit" label={`Edit transaction ${t.note || t.date}`} onClick={() => onEdit(t)} className="" /> <ActionIconButton action="delete" label={`Delete transaction ${t.note || t.date}`} onClick={() => remove(t.id)} className="" /></small></div></div>) : <p className="empty">No entries on this page.</p>;
 }
 export function DailyTransactions({ label, transactions, ...props }) {
   const totals = transactionTotals(transactions);
