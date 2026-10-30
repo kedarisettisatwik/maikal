@@ -60,3 +60,5 @@ html[data-maikal-view="desktop"]:not([data-maikal-dialog]) .financegrid{grid-tem
 html[data-maikal-view="desktop"]:not([data-maikal-dialog]) .row{grid-template-columns:1fr 1fr}
 html[data-maikal-view="desktop"]:not([data-maikal-dialog]) .note{margin-top:0}
 html[data-maikal-view="desktop"]:not([data-maikal-dialog]) .masthead h1{font-size:77px;letter-spacing:-4px}
+
+.icons .category-emoji-square{width:100%;min-width:0;height:47px;padding:4px;text-align:center;font-size:26px;line-height:1;border:1px solid var(--line);border-radius:4px;background:transparent}.category-emoji-help{margin:-10px 0 20px}

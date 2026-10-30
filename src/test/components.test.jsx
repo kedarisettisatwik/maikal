@@ -8,6 +8,19 @@ import MoneySection from '../components/MoneySection';
 
 const goal = { id: 'g', title: 'Steps', goalType: 'tracker', trackerUnit: 'count', schedule: { type: 'everyday' } };
 describe('React entry interactions', () => {
+  it('saves a custom category emoji instead of an image path', async () => {
+    const user=userEvent.setup(),save=vi.fn();
+    render(<EntryDialog entry={{type:'category'}} categories={[]} save={save} removeCategory={vi.fn()} notify={vi.fn()} onClose={vi.fn()}/>);
+    await user.type(screen.getByLabelText('Name'),'Coffee');fireEvent.change(screen.getByLabelText('Your category emoji'),{target:{value:'☕'}});
+    await user.click(screen.getByRole('button',{name:'Add category'}));
+    expect(save).toHaveBeenCalledWith(expect.objectContaining({name:'Coffee',iconMode:'emoji',icon:'☕'}));
+  });
+  it('lets a provided icon replace a custom category emoji', async () => {
+    const user=userEvent.setup(),save=vi.fn();
+    render(<EntryDialog entry={{type:'category'}} categories={[]} save={save} removeCategory={vi.fn()} notify={vi.fn()} onClose={vi.fn()}/>);
+    await user.type(screen.getByLabelText('Name'),'Food');fireEvent.change(screen.getByLabelText('Your category emoji'),{target:{value:'🍔'}});await user.click(screen.getByRole('button',{name:'fruits'}));await user.click(screen.getByRole('button',{name:'Add category'}));
+    expect(save).toHaveBeenCalledWith(expect.objectContaining({iconMode:'select',icon:'expenses/fruits.png'}));
+  });
   it('retains weekday selections when clicking labels and checkboxes', async () => {
     const user = userEvent.setup();
     function Form() { const [schedule, setSchedule] = useState({ type: 'everyday', days: [], dates: [''] }); return <Schedule value={schedule} onChange={setSchedule} />; }

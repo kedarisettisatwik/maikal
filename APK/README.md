@@ -1,5 +1,7 @@
 # Android downloads
 
+Version **1.9.1** adds an empty editable square alongside the provided category icons. Type or paste an emoji to use it as the category icon, or select a provided icon to switch back. Custom categories use the existing `iconMode: emoji` format and sync through the Firebase diary like other categories.
+
 Version **1.9.0** opens at the device’s normal screen width by default in both APKs and the website. **Menu → Change view** toggles between normal and desktop layouts and saves `maikal-view-mode` in local storage, separately on each browser/device. Refresh and app restarts restore the saved choice. Native entry forms temporarily use phone width, then restore the chosen diary view. Install the matching new APK over your existing edition; uninstalling is unnecessary and removes Local-edition data.
 
 Version **1.8.1** places notification-time badges beside goal, reminder and meeting titles with a small gap, including the saved-entry lists. Long titles and multiple badges wrap on narrow screens. **Menu → Refresh** reloads the website or APK diary without clearing its saved local records or Firebase sign-in. Both APK launcher names remain **Maikal**.
