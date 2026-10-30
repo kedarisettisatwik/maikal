@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+    <string name="widget_note_name">Maikal Note</string>
+    <string name="widget_note_description">Keep a selected note on your home screen and tap to open it</string>
     <string name="widget_today_name">Maikal Today</string>
     <string name="widget_today_description">Today’s goals, reminders and meetings</string>
     <string name="widget_today_empty">No goals or plans for today. Tap the heading to open Maikal.</string>

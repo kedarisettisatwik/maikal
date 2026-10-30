@@ -1,5 +1,9 @@
 # Android downloads
 
+Version **1.6.0** adds **Maikal Note** to Android's widget picker. Long-press the home screen, choose Widgets → Maikal Note, and select a saved note. The resizable widget shows a text/link/checklist preview; tap its body to open that exact note, or tap **Change** to choose another. Open the APK once after upgrading so its note snapshot is available. Edits and Firebase sync refresh the widget while the app is running. Deleted or unavailable notes show a placeholder; widgets do not expose notes from a different connected diary.
+
+The website's **Install APK** link downloads the Local edition unless its authorized Firebase account is connected, then downloads the Firebase edition. Public release assets are published using `python scripts/publish-apks.py --tag android-v1.6.0`; when making a new release, update `apkRelease` in `src/components/ApkDownload.jsx` after building and verifying both APKs.
+
 Version **1.5.0**: both editions display the app name **Maikal** on the launcher and Android share sheet. Use the filenames below to distinguish the downloads; the editions retain separate package IDs and data.
 
 ## Notes

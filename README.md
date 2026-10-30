@@ -25,6 +25,8 @@ Validation: React tests plus Android emulator tests cover recurrence, actual rin
 
 ## Notes and Android sharing — version 1.5
 
+Android 1.6 adds a configurable **Maikal Note** home-screen widget in both editions. Choose a note at placement, see its preview, and tap to open it directly. Notes are included in the account-scoped native widget snapshot. The website's APK download selects Local for guests and Firebase for the connected authorized account, after session restoration finishes. This APK download is separate from the existing browser/PWA install control.
+
 Menu → Notes opens the approved cream-colored Notes page on the website and both APKs. Create text, checklist or link notes; search, filter tags and sources, edit, delete, and open saved URLs. Both APKs display the name **Maikal**, while their download filenames remain `Maikal-Local.apk` and `Maikal-Firebase.apk`.
 
 Only the APKs receive Android `ACTION_SEND` text/link shares. Select Maikal from another app's share sheet, add a description and tags, and save. Share receipts are device-persistent and acknowledged only after a local save or an explicit discard. Deterministic note IDs prevent duplicate saves after a restart. Files/images/video streams are not accepted; reels/posts/items are saved through their shared links.

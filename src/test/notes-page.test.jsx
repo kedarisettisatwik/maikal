@@ -16,3 +16,9 @@ it('creates a text note without requiring a share receiver on the website',async
 it('renders URLs inside note text as links rather than executable content',()=>{
   render(<NoteText text={'See https://example.com/item. javascript:alert(1)'}/>);expect(screen.getByRole('link').getAttribute('href')).toBe('https://example.com/item');expect(screen.getAllByRole('link')).toHaveLength(1);
 });
+it('opens a widget-selected note after its records become available',()=>{
+  const p=props();const view=render(<NotesPage {...p} records={{}} openNote={{id:'n',requestId:'widget-tap-1'}}/>);
+  expect(screen.getByText(/not available in the current diary/)).toBeTruthy();
+  view.rerender(<NotesPage {...p} openNote={{id:'n',requestId:'widget-tap-1'}}/>);
+  expect(screen.getByRole('button',{name:'Edit note',exact:true})).toBeTruthy();
+});

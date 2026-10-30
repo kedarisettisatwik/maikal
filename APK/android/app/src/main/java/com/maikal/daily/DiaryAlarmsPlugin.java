@@ -32,6 +32,7 @@ public class DiaryAlarmsPlugin extends Plugin {
             if (entries == null) { call.reject("Missing entries"); return; }
             JSONArray records = call.getArray("records");
             NativeDiaryStore.snapshot(getContext(), call.getString("uid", "local"), records == null ? new JSONArray() : records);
+            NoteWidgetProvider.refresh(getContext());
             JSONArray greetings = GreetingReminders.entries();
             for (int i = 0; i < greetings.length(); i++) entries.put(greetings.getJSONObject(i));
             DiaryAlarmReceiver.replace(getContext(), entries);
@@ -52,6 +53,10 @@ public class DiaryAlarmsPlugin extends Plugin {
             Intent intent = getActivity().getIntent();
             String kind = intent.getStringExtra("transactionKind");
             JSObject result = new JSObject();
+            if(intent.hasExtra("noteId") || intent.getBooleanExtra("openNotes",false)) {
+                String requestId=intent.getStringExtra("noteLaunchRequestId");if(requestId==null){requestId=java.util.UUID.randomUUID().toString();intent.putExtra("noteLaunchRequestId",requestId);}
+                result.put("type",intent.hasExtra("noteId")?"note":"notes");result.put("noteId",intent.getStringExtra("noteId"));result.put("uid",intent.getStringExtra("noteUid"));result.put("requestId",requestId);call.resolve(result);return;
+            }
             if ("income".equals(kind) || "expense".equals(kind)) {
                 String requestId = intent.getStringExtra("transactionRequestId");
                 if (requestId == null) { requestId = java.util.UUID.randomUUID().toString(); intent.putExtra("transactionRequestId", requestId); }
@@ -63,6 +68,9 @@ public class DiaryAlarmsPlugin extends Plugin {
     @PluginMethod public void acknowledgeLaunch(PluginCall call) {
         getActivity().runOnUiThread(() -> {
             Intent intent = getActivity().getIntent();
+            if(call.getString("requestId", "").equals(intent.getStringExtra("noteLaunchRequestId"))) {
+                intent.removeExtra("noteId");intent.removeExtra("noteUid");intent.removeExtra("noteLaunchRequestId");intent.removeExtra("openNotes");
+            }
             if (call.getString("requestId", "").equals(intent.getStringExtra("transactionRequestId"))) {
                 intent.removeExtra("transactionKind"); intent.removeExtra("transactionRequestId");
             }

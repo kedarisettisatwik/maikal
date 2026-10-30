@@ -1,0 +1,9 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/widget_note_card" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@drawable/widget_paper" android:padding="16dp">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+        <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Maikal · Notes" android:textSize="11sp" android:textColor="#72756E" />
+        <TextView android:id="@+id/widget_note_change" android:layout_width="48dp" android:layout_height="40dp" android:text="Change" android:gravity="center" android:textColor="#285D79" android:textSize="11sp" android:contentDescription="Choose another note" />
+    </LinearLayout>
+    <TextView android:id="@+id/widget_note_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="22sp" android:fontFamily="serif" android:textColor="#253439" android:maxLines="2" android:ellipsize="end" />
+    <TextView android:id="@+id/widget_note_body" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" android:textSize="14sp" android:textColor="#536159" android:ellipsize="end" android:maxLines="8" />
+    <TextView android:id="@+id/widget_note_source" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="10sp" android:textColor="#72756E" android:maxLines="1" android:ellipsize="end" />
+</LinearLayout>
