@@ -1,0 +1,10 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/widget_track_card" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@drawable/widget_paper" android:padding="18dp">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Maikal · Track" android:textColor="#536159" android:textSize="12sp" />
+    <TextView android:id="@+id/widget_track_total" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:textSize="32sp" android:textColor="#285D79" android:fontFamily="serif" android:maxLines="2" android:ellipsize="end" />
+    <TextView android:id="@+id/widget_track_subtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="11sp" android:textColor="#72756E" />
+    <TextView android:id="@+id/widget_track_apps" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="10dp" android:textSize="12sp" android:textColor="#253439" android:lineSpacingExtra="7dp" android:maxLines="3" android:ellipsize="end" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="8dp">
+        <TextView android:id="@+id/widget_track_updated" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textColor="#72756E" android:textSize="10sp" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Open Track →" android:textColor="#285D79" android:textSize="10sp" />
+    </LinearLayout>
+</LinearLayout>

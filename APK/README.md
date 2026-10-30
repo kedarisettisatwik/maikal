@@ -1,5 +1,13 @@
 # Android downloads
 
+Version **1.7.0** adds **Menu → Track** in both APKs. Enable Android **Usage access** once to see today, yesterday or the last seven days of foreground app usage, total screen time and a usage chart. Tap an app for its duration. Home, lock screen and background activity are excluded; overlapping split-screen usage is counted once in the total. Android controls how much detailed event history remains available, so older days may be incomplete. No continuous monitoring service or accessibility access is used.
+
+Add **Maikal Track** from the Android home-screen widget picker for today’s total and three most-used apps. Tap the widget to open Track. Android refreshes it periodically (requested every 30 minutes, subject to system scheduling); opening Maikal also refreshes it. The update timestamp shows freshness.
+
+The homepage screen-time summary replaces the old “Small things” quotation. App-by-app usage stays on the phone. Daily totals, date, timezone, a random installation ID and device model use `type: screentime` records in the existing account-scoped `maikalRecords` collection. Local keeps these totals on-device; Firebase uploads them only to the authorized connected diary using existing sign-in, rules and offline retry. Opening/resuming Maikal reads totals and syncs them; while its dashboard is visible, it checks each minute. It does not upload while the APK is closed. Grant access and return to the Firebase APK to seed the website summary. The website shows the latest reporting phone’s total for today and its timestamp; it never adds overlapping phones together or presents yesterday’s value as today’s.
+
+Build with `npm run android:build`, verify, then publish using `python scripts/publish-apks.py --tag android-v1.7.0`. APKs retain their package IDs, signatures and launcher name **Maikal**.
+
 Version **1.6.0** adds **Maikal Note** to Android's widget picker. Long-press the home screen, choose Widgets → Maikal Note, and select a saved note. The resizable widget shows a text/link/checklist preview; tap its body to open that exact note, or tap **Change** to choose another. Open the APK once after upgrading so its note snapshot is available. Edits and Firebase sync refresh the widget while the app is running. Deleted or unavailable notes show a placeholder; widgets do not expose notes from a different connected diary.
 
 The website's **Install APK** link downloads the Local edition unless its authorized Firebase account is connected, then downloads the Firebase edition. Public release assets are published using `python scripts/publish-apks.py --tag android-v1.6.0`; when making a new release, update `apkRelease` in `src/components/ApkDownload.jsx` after building and verifying both APKs.

@@ -23,3 +23,15 @@ it('includes notes in the Firebase listener and merges received APK notes', () =
   act(()=>subscription[2]({docs:[{metadata:{hasPendingWrites:false},data:()=>({id:'apk-note',type:'note',noteType:'text',title:'From APK',body:'Synced',updatedAt:10})}],metadata:{fromCache:false}}));
   expect(result.current.records['apk-note'].title).toBe('From APK');
 });
+it('receives APK screen-time totals from Firebase and uploads pending totals after reconnecting', async () => {
+  mocks.snapshot.mockReturnValue(()=>{});mocks.setDoc.mockResolvedValue();
+  const uid='0kX2kfDq3KV9MIhtDV7IDpuXnfJ3';
+  const view=renderHook(()=>useRecords(uid,vi.fn()));
+  expect(where).toHaveBeenCalledWith('type','in',expect.arrayContaining(['screentime']));
+  const record={id:'screentime_phone_2026-10-30',type:'screentime',date:'2026-10-30',deviceId:'phone',totalMs:60000,observedAt:100,updatedAt:100};
+  act(()=>view.result.current.save(record));expect(mocks.setDoc).not.toHaveBeenCalled();
+  await act(async()=>mocks.snapshot.mock.calls[0][2]({docs:[],metadata:{fromCache:false}}));
+  expect(mocks.setDoc).toHaveBeenCalledWith(undefined,expect.objectContaining({type:'screentime',totalMs:60000}));
+  await act(async()=>mocks.snapshot.mock.calls[0][2]({docs:[{metadata:{hasPendingWrites:false},data:()=>({...record,totalMs:120000,updatedAt:Date.now()+1000})}],metadata:{fromCache:false}}));
+  expect(view.result.current.records[record.id].totalMs).toBe(120000);
+});

@@ -42,3 +42,5 @@ dialog.native-form-page .dialoghead button { min-height:44px; white-space:nowrap
 dialog.native-form-page .signin { max-width:none; width:100%; margin:0; padding:0; border:0; box-shadow:none; }
 dialog.native-form-page .row { grid-template-columns:1fr; }
 dialog.native-form-page input:not([type=checkbox]), dialog.native-form-page select, dialog.native-form-page textarea, dialog.native-form-page button.primary { min-height:48px; font-size:16px; }
+
+.screen-time-summary{transform:none}.screen-time-summary h3{font-style:normal;font-size:25px}.screen-time-value{font:42px/1.2 Georgia,serif;color:var(--blue);margin:10px 0}.screen-time-summary button{font-size:12px;margin-top:12px}.screen-time-summary small{display:block;margin-top:8px}

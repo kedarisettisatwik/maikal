@@ -1,0 +1,11 @@
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { beforeEach, expect, it, vi } from 'vitest';
+const mocks=vi.hoisted(()=>({native:true,read:vi.fn()}));
+vi.mock('../native-notifications',()=>({isNative:()=>mocks.native,screenTimeTotals:mocks.read}));
+import useScreenTime from '../useScreenTime';
+const snapshot={allowed:true,deviceId:'phone',deviceName:'Test phone',timezone:'Asia/Kolkata',days:[{date:'2026-10-30',totalMs:60000,observedAt:1000000}]};
+beforeEach(()=>{vi.clearAllMocks();mocks.native=true;mocks.read.mockResolvedValue(snapshot);});
+it('imports Android totals into the diary so its ordinary local or Firebase saving applies',async()=>{const save=vi.fn();const view=renderHook(()=>useScreenTime({},save,'local',false));await waitFor(()=>expect(save).toHaveBeenCalledTimes(1));expect(save.mock.calls[0][0]).toEqual(expect.objectContaining({type:'screentime',totalMs:60000,deviceId:'phone'}));expect(view.result.current.allowed).toBe(true);});
+it('leaves browser usage untouched',async()=>{mocks.native=false;renderHook(()=>useScreenTime({},vi.fn(),'local',false));await act(async()=>{});expect(mocks.read).not.toHaveBeenCalled();});
+it('waits for restored authentication before collecting totals',async()=>{const save=vi.fn();const view=renderHook(({restoring})=>useScreenTime({},save,'local',restoring),{initialProps:{restoring:true}});expect(mocks.read).not.toHaveBeenCalled();view.rerender({restoring:false});await waitFor(()=>expect(save).toHaveBeenCalled());});
+it('does not save when permission is denied',async()=>{mocks.read.mockResolvedValue({allowed:false});const save=vi.fn();const view=renderHook(()=>useScreenTime({},save,'local',false));await waitFor(()=>expect(view.result.current.allowed).toBe(false));expect(save).not.toHaveBeenCalled();});
