@@ -16,7 +16,7 @@ import java.util.*;
 /** Native alarm editor, available in both APKs even without Firebase or WebView connectivity. */
 public class AlarmsActivity extends Activity {
     private LinearLayout root;private FrameLayout frame;private LocalTime draftTime=LocalTime.now().plusMinutes(2).withSecond(0).withNano(0);
-    
+
     private int ink(){return 0xff253439;}
     private int accent(){return 0xff285d79;}
     private android.graphics.drawable.GradientDrawable background(int color,int radius){android.graphics.drawable.GradientDrawable d=new android.graphics.drawable.GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
