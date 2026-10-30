@@ -4,7 +4,7 @@ React + Vite planner with sign-in-only Firebase Authentication, Firestore, and t
 
 ## Android 1.3 — local and Firebase editions
 
-Version 1.4 updates both editions with a reference-based light/dark alarm list and wheel picker, a dark full-screen ringing view, left-to-snooze/right-to-stop gestures, and ten-minute advance notifications. Dismiss hides only the advance notification for that occurrence; the alarm still rings. See `APK/README.md` for details.
+Version 1.4.1 uses Maikal's default cream palette for both editions' alarm list and wheel picker, a dark full-screen ringing view, left-to-snooze/right-to-stop gestures, and ten-minute advance notifications. Dismiss hides only the advance notification for that occurrence; the alarm still rings. See `APK/README.md` for details.
 
 Run `npm run android:build` with Node 24, JDK 21 and Android SDK 36. The existing extracted JDK under `.publish/android-tools/jdk21` is used when JAVA_HOME is unset. `npm run android:sync` only prepares the two isolated web bundles and Capacitor plugins.
 

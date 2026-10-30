@@ -7,7 +7,7 @@ The editions install side by side and have separate local storage. The Firebase 
 
 Open **Menu → Alarms** to create daily, weekday, one-time, or date-specific ringing alarms. Enable alarm and lock-screen permissions using the button on that screen. **Snooze** rings again after five minutes; **Stop** ends the current occurrence. Future recurring occurrences remain scheduled. Alarms are device-local in both editions.
 
-Version 1.4 adds a lavender alarm list with wheel time selection, cards and a floating Add button, following the device's light/dark appearance. The ringing screen uses a large clock on a dark background. Drag its center handle **left to Snooze** or **right to Stop**; a short drag takes no action. Accessibility actions and notification buttons remain available.
+Version 1.4.1 uses Maikal's default cream (#FAF8EF) background, ink text, blue controls and green Add button for the alarm list and editor, including when the device is in dark mode. Wheel time selection and alarm cards are retained. The ringing screen uses a large clock on a dark background. Drag its center handle **left to Snooze** or **right to Stop**; a short drag takes no action. Accessibility actions and notification buttons remain available.
 
 An advance notification is scheduled **10 minutes before each regular alarm occurrence**. Its **Dismiss** action (or swiping away the notice) hides only that occurrence's notification; it does not cancel the ringing alarm or future repeat notifications. Editing/disabling/deleting the alarm cancels stale advance notices. Alarms created less than ten minutes before ringing do not generate a retroactive notice. Five-minute snoozes do not receive another ten-minute advance notice.
 
