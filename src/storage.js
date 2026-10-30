@@ -14,7 +14,7 @@ export function mergeLocalIntoCloud(uid) {
   if (!cloudEnabled(uid)) return;
   const local = readCache(localKey), key = `maikal-v2-${uid}`, cloud = readCache(key);
   for (const [id, record] of Object.entries(local.records)) {
-    if (!['goal', 'event', 'category', 'transaction', 'progress'].includes(record.type)) continue;
+    if (!['goal', 'event', 'category', 'transaction', 'progress', 'note'].includes(record.type)) continue;
     if (!cloud.records[id] || Number(record.updatedAt || 0) > Number(cloud.records[id].updatedAt || 0)) {
       cloud.records[id] = record; cloud.dirty[id] = true;
     }

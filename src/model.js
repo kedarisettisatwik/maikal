@@ -32,7 +32,7 @@ export function expenseCategories(tx) {
 export function mergeRecords(local, dirty, remote) {
   const records = { ...local }, pending = { ...dirty };
   for (const r of remote) {
-    if (!r || typeof r.id !== 'string' || !['goal', 'event', 'category', 'transaction', 'progress'].includes(r.type)) continue;
+    if (!r || typeof r.id !== 'string' || !['goal', 'event', 'category', 'transaction', 'progress', 'note'].includes(r.type)) continue;
     if (!records[r.id] || r.updatedAt > records[r.id].updatedAt) { records[r.id] = r; delete pending[r.id]; }
     else if (r.updatedAt === records[r.id].updatedAt) delete pending[r.id];
   }

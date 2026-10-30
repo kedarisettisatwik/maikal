@@ -38,7 +38,7 @@ export default function useRecords(uid, notify) {
   useEffect(() => {
     alive.current = true; ready.current = false;
     if (!cloud) return () => { alive.current = false; };
-    const stop = onSnapshot(query(collection(db, 'users', uid, 'maikalRecords'), where('type', 'in', ['goal', 'event', 'category', 'transaction', 'progress'])), { includeMetadataChanges: true }, snapshot => {
+    const stop = onSnapshot(query(collection(db, 'users', uid, 'maikalRecords'), where('type', 'in', ['goal', 'event', 'category', 'transaction', 'progress', 'note'])), { includeMetadataChanges: true }, snapshot => {
       if (!alive.current) return;
       persist(mergeRecords(ref.current.records, ref.current.dirty, snapshot.docs.filter(d => !d.metadata.hasPendingWrites).map(d => d.data())));
       setConnected(!snapshot.metadata.fromCache);

@@ -7,8 +7,8 @@ android {
         applicationId "com.maikal.daily"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 8
-        versionName "1.4.1"
+        versionCode 9
+        versionName "1.5.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -22,14 +22,14 @@ android {
             dimension "storage"
             applicationIdSuffix ".local"
             versionNameSuffix "-local"
-            resValue "string", "app_name", "Maikal Local"
-            resValue "string", "title_activity_main", "Maikal Local"
+            resValue "string", "app_name", "Maikal"
+            resValue "string", "title_activity_main", "Maikal"
         }
         firebase {
             dimension "storage"
             versionNameSuffix "-firebase"
-            resValue "string", "app_name", "Maikal Firebase"
-            resValue "string", "title_activity_main", "Maikal Firebase"
+            resValue "string", "app_name", "Maikal"
+            resValue "string", "title_activity_main", "Maikal"
         }
     }
     buildTypes {

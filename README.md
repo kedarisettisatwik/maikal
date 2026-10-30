@@ -23,6 +23,14 @@ Validation: React tests plus Android emulator tests cover recurrence, actual rin
 
 **Live site:** https://kedarisettisatwik.github.io/maikal/
 
+## Notes and Android sharing — version 1.5
+
+Menu → Notes opens the approved cream-colored Notes page on the website and both APKs. Create text, checklist or link notes; search, filter tags and sources, edit, delete, and open saved URLs. Both APKs display the name **Maikal**, while their download filenames remain `Maikal-Local.apk` and `Maikal-Firebase.apk`.
+
+Only the APKs receive Android `ACTION_SEND` text/link shares. Select Maikal from another app's share sheet, add a description and tags, and save. Share receipts are device-persistent and acknowledged only after a local save or an explicit discard. Deterministic note IDs prevent duplicate saves after a restart. Files/images/video streams are not accepted; reels/posts/items are saved through their shared links.
+
+Notes use record type `note` under the existing `users/{uid}/maikalRecords` collection and existing account-isolation rules. Firebase APK notes appear on the signed-in website through the updated Firestore listener. The Local APK remains offline and does not send notes to the website. No website share-target registration or incoming-share listener is added.
+
 ## Run locally
 
 Requires Node.js 20.19+ or 22.12+ (Node 24 is supported).

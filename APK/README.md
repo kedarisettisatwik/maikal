@@ -1,5 +1,15 @@
 # Android downloads
 
+Version **1.5.0**: both editions display the app name **Maikal** on the launcher and Android share sheet. Use the filenames below to distinguish the downloads; the editions retain separate package IDs and data.
+
+## Notes
+
+**Menu → Notes** opens a separate page with saved links, text notes and checklists. Search, filter by tags or source, and open saved links in the browser. URLs in the note body are clickable too. Tags and descriptions can be edited, checklist items can be checked off, and notes can be deleted.
+
+In another Android app, share a **link or text** and select **Maikal**. A capture form asks for the title, description and tags. Shared links are stored as bookmarks; media files and private content are not downloaded. Source labels are inferred from the link's domain. Pending shares remain queued across launches until saved or discarded. Re-opening the same delivered intent does not create a duplicate note.
+
+The **Local APK** keeps notes on that device. The **Firebase APK** syncs notes through the same authorized account and Firestore rules as the diary. Connect that account on the website to display the APK's notes; local drafts in the Firebase APK are merged when you connect. The website supports creating and managing notes but does **not** register as an Android/PWA share target.
+
 - **Maikal-Local.apk** — device-only diary, no Firebase SDK or Internet permission. Package: `com.maikal.daily.local`.
 - **Maikal-Firebase.apk** — cloud-enabled edition for the authorized Maikal account. Package: `com.maikal.daily`.
 

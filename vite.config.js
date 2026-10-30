@@ -14,6 +14,7 @@ export default defineConfig(({ command, mode }) => {
   }
   return {
   base: android ? '/' : '/maikal/',
+  optimizeDeps: { entries: ['index.html'] },
   plugins: [localOnly && { name: 'local-only-firebase', enforce: 'pre', resolveId(source) { if (source.startsWith('firebase/') || /^(?:\.\.?\/)+firebase(?:\.js)?$/.test(source)) return localShim; } }, react(), VitePWA({
     disable: android,
     registerType: 'prompt',

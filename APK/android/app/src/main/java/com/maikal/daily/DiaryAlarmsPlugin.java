@@ -10,6 +10,17 @@ import org.json.JSONArray;
 
 @CapacitorPlugin(name = "DiaryAlarms")
 public class DiaryAlarmsPlugin extends Plugin {
+    @PluginMethod public void pendingShare(PluginCall call) {
+        try { org.json.JSONObject share=SharedNotes.pending(getContext()); JSObject result=new JSObject(); if(share!=null)result.put("share",share);call.resolve(result); }
+        catch(Exception e){call.reject("Could not read shared note",e);}
+    }
+    @PluginMethod public void acknowledgeShare(PluginCall call) {
+        try{SharedNotes.acknowledge(getContext(),call.getString("id",""));call.resolve();}catch(Exception e){call.reject("Could not acknowledge shared note",e);}
+    }
+    @PluginMethod public void openNoteLink(PluginCall call) {
+        try{android.net.Uri uri=android.net.Uri.parse(call.getString("url",""));String scheme=uri.getScheme();if(!"https".equalsIgnoreCase(scheme)&&!"http".equalsIgnoreCase(scheme)){call.reject("Only web links can be opened");return;}getActivity().startActivity(new Intent(Intent.ACTION_VIEW,uri));call.resolve();}
+        catch(Exception e){call.reject("No app is available to open this link",e);}
+    }
     @PluginMethod public void openAlarms(PluginCall call) {
         getActivity().startActivity(new Intent(getContext(), AlarmsActivity.class));
         call.resolve();

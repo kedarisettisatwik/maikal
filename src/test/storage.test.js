@@ -4,6 +4,12 @@ import { NEWS_READER_UID } from '../news-model';
 
 beforeEach(() => localStorage.clear());
 describe('local diary and authorized cloud merge', () => {
+  it('moves saved local notes into the authorized cloud account without losing them',()=>{
+    localStorage.setItem(localKey,JSON.stringify({records:{n:{id:'n',type:'note',title:'Shared note',updatedAt:30}}}));
+    mergeLocalIntoCloud(NEWS_READER_UID);
+    expect(readCache(`maikal-v2-${NEWS_READER_UID}`).records.n.title).toBe('Shared note');
+    expect(readCache(`maikal-v2-${NEWS_READER_UID}`).dirty.n).toBe(true);
+  });
   it('only enables cloud for the designated UID', () => {
     expect(cloudEnabled(LOCAL_UID)).toBe(false);
     expect(cloudEnabled('another-user')).toBe(false);
