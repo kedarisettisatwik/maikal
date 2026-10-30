@@ -11,9 +11,11 @@ export function Dialog({ children, title = 'A new entry', onClose }) {
   useLayoutEffect(() => {
     const dialog = ref.current, viewport = document.querySelector('meta[name="viewport"]');
     const previous = viewport?.getAttribute('content');
+    const previousDialog = document.documentElement.getAttribute('data-maikal-dialog');
+    if (native) document.documentElement.setAttribute('data-maikal-dialog', 'true');
     if (native) viewport?.setAttribute('content', 'width=device-width, initial-scale=1, minimum-scale=0.5, maximum-scale=5, user-scalable=yes');
     dialog.showModal();
-    return () => { dialog.close(); if (native && previous) viewport?.setAttribute('content', previous); };
+    return () => { dialog.close(); if (native) { if (previous) viewport?.setAttribute('content', previous); if (previousDialog === null) document.documentElement.removeAttribute('data-maikal-dialog'); else document.documentElement.setAttribute('data-maikal-dialog',previousDialog); } };
   }, [native]);
   return <dialog ref={ref} className={native ? 'native-form-page' : undefined} onCancel={e => { e.preventDefault(); onClose(); }}><div className="dialoghead"><span className="kicker">{title}</span><button type="button" onClick={onClose} aria-label={native ? 'Back to diary' : 'Close dialog'}>{native ? '← Back' : '×'}</button></div>{children}<Toaster toasterId="dialog" position="top-center" toastOptions={{ duration: 4200 }} /></dialog>;
 }

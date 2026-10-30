@@ -1,5 +1,7 @@
 # Android downloads
 
+Version **1.9.0** opens at the device’s normal screen width by default in both APKs and the website. **Menu → Change view** toggles between normal and desktop layouts and saves `maikal-view-mode` in local storage, separately on each browser/device. Refresh and app restarts restore the saved choice. Native entry forms temporarily use phone width, then restore the chosen diary view. Install the matching new APK over your existing edition; uninstalling is unnecessary and removes Local-edition data.
+
 Version **1.8.1** places notification-time badges beside goal, reminder and meeting titles with a small gap, including the saved-entry lists. Long titles and multiple badges wrap on narrow screens. **Menu → Refresh** reloads the website or APK diary without clearing its saved local records or Firebase sign-in. Both APK launcher names remain **Maikal**.
 
 Version **1.8.0** adds optional **Alarm times** alongside **Notification times** in the APK goal, reminder and meeting forms. Add times in either section or both; leave a section empty to disable that alert type. Alarm times use the entry’s repeat schedule (daily, weekdays, dates or date range) and the device timezone. The browser keeps its existing notification controls and preserves alarm metadata when editing an APK-created entry.

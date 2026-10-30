@@ -1,0 +1,10 @@
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { applyViewMode, readViewMode, saveViewMode, viewModeKey } from '../view-mode';
+import ChangeViewButton from '../components/ChangeViewButton';
+beforeEach(()=>{localStorage.clear();const meta=document.createElement('meta');meta.name='viewport';meta.content='width=device-width, initial-scale=1';document.head.append(meta);});
+afterEach(()=>{document.querySelector('meta[name=viewport]')?.remove();delete document.documentElement.dataset.maikalView;});
+it('defaults to normal screen width and tolerates invalid stored preferences',()=>{expect(readViewMode()).toBe('normal');localStorage.setItem(viewModeKey,'unknown');expect(readViewMode()).toBe('normal');applyViewMode(readViewMode());expect(document.querySelector('meta[name=viewport]').content).toContain('width=device-width');});
+it('persists desktop view across remounts and switches back to normal without losing diary data',async()=>{localStorage.setItem('maikal-v2-local','saved diary');const user=userEvent.setup(),close=vi.fn();const view=render(<ChangeViewButton onClose={close} notify={vi.fn()}/>);await user.click(screen.getByRole('button',{name:'Change view · Normal'}));expect(close).toHaveBeenCalled();expect(readViewMode()).toBe('desktop');expect(document.querySelector('meta[name=viewport]').content).toContain('width=1200');view.unmount();applyViewMode(readViewMode());render(<ChangeViewButton onClose={close} notify={vi.fn()}/>);expect(screen.getByRole('button',{name:'Change view · Desktop'}).getAttribute('aria-pressed')).toBe('true');await user.click(screen.getByRole('button',{name:'Change view · Desktop'}));expect(readViewMode()).toBe('normal');expect(document.documentElement.dataset.maikalView).toBe('normal');expect(localStorage.getItem('maikal-v2-local')).toBe('saved diary');});
+it('applies a stored desktop choice at startup',()=>{saveViewMode('desktop');delete document.documentElement.dataset.maikalView;applyViewMode(readViewMode());expect(document.documentElement.dataset.maikalView).toBe('desktop');});

@@ -47,3 +47,16 @@ dialog.native-form-page input:not([type=checkbox]), dialog.native-form-page sele
 
 /* Keep scheduled alert times beside titles, wrapping naturally on small screens. */
 .entry-title-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px}.entry-title-row h3{min-width:0;max-width:100%;margin:0}.entry-title-row .notification-tags{margin:0;align-items:center}
+
+html[data-maikal-view="desktop"]:not([data-maikal-dialog]){min-width:1200px}
+
+/* Desktop browsers can ignore viewport meta changes, so force the desktop layout too. */
+html[data-maikal-view="desktop"]:not([data-maikal-dialog]) .sheet{width:1200px;max-width:1240px;margin:28px auto;padding:32px 48px}
+html[data-maikal-view="desktop"]:not([data-maikal-dialog]) .intro{display:grid;grid-template-columns:1.65fr 1fr;padding:30px 0}
+html[data-maikal-view="desktop"]:not([data-maikal-dialog]) .columns{display:grid;grid-template-columns:1.7fr 1fr}
+html[data-maikal-view="desktop"]:not([data-maikal-dialog]) .column{padding:30px 30px 30px 0}
+html[data-maikal-view="desktop"]:not([data-maikal-dialog]) .column.right{padding:30px 0 30px 30px;border-left:1px solid var(--line);border-top:0}
+html[data-maikal-view="desktop"]:not([data-maikal-dialog]) .financegrid{grid-template-columns:1.3fr 1fr}
+html[data-maikal-view="desktop"]:not([data-maikal-dialog]) .row{grid-template-columns:1fr 1fr}
+html[data-maikal-view="desktop"]:not([data-maikal-dialog]) .note{margin-top:0}
+html[data-maikal-view="desktop"]:not([data-maikal-dialog]) .masthead h1{font-size:77px;letter-spacing:-4px}
