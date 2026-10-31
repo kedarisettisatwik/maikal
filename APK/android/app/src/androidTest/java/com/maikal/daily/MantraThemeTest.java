@@ -24,6 +24,10 @@ public class MantraThemeTest {
   assertEquals("MANTRA",context.getApplicationInfo().loadLabel(context.getPackageManager()).toString());
   }finally{MantraTheme.save(context,previous);}
  }
+ @Test public void nativeAlarmScreenUsesDarkBackground()throws Exception{
+  String previous=MantraTheme.choice(context);MantraTheme.save(context,"dark");
+  try(ActivityScenario<AlarmsActivity> screen=ActivityScenario.launch(AlarmsActivity.class)){screen.onActivity(a->{android.view.ViewGroup content=a.findViewById(android.R.id.content);android.graphics.drawable.ColorDrawable background=(android.graphics.drawable.ColorDrawable)content.getChildAt(0).getBackground();assertEquals(0xff182126,background.getColor());});}finally{MantraTheme.save(context,previous);}
+ }
  private String js(ActivityScenario<MainActivity> screen,String code)throws Exception{java.util.concurrent.CountDownLatch latch=new java.util.concurrent.CountDownLatch(1);java.util.concurrent.atomic.AtomicReference<String> result=new java.util.concurrent.atomic.AtomicReference<>("");screen.onActivity(a->a.getBridge().getWebView().evaluateJavascript(code,v->{result.set(v);latch.countDown();}));latch.await(3,java.util.concurrent.TimeUnit.SECONDS);return result.get();}
  private void waitFor(ActivityScenario<MainActivity> screen,String code)throws Exception{for(int i=0;i<150;i++){if("true".equals(js(screen,code)))return;Thread.sleep(100);}fail(code);}
  @Test public void moreShowsVersionThemeAndAppGuide()throws Exception{
@@ -32,6 +36,7 @@ public class MantraThemeTest {
    waitFor(screen,"document.querySelector('.mobile-more').textContent.includes('Version 2.3.0')");assertEquals("true",js(screen,"document.querySelector('.brand').textContent.includes('MANTRA')"));
    js(screen,"(()=>{const s=document.querySelector('.mobile-more select[aria-label=Theme]');Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value').set.call(s,'dark');s.dispatchEvent(new Event('change',{bubbles:true}));return true;})()");waitFor(screen,"document.documentElement.dataset.theme==='dark'");
    for(int i=0;i<40&&!"dark".equals(MantraTheme.choice(context));i++)Thread.sleep(100);assertEquals("dark",MantraTheme.choice(context));
+   waitFor(screen,"getComputedStyle(document.querySelector('.phone')).backgroundColor==='rgb(24, 33, 38)'");Thread.sleep(2000);
    android.graphics.Bitmap shot=InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();if(shot!=null){try(java.io.FileOutputStream out=new java.io.FileOutputStream(new java.io.File(context.getExternalFilesDir(null),"mantra-dark-more.png"))){shot.compress(android.graphics.Bitmap.CompressFormat.PNG,100,out);}shot.recycle();}
    js(screen,"[...document.querySelectorAll('.mobile-more button')].find(b=>b.textContent.includes('Know more about app')).click()");waitFor(screen,"Boolean(document.querySelector('dialog[open] .app-info'))");
    assertEquals("true",js(screen,"document.querySelector('dialog[open]').textContent.includes('Home-screen widgets')"));assertEquals("true",js(screen,"!document.body.textContent.match(/sign\\s*up/i)"));
