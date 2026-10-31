@@ -1,5 +1,7 @@
 # Android downloads
 
+Version **2.3.1** fixes dark screen-time cards and selected Notes filters, removes individual Money summary column backgrounds, and keeps the All day checkbox compact and inline in meeting/reminder forms in both themes.
+
 Version **2.3.0** rebrands the app and launcher as **MANTRA**, with the supplied lotus artwork. Package IDs, data keys and signing remain unchanged. More shows the version, a feature guide, and Light / Dark / System default themes. Native screens and home-screen widgets follow the preference. Both editions still install as updates over their matching earlier edition.
 
 The Local APK now has Internet permission solely to send anonymous usage counts. Personal diary records are never synced from the Local APK. Its analytics uses a separate anonymous Firebase Auth identity and a tightly validated `appUsage` document containing only counts, edition, version and report dates. No Firebase diary SDK is included in the Local bundle. Counts update while open, at most every 15 minutes, and retry after connectivity returns. Anonymous credentials are retained on-device. Clearing app data creates a new installation identity.

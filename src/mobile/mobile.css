@@ -372,7 +372,7 @@ html[data-maikal-mobile] .goal-celebration i { position:absolute; width:5px; hei
 
 /* User-selected appearance overrides the original light-only mobile palette. */
 html[data-maikal-mobile][data-theme="dark"]{--paper:#182126;--white:#182126;--soft:#293c34;--ink:#e9e7df;--muted:#adb8b5;--line:#3f5056;--green:#94c5a5;--deep:#b2dfc2;background:#11191d}
-html[data-maikal-mobile][data-theme="dark"] :is(body,.phone,.app-header,.tab-bar,.panel,.form-page,.form-header,dialog,.notes-card,.account-card,.note-card,.stat,.metric,.field input,.field select,.field textarea,.tracker input,.day-filter,.month-control,.note-filterbar,.report-card){background:#182126;color:var(--ink);border-color:var(--line)}
+html[data-maikal-mobile][data-theme="dark"] :is(body,.phone,.app-header,.tab-bar,.panel,.form-page,.form-header,dialog,.notes-card,.account-card,.note-card,.metric,.field input,.field select,.field textarea,.tracker input,.day-filter,.month-control,.note-filterbar,.report-card){background:#182126;color:var(--ink);border-color:var(--line)}
 html[data-maikal-mobile][data-theme="dark"] :is(.tab-bar img,.action-icon-button img){filter:invert(1)}
 html[data-maikal-mobile][data-theme="dark"] .primary{background:#287247;color:white}
 html[data-maikal-mobile][data-theme="dark"] .toggle:not(:checked){background:#51615b}
@@ -383,3 +383,11 @@ html[data-maikal-mobile] .theme-choice{padding:18px 0;border-bottom:1px solid va
 html[data-maikal-mobile][data-theme="dark"] :is(.notes-page,.donut-hole,.mobile-month,.search,.tracker-input,.notes-field input,.notes-field textarea,.notes-filterbar input,.notes-filterbar select,.money-filters input,.money-filters select){background:#182126;color:var(--ink);border-color:var(--line)}
 html[data-maikal-mobile][data-theme="dark"] .private-content :is(.leetcode-section,.news-article,.job-card){background:#182126;color:var(--ink);border-color:var(--line)}
 html[data-maikal-mobile][data-theme="dark"] dialog.native-form-page::backdrop{background:#11191d}
+
+/* Theme corrections for screen time, summary columns and Notes filters. */
+html[data-maikal-mobile] .stats>.stat{background:transparent}
+html[data-maikal-mobile][data-theme="dark"] .mobile-screen-time{background:#20312b;border-color:var(--line);color:var(--ink)}
+html[data-maikal-mobile][data-theme="dark"] .notes-mobile-tags button,html[data-maikal-mobile][data-theme="dark"] .notes-tabs button{background:transparent;color:var(--muted);border:1px solid var(--line)}
+html[data-maikal-mobile][data-theme="dark"] .notes-mobile-tags button[aria-pressed="true"],html[data-maikal-mobile][data-theme="dark"] .notes-tabs button[aria-selected="true"]{background:#2c403a;color:#b3dfc0;border-color:#648a75}
+html[data-maikal-mobile] .field.all-day-field{display:flex;align-items:center;gap:10px;min-height:44px}
+html[data-maikal-mobile] .field.all-day-field>input[type="checkbox"]{display:inline-block;width:18px;height:18px;min-height:18px;flex:0 0 18px;margin:0;padding:0;accent-color:var(--green)}
