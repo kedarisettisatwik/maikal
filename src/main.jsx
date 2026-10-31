@@ -16,7 +16,7 @@ createRoot(document.getElementById('root')).render(<React.StrictMode><App /><Toa
 const updateSW = isNative() ? () => {} : registerSW({
   immediate: true,
   onNeedRefresh() {
-    toast(t => <span>A Maikal update is ready. <button type="button" onClick={() => { toast.dismiss(t.id); updateSW(true); }}>Reload</button></span>, { duration: Infinity });
+    toast(t => <span>A MANTRA update is ready. <button type="button" onClick={() => { toast.dismiss(t.id); updateSW(true); }}>Reload</button></span>, { duration: Infinity });
   },
   onRegisterError(error) { console.warn('App installation support could not start:', error.message); },
 });
