@@ -18,10 +18,10 @@ export default function InstallAppButton() {
   async function install() {
     if (deferredPrompt) {
       const event = deferredPrompt; deferredPrompt = null;
-      try { await event.prompt(); const choice = await event.userChoice; if (choice.outcome === 'accepted') toast.success('Maikal is being installed'); }
+      try { await event.prompt(); const choice = await event.userChoice; if (choice.outcome === 'accepted') toast.success('MANTRA is being installed'); }
       catch { toast('Use your browser menu → Add to Home screen → Install.'); }
     } else if (/iPad|iPhone|iPod/.test(navigator.userAgent) || navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) toast('In Safari: tap Share → Add to Home Screen → Add.', { duration: 6500 });
-    else toast('Open Maikal in Chrome or Edge, then use the browser menu → Add to Home screen or Install app.', { duration: 6500 });
+    else toast('Open MANTRA in Chrome or Edge, then use the browser menu → Add to Home screen or Install app.', { duration: 6500 });
   }
   return standalone || isNative() ? null : <button type="button" onClick={install}>Install app</button>;
 }

@@ -47,10 +47,10 @@ public class ClockAlarmService extends Service {
             .addAction(0,"Snooze · 5 min",action(this,"SNOOZE",id)).addAction(0,"Stop",action(this,"STOP",id)).build();
         if(Build.VERSION.SDK_INT>=29)startForeground(NOTICE,notification,ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);else startForeground(NOTICE,notification);
         try{
-            wake=((PowerManager)getSystemService(POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"Maikal:ClockAlarm");wake.acquire(10*60*1000L);
+            wake=((PowerManager)getSystemService(POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"MANTRA:ClockAlarm");wake.acquire(10*60*1000L);
             Uri sound=RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);if(sound==null)sound=RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
             player=new MediaPlayer();player.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build());player.setDataSource(this,sound);player.setLooping(true);player.prepare();player.start();
-        }catch(Exception e){android.util.Log.e("Maikal","Alarm audio unavailable",e);}
+        }catch(Exception e){android.util.Log.e("MANTRA","Alarm audio unavailable",e);}
         vibrator=(Vibrator)getSystemService(VIBRATOR_SERVICE);if(vibrator!=null&&vibrator.hasVibrator())vibrator.vibrate(VibrationEffect.createWaveform(new long[]{0,700,400,700,800},0));
         // A forgotten alarm stops after ten minutes; scheduled recurrences remain intact.
         handler.postDelayed(()->{if(id.equals(activeId))onStartCommand(new Intent().setAction("STOP").putExtra("id",id),0,0);},10*60*1000L);

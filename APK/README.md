@@ -1,5 +1,11 @@
 # Android downloads
 
+Version **2.3.0** rebrands the app and launcher as **MANTRA**, with the supplied lotus artwork. Package IDs, data keys and signing remain unchanged. More shows the version, a feature guide, and Light / Dark / System default themes. Native screens and home-screen widgets follow the preference. Both editions still install as updates over their matching earlier edition.
+
+The Local APK now has Internet permission solely to send anonymous usage counts. Personal diary records are never synced from the Local APK. Its analytics uses a separate anonymous Firebase Auth identity and a tightly validated `appUsage` document containing only counts, edition, version and report dates. No Firebase diary SDK is included in the Local bundle. Counts update while open, at most every 15 minutes, and retry after connectivity returns. Anonymous credentials are retained on-device. Clearing app data creates a new installation identity.
+
+The owner dashboard is `/maikal/analytics.html`. Firestore read access is limited to UID `0kX2kfDq3KV9MIhtDV7IDpuXnfJ3`; hiding the HTML is not the access control. Anonymous clients can only write their own aggregate document, not read analytics or personal records. GitHub download counts are separate from anonymous first launches. Client reports are best effort and can include multiple devices for one person. Historical APKs do not report retroactively.
+
 Version **1.10.1** always opens APK Notes in the normal phone-width layout, including saved-note and edit dialogs. Returning to the diary restores its saved view preference. The website uses its responsive layout and no longer offers Change view in the menu, including for browsers with an older desktop preference. Install the matching APK over the existing edition without uninstalling.
 
 Version **1.10.0** uses compact 300 × 300 px calendar and tracker report cards, with small calendar squares and tighter day spacing. Monthly tracker bars fit inside their card without horizontal scrolling. The Add Transaction home-screen widget is a green circle with a centered white plus, measuring 70% of its shorter side; the surrounding area is transparent. Existing transaction widgets refresh on upgrade. Install the matching edition over your current app; no uninstall is needed.

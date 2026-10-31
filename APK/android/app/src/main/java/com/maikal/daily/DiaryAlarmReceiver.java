@@ -143,7 +143,7 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(c, greeting ? "maikal_greetings" : "maikal_reminders").setSmallIcon(R.drawable.ic_stat_maikal)
                     .addExtras(extras)
                     .setLargeIcon(BitmapFactory.decodeResource(c.getResources(), R.drawable.maikal_logo))
-                    .setContentTitle(entry.optString("title", "Maikal"))
+                    .setContentTitle(entry.optString("title", "MANTRA"))
                     .setContentText(entry.optString("body", entry.optString("kind", "Reminder") + " · " + entry.optString("time")))
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(entry.optString("body", entry.optString("kind", "Reminder") + " · " + entry.optString("time"))))
                     .setPriority(greeting ? NotificationCompat.PRIORITY_DEFAULT : NotificationCompat.PRIORITY_HIGH).setContentIntent(open).setAutoCancel(true);
@@ -159,6 +159,6 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
             }
             schedule(c, entry, id);
             TodayWidgetProvider.refresh(c);
-        } catch (Exception error) { android.util.Log.e("Maikal", "Reminder scheduling failed", error); }
+        } catch (Exception error) { android.util.Log.e("MANTRA", "Reminder scheduling failed", error); }
     }
 }

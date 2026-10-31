@@ -10,12 +10,13 @@ import org.json.JSONArray;
 
 @CapacitorPlugin(name = "DiaryAlarms")
 public class DiaryAlarmsPlugin extends Plugin {
+    @PluginMethod public void setTheme(PluginCall call){MantraTheme.save(getContext(),call.getString("theme","system"));call.resolve();}
     @PluginMethod public void prepareAlarmAccess(PluginCall call){getActivity().runOnUiThread(()->{
         try{
             android.app.NotificationManager manager=(android.app.NotificationManager)getContext().getSystemService(android.content.Context.NOTIFICATION_SERVICE);
             if(!manager.areNotificationsEnabled()){
                 getActivity().startActivity(new Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(android.provider.Settings.EXTRA_APP_PACKAGE,getContext().getPackageName()));
-                call.reject("Enable Maikal notifications for alarm controls, then return and save again.");return;
+                call.reject("Enable MANTRA notifications for alarm controls, then return and save again.");return;
             }
             if(!ClockAlarms.canSchedule(getContext())){
                 getActivity().startActivity(new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,android.net.Uri.parse("package:"+getContext().getPackageName())));

@@ -24,7 +24,7 @@ describe('authentication forms', () => {
     const user = userEvent.setup(); render(<AuthScreen />);
     await user.type(screen.getByLabelText('Email address'), 'me@example.com'); await user.type(screen.getByLabelText('Password'), 'Secret123!'); await user.click(screen.getByRole('button', { name: 'Sign in' }));
     expect(mocks.signin).toHaveBeenCalledWith({}, 'me@example.com', 'Secret123!');
-    expect(screen.getByAltText('Maikal').getAttribute('src')).toBe(`${import.meta.env.BASE_URL}logo.png`);
+    expect(screen.getByAltText('MANTRA').getAttribute('src')).toBe(`${import.meta.env.BASE_URL}logo.png`);
   });
   it('offers no signup or password reset controls on the website', () => {
     render(<AuthScreen />);

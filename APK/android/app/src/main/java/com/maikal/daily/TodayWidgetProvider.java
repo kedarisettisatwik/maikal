@@ -31,7 +31,7 @@ public class TodayWidgetProvider extends AppWidgetProvider {
         return result;
     }
     static RemoteViews row(Context c, JSONObject r) throws Exception {
-        RemoteViews row = new RemoteViews(c.getPackageName(), R.layout.widget_today_row);
+        RemoteViews row = new RemoteViews(c.getPackageName(), R.layout.widget_today_row); MantraTheme.widget(c,row,R.layout.widget_today_row);
         String date = LocalDate.now().toString(); boolean goal = "goal".equals(r.optString("type"));
         boolean tracker = goal && "tracker".equals(r.optString("goalType"));
         boolean done = goal && !tracker && NativeDiaryStore.completed(c, r.getString("id"), date);
@@ -48,12 +48,12 @@ public class TodayWidgetProvider extends AppWidgetProvider {
         } else detail = goal ? done ? "Goal · Completed" : "Goal · To do" : r.optString("kind", "Reminder") + " · " + (r.optBoolean("allDay") ? "All day" : r.optString("startTime"));
         row.setTextViewText(R.id.widget_row_title, (done ? "✓ " : "") + r.optString("title"));
         row.setTextViewText(R.id.widget_row_detail, detail);
-        row.setTextColor(R.id.widget_row_title, Color.parseColor(done ? "#008B47" : "#253439"));
+        row.setTextColor(R.id.widget_row_title, MantraTheme.color(c,MantraTheme.color(c,Color.parseColor(done ? "#008B47" : "#253439"))));
         row.setOnClickFillInIntent(R.id.widget_row, new Intent());
         return row;
     }
     static void update(Context c, AppWidgetManager manager, int id) throws Exception {
-        RemoteViews view = new RemoteViews(c.getPackageName(), R.layout.widget_today);
+        RemoteViews view = new RemoteViews(c.getPackageName(), R.layout.widget_today); MantraTheme.widget(c,view,R.layout.widget_today);
         view.setTextViewText(R.id.widget_date, LocalDate.now().format(DateTimeFormatter.ofPattern("EEE, d MMM")));
         Intent open = new Intent(c, MainActivity.class).setAction("com.maikal.daily.OPEN").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         view.setOnClickPendingIntent(R.id.widget_header, PendingIntent.getActivity(c, 8000, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
@@ -76,7 +76,7 @@ public class TodayWidgetProvider extends AppWidgetProvider {
     static void refresh(Context c) {
         AppWidgetManager manager = AppWidgetManager.getInstance(c);
         int[] ids = manager.getAppWidgetIds(new ComponentName(c, TodayWidgetProvider.class));
-        for (int id : ids) try { update(c, manager, id); } catch (Exception e) { android.util.Log.e("Maikal", "Widget update failed", e); }
+        for (int id : ids) try { update(c, manager, id); } catch (Exception e) { android.util.Log.e("MANTRA", "Widget update failed", e); }
         MoneySummaryWidgetProvider.refresh(c);
     }
     @Override public void onUpdate(Context c, AppWidgetManager manager, int[] ids) { refresh(c); }

@@ -21,10 +21,10 @@ public class NoteWidgetProvider extends AppWidgetProvider {
         String body=note.optString("body");return body.isEmpty()?note.optString("url"):body;
     }
     static RemoteViews views(Context c,int id)throws Exception{
-        RemoteViews view=new RemoteViews(c.getPackageName(),R.layout.widget_note);JSONObject note=selected(c,id);
+        RemoteViews view=new RemoteViews(c.getPackageName(),R.layout.widget_note); MantraTheme.widget(c,view,R.layout.widget_note);JSONObject note=selected(c,id);
         view.setTextViewText(R.id.widget_note_title,note==null?"Note unavailable":note.optString("title","Note"));
-        view.setTextViewText(R.id.widget_note_body,note==null?"Open Maikal to sync this diary, or choose another note.":preview(note));
-        view.setTextViewText(R.id.widget_note_source,note==null?"Maikal Notes":note.optString("source","Written here")+" · Tap to open");
+        view.setTextViewText(R.id.widget_note_body,note==null?"Open MANTRA to sync this diary, or choose another note.":preview(note));
+        view.setTextViewText(R.id.widget_note_source,note==null?"MANTRA Notes":note.optString("source","Written here")+" · Tap to open");
         String noteId=prefs(c).getString("note_"+id,"");
         Intent open=new Intent(c,MainActivity.class).setData(Uri.parse("maikal-note://widget/"+id)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP)
             .putExtra("noteId",noteId).putExtra("noteUid",prefs(c).getString("uid_"+id,""));
@@ -32,7 +32,7 @@ public class NoteWidgetProvider extends AppWidgetProvider {
         Intent configure=new Intent(c,NoteWidgetConfigureActivity.class).setData(Uri.parse("maikal-note://configure/"+id)).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,id);
         view.setOnClickPendingIntent(R.id.widget_note_change,PendingIntent.getActivity(c,id,configure,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE));return view;
     }
-    static void update(Context c,int id){try{AppWidgetManager.getInstance(c).updateAppWidget(id,views(c,id));}catch(Exception e){android.util.Log.e("Maikal","Note widget update failed",e);}}
+    static void update(Context c,int id){try{AppWidgetManager.getInstance(c).updateAppWidget(id,views(c,id));}catch(Exception e){android.util.Log.e("MANTRA","Note widget update failed",e);}}
     static void refresh(Context c){for(int id:AppWidgetManager.getInstance(c).getAppWidgetIds(new ComponentName(c,NoteWidgetProvider.class)))update(c,id);}
     @Override public void onUpdate(Context c,AppWidgetManager manager,int[] ids){for(int id:ids)update(c,id);}
     @Override public void onDeleted(Context c,int[] ids){android.content.SharedPreferences.Editor edit=prefs(c).edit();for(int id:ids)edit.remove("note_"+id).remove("uid_"+id);edit.apply();}

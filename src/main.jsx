@@ -6,7 +6,10 @@ import { isNative } from './native-notifications';
 import App from './App.jsx';
 import './styles.css';
 import { applyViewMode, readViewMode } from './view-mode';
+import { startTheme } from './theme';
+import './themes.css';
 
+startTheme();
 applyViewMode(isNative() ? readViewMode() : 'normal');
 createRoot(document.getElementById('root')).render(<React.StrictMode><App /><Toaster position="top-center" toastOptions={{ duration: 4200, style: { background: '#253439', color: '#faf8ef', borderRadius: '6px' } }} /></React.StrictMode>);
 

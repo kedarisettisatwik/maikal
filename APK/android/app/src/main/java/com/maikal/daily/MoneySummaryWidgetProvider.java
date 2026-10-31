@@ -39,7 +39,7 @@ public class MoneySummaryWidgetProvider extends AppWidgetProvider {
         LocalDate date = LocalDate.now();
         long[] totals = totals(c, date);
         NumberFormat money = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("en-IN"));
-        RemoteViews view = new RemoteViews(c.getPackageName(), R.layout.widget_money_summary);
+        RemoteViews view = new RemoteViews(c.getPackageName(), R.layout.widget_money_summary); MantraTheme.widget(c,view,R.layout.widget_money_summary);
         view.setTextViewText(R.id.widget_money_period, "Today: " + date.format(DateTimeFormatter.ofPattern("d MMM")) + " · Month: " + date.format(DateTimeFormatter.ofPattern("MMM yyyy")));
         int[] fields = {R.id.widget_day_expense, R.id.widget_month_expense, R.id.widget_month_income, R.id.widget_month_saving};
         for (int i = 0; i < fields.length; i++) view.setTextViewText(fields[i], money.format(totals[i] / 100.0));
@@ -52,7 +52,7 @@ public class MoneySummaryWidgetProvider extends AppWidgetProvider {
         AppWidgetManager manager = AppWidgetManager.getInstance(c);
         int[] ids = manager.getAppWidgetIds(new ComponentName(c, MoneySummaryWidgetProvider.class));
         for (int id : ids) try { manager.updateAppWidget(id, views(c)); }
-        catch (Exception e) { android.util.Log.e("Maikal", "Money widget update failed", e); }
+        catch (Exception e) { android.util.Log.e("MANTRA", "Money widget update failed", e); }
     }
     @Override public void onUpdate(Context c, AppWidgetManager manager, int[] ids) { refresh(c); }
 }

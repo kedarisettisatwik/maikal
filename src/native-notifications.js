@@ -13,7 +13,7 @@ export const openNoteLink = url => DiaryAlarms.openNoteLink({url});
 export async function enableNotifications() {
   if (!isNative()) throw new Error('Install the Android APK for notifications while the app is closed.');
   const result = await LocalNotifications.requestPermissions();
-  if (result.display !== 'granted') throw new Error('Enable Maikal notifications in Android settings.');
+  if (result.display !== 'granted') throw new Error('Enable MANTRA notifications in Android settings.');
   const exact = await LocalNotifications.checkExactNotificationSetting();
   if (exact.exact_alarm !== 'granted') await LocalNotifications.changeExactNotificationSetting();
 }

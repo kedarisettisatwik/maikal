@@ -1,0 +1,15 @@
+import { localOnly } from './build-mode';
+import { APP_VERSION } from './version';
+const key='mantra-usage-auth',sentKey='mantra-usage-sent';
+const apiKey=import.meta.env.VITE_FIREBASE_API_KEY, project=import.meta.env.VITE_FIREBASE_PROJECT_ID;
+export function usageCounts(records){const counts={goals:0,reminders:0,meetings:0,notifications:0,alarms:0,expenses:0,notes:0};for(const r of Object.values(records)){if(r.deleted)continue;if(r.type==='goal')counts.goals++;if(r.type==='event'&&r.kind==='reminder')counts.reminders++;if(r.type==='event'&&r.kind==='meeting')counts.meetings++;if(r.type==='transaction'&&r.kind==='expense')counts.expenses++;if(r.type==='note')counts.notes++;if(['goal','event'].includes(r.type)){counts.notifications+=(r.notificationTimes||[]).length;counts.alarms+=(r.alarmTimes||[]).length;}}return counts;}
+async function responseJson(response){if(!response.ok)throw new Error('Usage service unavailable');return response.json();}
+async function identity(){let state=JSON.parse(localStorage.getItem(key)||'null');if(state?.expires>Date.now()+60000)return state;
+  if(state?.refreshToken){const result=await fetch(`https://securetoken.googleapis.com/v1/token?key=${apiKey}`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:state.refreshToken})}).then(responseJson);state={...state,idToken:result.id_token,refreshToken:result.refresh_token,uid:result.user_id,expires:Date.now()+Number(result.expires_in)*1000};}
+  else {const result=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})}).then(responseJson);state={uid:result.localId,idToken:result.idToken,refreshToken:result.refreshToken,expires:Date.now()+Number(result.expiresIn)*1000,firstSeen:new Date().toISOString()};}
+  localStorage.setItem(key,JSON.stringify(state));return state;
+}
+export async function reportUsage(records){if(!apiKey||!project)return;const counts=usageCounts(records),last=JSON.parse(localStorage.getItem(sentKey)||'null'),signature=JSON.stringify(counts);if(last&&Date.now()-last.at<15*60000)return;
+  const state=await identity(),fields={edition:{stringValue:localOnly?'local':'firebase'},version:{stringValue:APP_VERSION},firstSeen:{stringValue:state.firstSeen}};for(const [name,value]of Object.entries(counts))fields[name]={integerValue:String(Math.min(1000000,value))};
+  await fetch(`https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents:commit`,{method:'POST',headers:{Authorization:`Bearer ${state.idToken}`,'Content-Type':'application/json'},body:JSON.stringify({writes:[{update:{name:`projects/${project}/databases/(default)/documents/appUsage/${state.uid}`,fields},updateTransforms:[{fieldPath:'updatedAt',setToServerValue:'REQUEST_TIME'}]}]})}).then(responseJson);localStorage.setItem(sentKey,JSON.stringify({at:Date.now(),signature}));
+}
