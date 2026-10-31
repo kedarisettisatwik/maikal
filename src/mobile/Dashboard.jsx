@@ -25,6 +25,7 @@ import noteIcon from './assets/note.png';
 import timeIcon from './assets/time.png';
 import moreIcon from './assets/more.png';
 import './mobile.css';
+import { celebrateGoal, clearCelebration } from './goal-celebration';
 
 const native = registerPlugin('DiaryAlarms');
 const tabs = [['home', homeIcon], ['money', moneyIcon], ['note', noteIcon], ['time', timeIcon], ['more', moreIcon]];
@@ -45,7 +46,7 @@ export function GoalRow({ goal, records, date, onProgress, onEdit, remove, notif
   const value = progress(records, goal, date), tracker = goal.goalType === 'tracker';
   return <div className={`goal-row ${!tracker && value ? 'done' : ''}`}>
     <div className="goal-visual"><Icon record={goal} /></div><div className="grow"><h3>{goal.title}</h3><small>{manage ? describe(goal.schedule || { type: 'everyday' }) : tracker ? `Track in ${unit(goal)}` : value ? 'Completed today' : 'Daily progress'}</small></div>
-    {manage ? <div className="row-actions"><ActionIconButton action="edit" label={`Edit goal ${goal.title}`} onClick={() => onEdit(goal)} /><ActionIconButton action="delete" label={`Delete goal ${goal.title}`} onClick={() => remove(goal.id)} /></div> : <div className="goal-control">{tracker ? <Tracker key={`${goal.id}-${date}`} goal={goal} value={value} onSave={v => onProgress(goal.id, v, date)} notify={notify} /> : <label className="goal-check"><input type="checkbox" aria-label={`Mark ${goal.title} done`} checked={Boolean(value)} onChange={e => onProgress(goal.id, e.target.checked, date)} /></label>}</div>}
+    {manage ? <div className="row-actions"><ActionIconButton action="edit" label={`Edit goal ${goal.title}`} onClick={() => onEdit(goal)} /><ActionIconButton action="delete" label={`Delete goal ${goal.title}`} onClick={() => remove(goal.id)} /></div> : <div className="goal-control">{tracker ? <Tracker key={`${goal.id}-${date}`} goal={goal} value={value} onSave={v => onProgress(goal.id, v, date)} notify={notify} /> : <label className="goal-check"><input type="checkbox" aria-label={`Mark ${goal.title} done`} checked={Boolean(value)} onChange={e => { const checked = e.target.checked; const saved = onProgress(goal.id, checked, date); if (checked && saved !== false) celebrateGoal(e.currentTarget); else clearCelebration(); }} /></label>}</div>}
   </div>;
 }
 export function PlanRow({ event, manage, onEdit, remove }) {
@@ -72,7 +73,7 @@ export default function Dashboard({ user, notify, onConnect, restoring }) {
   const [noteLaunch, setNoteLaunch] = useState(null), [sharedNote, setSharedNote] = useState(null), [syncRevision, setSyncRevision] = useState(0), [signingOut, setSigningOut] = useState(false);
   const viewport = useRef(null), latest = useRef(null), drag = useRef(null), pendingRequest = useRef(null), shareOpened = useRef(null);
   latest.current = { records, tab };
-  useLayoutEffect(() => { document.documentElement.dataset.maikalMobile = 'true'; document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#ffffff'); applyViewMode('normal'); return () => { delete document.documentElement.dataset.maikalMobile; }; }, []);
+  useLayoutEffect(() => { document.documentElement.dataset.maikalMobile = 'true'; document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#ffffff'); applyViewMode('normal'); return () => { clearCelebration(); delete document.documentElement.dataset.maikalMobile; }; }, []);
   function go(name, smooth = true) { setTab(name); setList(null); history.replaceState(null, '', '#' + name); viewport.current?.scrollTo({ left: tabs.findIndex(([t]) => t === name) * viewport.current.clientWidth, behavior: smooth && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'instant' }); }
   useLayoutEffect(() => { go(initialTab(), false); const resize = () => { const name = latest.current.tab; viewport.current?.scrollTo({ left: tabs.findIndex(([t]) => t === name) * viewport.current.clientWidth, behavior: 'instant' }); }; window.addEventListener('resize', resize); return () => window.removeEventListener('resize', resize); }, []);
   useEffect(() => { const backHome = () => go('home'); window.addEventListener('maikal-mobile-home', backHome); return () => window.removeEventListener('maikal-mobile-home', backHome); }, []);
@@ -109,7 +110,7 @@ export default function Dashboard({ user, notify, onConnect, restoring }) {
   const complete = todayGoals.filter(g => g.goalType !== 'tracker' && Boolean(progress(records, g, date))).length;
   const checks = todayGoals.filter(g => g.goalType !== 'tracker').length;
   const usage = latestScreenTime(records, date, screenTime.deviceId);
-  function onProgress(goalId, value, day) { if (!latest.current.records[goalId] || latest.current.records[goalId].deleted) return; try { save({ id: `progress_${goalId}_${day}`, type: 'progress', goalId, date: day, value }); } catch (e) { notify(e.message); } }
+  function onProgress(goalId, value, day) { if (!latest.current.records[goalId] || latest.current.records[goalId].deleted) return false; try { save({ id: `progress_${goalId}_${day}`, type: 'progress', goalId, date: day, value }); return true; } catch (e) { notify(e.message); return false; } }
   function edit(record) { setList(null); setEntry({ type: record.type === 'event' ? record.kind : record.type, ...(record.type === 'transaction' ? { transaction: record } : { record }) }); }
   async function saveEntry(record) {
     if ((entry?.record || entry?.transaction) && latest.current.records[record.id]?.deleted) throw Error('This item was deleted. Create a new entry instead.');

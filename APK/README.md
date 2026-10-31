@@ -1,5 +1,7 @@
 # Android downloads
 
+Version **2.1.2** adds a short outward burst of 24 green dots when completing a checkbox goal in the app. Unchecking does not celebrate; reduced-motion settings are respected. Report calendars have a small bottom gap. Install over the matching edition without uninstalling.
+
 Version **2.1.1** opens APK reports immediately without expand/collapse, reduces report-card spacing, and uses smaller money totals and a semibold sans-serif screen-time total. Note titles wrap flush with card content, tags have gaps, and checklist items each occupy their own row. Install over the matching edition without uninstalling.
 
 Version **2.1.0** adds a separate compact **Maikal · Total screen time** widget (2 × 1 cells) showing only today’s total; tap it to open Track. It refreshes on Android’s periodic widget updates, when Track or the diary reads usage, and on date/timezone changes. Usage access is required. It uses a white Android theme, coordinated all-time/month/day money filters, a larger expense donut, bordered note cards and highlighted filter labels. The saved-link editor has a separate source panel and compact Save action; + Note sits beside the collection heading. Screen time and LeetCode have distinct bordered panels, with a larger daily-problem heading. A moving green light on the navigation bar follows the selected tab. Install over the matching edition without uninstalling.

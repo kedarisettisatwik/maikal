@@ -364,3 +364,8 @@ html[data-maikal-mobile] .goal-report { padding:12px; margin:8px 0; height:auto;
 html[data-maikal-mobile] .goal-report .calendar-squares { margin-top:12px!important; }
 html[data-maikal-mobile] .goal-reports-grid { gap:10px; margin-top:12px; }
 html[data-maikal-mobile] .reports-content { margin-top:14px; }
+
+html[data-maikal-mobile] .goal-report .report-calendar { margin-bottom:10px; }
+html[data-maikal-mobile] .goal-celebration { position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:10; }
+html[data-maikal-mobile] .goal-celebration i { position:absolute; width:5px; height:5px; border-radius:50%; background:#25704d; }
+@media(prefers-reduced-motion:reduce) { html[data-maikal-mobile] .goal-celebration { display:none; } }

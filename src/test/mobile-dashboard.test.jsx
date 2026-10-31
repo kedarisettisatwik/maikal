@@ -10,7 +10,8 @@ vi.mock('../native-notifications', () => ({ isNative: () => true, pendingNativeS
 vi.mock('../components/LeetcodeSection', () => ({ default: () => <h2>Private LeetCode</h2> }));
 vi.mock('../components/NewsSection', () => ({ default: () => <h2>Private News</h2> }));
 vi.mock('../components/JobsSection', () => ({ default: () => <h2>Private Jobs</h2> }));
-import Dashboard from '../mobile/Dashboard';
+import Dashboard, { GoalRow } from '../mobile/Dashboard';
+import { clearCelebration } from '../mobile/goal-celebration';
 import { expenseBreakdown, filterTransactions } from '../mobile/MoneyPage';
 const notify = vi.fn();
 beforeEach(() => {
@@ -83,4 +84,21 @@ it('opens APK reports immediately without an expand or collapse step', () => {
   expect(screen.getByText('Report month')).toBeTruthy();
   expect(screen.getByRole('group',{name:'Read completion calendar'})).toBeTruthy();
   expect(screen.queryByText(/Expand|Collapse/)).toBeNull();
+});
+
+it('celebrates a completed checkbox only after its progress saves', () => {
+  const original = Element.prototype.animate;
+  Element.prototype.animate = vi.fn(() => ({cancel:vi.fn()}));
+  const onProgress = vi.fn(() => true);
+  const view = render(<GoalRow goal={mock.records.g} records={{}} date="2026-10-31" onProgress={onProgress} notify={notify} />);
+  try {
+    expect(document.querySelector('.goal-celebration')).toBeNull();
+    fireEvent.click(screen.getByRole('checkbox',{name:'Mark Read done'}));
+    expect(onProgress).toHaveBeenCalledWith('g',true,'2026-10-31');
+    expect(document.querySelectorAll('.goal-celebration i')).toHaveLength(24);
+    clearCelebration();
+    onProgress.mockReturnValue(false);
+    fireEvent.click(screen.getByRole('checkbox',{name:'Mark Read done'}));
+    expect(document.querySelector('.goal-celebration')).toBeNull();
+  } finally { clearCelebration(); Element.prototype.animate = original; view.unmount(); }
 });
