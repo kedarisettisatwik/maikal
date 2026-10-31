@@ -15,7 +15,7 @@ import ActionIconButton from '../components/ActionIconButton';
 import LeetcodeSection from '../components/LeetcodeSection';
 import NewsSection from '../components/NewsSection';
 import JobsSection from '../components/JobsSection';
-import ReportsSection from '../components/ReportsSection';
+import ReportsSection from './ReportsSection';
 import EntryDialog, { Dialog, Icon } from './EntryDialog';
 import NotesPage from './NotesPage';
 import MoneyPage from './MoneyPage';

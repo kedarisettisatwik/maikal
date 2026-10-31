@@ -75,3 +75,12 @@ it('opens a saved-link editor with a separate source hint', () => {
   expect(screen.getByLabelText('Description')).toBeTruthy();
   expect(screen.getByRole('button',{name:'Save note'})).toBeTruthy();
 });
+
+it('opens APK reports immediately without an expand or collapse step', () => {
+  render(<Dashboard user={{uid:'local'}} notify={notify} restoring={false} />);
+  fireEvent.click(screen.getByRole('tab',{name:'More'}));
+  fireEvent.click(screen.getByRole('button',{name:/Goal reports/}));
+  expect(screen.getByText('Report month')).toBeTruthy();
+  expect(screen.getByRole('group',{name:'Read completion calendar'})).toBeTruthy();
+  expect(screen.queryByText(/Expand|Collapse/)).toBeNull();
+});
