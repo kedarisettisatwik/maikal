@@ -1,14 +1,33 @@
-import {it,expect,vi} from 'vitest';
+import {it,expect,vi,afterEach} from 'vitest';
 import {render,screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-vi.mock('../native-notifications',()=>({isNative:()=>false,openNoteLink:vi.fn()}));
+const platform=vi.hoisted(()=>({native:false}));
+vi.mock('../native-notifications',()=>({isNative:()=>platform.native,openNoteLink:vi.fn()}));
+import {readViewMode,saveViewMode,viewModeKey} from '../view-mode';
+afterEach(()=>{platform.native=false;document.querySelector('meta[name=viewport]')?.remove();delete document.documentElement.dataset.maikalView;localStorage.removeItem(viewModeKey);});
 import NotesPage,{NoteText} from '../components/NotesPage';
 const note={id:'n',type:'note',noteType:'link',title:'Saved reel',source:'Instagram',body:'Try this later',url:'https://www.instagram.com/reel/123/',tags:['fitness'],createdAt:100,updatedAt:100};
 const props=()=>({records:{n:note},save:vi.fn(),remove:vi.fn(),notify:vi.fn(),uid:'local',status:'Saved on this device',onBack:vi.fn()});
+it('keeps APK notes and note dialogs normal while preserving the desktop diary preference',async()=>{
+  platform.native=true;
+  const meta=document.createElement('meta');meta.name='viewport';document.head.append(meta);saveViewMode('desktop');
+  const user=userEvent.setup(),view=render(<NotesPage {...props()}/>);
+  expect(document.documentElement.dataset.maikalView).toBe('normal');expect(meta.content).toContain('width=device-width');expect(readViewMode()).toBe('desktop');
+  await user.click(screen.getByRole('button',{name:'Saved reel',exact:true}));
+  await user.click(screen.getByRole('button',{name:'Back to diary',exact:true}));
+  expect(document.documentElement.dataset.maikalView).toBe('normal');expect(meta.content).toContain('width=device-width');
+  view.unmount();expect(document.documentElement.dataset.maikalView).toBe('desktop');expect(meta.content).toContain('width=1200');expect(readViewMode()).toBe('desktop');
+});
 it('opens shared notes with clickable external links and filters sources',async()=>{
   const user=userEvent.setup();render(<NotesPage {...props()}/>);await user.click(screen.getByRole('button',{name:'Saved reel',exact:true}));
   expect(screen.getByRole('link',{name:/https:\/\/www.instagram.com\/reel/}).getAttribute('href')).toBe(note.url);
   expect(screen.queryByText(/Preview share flow/)).toBeNull();
+});
+it('restores desktop view when leaving a widget-opened note with its dialog still open',()=>{
+  platform.native=true;const meta=document.createElement('meta');meta.name='viewport';document.head.append(meta);saveViewMode('desktop');
+  const view=render(<NotesPage {...props()} openNote={{id:'n',requestId:'widget-layout'}}/>);
+  expect(meta.content).toContain('width=device-width');view.unmount();
+  expect(document.documentElement.dataset.maikalView).toBe('desktop');expect(meta.content).toContain('width=1200');
 });
 it('creates a text note without requiring a share receiver on the website',async()=>{
   const user=userEvent.setup(),p=props();render(<NotesPage {...p}/>);await user.click(screen.getByRole('button',{name:'+ New note'}));await user.type(screen.getByLabelText('Title'),'An idea');await user.type(screen.getByLabelText('Your note'),'Remember this');await user.click(screen.getByRole('button',{name:'Save note'}));expect(p.save).toHaveBeenCalledWith(expect.objectContaining({type:'note',title:'An idea',noteType:'text',body:'Remember this'}));

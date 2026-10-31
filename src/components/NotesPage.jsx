@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
+import { applyViewMode, readViewMode } from '../view-mode';
 import { assetUrl } from '../assets';
 import { cloudEnabled } from '../storage';
 import { activeRecords } from '../model';
@@ -27,7 +28,7 @@ export default function NotesPage({records,save,remove,status,error,uid,onBack,s
   const view=notes.find(n=>n.id===viewId);
   useEffect(()=>{if(openNote?.id){setEditor(null);setViewId(openNote.id);}},[openNote?.requestId]);
   useEffect(()=>{if(shared){setViewId(null);setEditor(shareDraft(shared));}},[shared?.id]);
-  useEffect(()=>{if(!isNative())return;const viewport=document.querySelector('meta[name="viewport"]'),previous=viewport?.content;if(viewport)viewport.content='width=device-width, initial-scale=1, minimum-scale=0.5, maximum-scale=5, user-scalable=yes';return()=>{if(viewport)viewport.content=previous};},[]);
+  useLayoutEffect(()=>{if(!isNative())return;applyViewMode('normal');return()=>applyViewMode(readViewMode());},[]);
   function reset(){setQuery('');setSource('all');setTag('all');setType('all')}
   const filtered=notes.filter(n=>(source==='all'||n.source===source)&&(tag==='all'||(n.tags||[]).includes(tag))&&(type==='all'||n.noteType===type)&&[n.title,n.body,n.source,...(n.tags||[]),...(n.items||[]).map(i=>i.text)].join(' ').toLowerCase().includes(query.trim().toLowerCase())).sort(sort==='title'?(a,b)=>a.title.localeCompare(b.title):sort==='oldest'?(a,b)=>(a.createdAt||a.updatedAt)-(b.createdAt||b.updatedAt):(a,b)=>(b.createdAt||b.updatedAt)-(a.createdAt||a.updatedAt));
   async function closeEditor(){if(shared){setClosingShare(true);try{await onShareDone(shared.id);}catch(e){notify('Could not discard the shared draft. Please try again.');return}finally{setClosingShare(false)}}setEditor(null);}

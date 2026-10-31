@@ -2,6 +2,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import { assetUrl } from '../assets';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { isNative } from '../native-notifications';
+import { applyViewMode } from '../view-mode';
 import NotificationTimes from './NotificationTimes';
 import ActionIconButton from './ActionIconButton';
 import { expenseIcons, goalIcons, localDate, validateSchedule, weekdays } from '../model';
@@ -16,7 +17,7 @@ export function Dialog({ children, title = 'A new entry', onClose }) {
     if (native) document.documentElement.setAttribute('data-maikal-dialog', 'true');
     if (native) viewport?.setAttribute('content', 'width=device-width, initial-scale=1, minimum-scale=0.5, maximum-scale=5, user-scalable=yes');
     dialog.showModal();
-    return () => { dialog.close(); if (native) { if (previous) viewport?.setAttribute('content', previous); if (previousDialog === null) document.documentElement.removeAttribute('data-maikal-dialog'); else document.documentElement.setAttribute('data-maikal-dialog',previousDialog); } };
+    return () => { dialog.close(); if (native) { const mode = document.documentElement.dataset.maikalView; if (mode) applyViewMode(mode); else if (previous) viewport?.setAttribute('content', previous); if (previousDialog === null) document.documentElement.removeAttribute('data-maikal-dialog'); else document.documentElement.setAttribute('data-maikal-dialog',previousDialog); } };
   }, [native]);
   return <dialog ref={ref} className={native ? 'native-form-page' : undefined} onCancel={e => { e.preventDefault(); onClose(); }}><div className="dialoghead"><span className="kicker">{title}</span><button type="button" onClick={onClose} aria-label={native ? 'Back to diary' : 'Close dialog'}>{native ? '← Back' : '×'}</button></div>{children}<Toaster toasterId="dialog" position="top-center" toastOptions={{ duration: 4200 }} /></dialog>;
 }
