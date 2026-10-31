@@ -29,6 +29,7 @@ public class DiaryAlarmsPlugin extends Plugin {
         }catch(Exception e){call.reject("Open Menu → Alarms to enable alarm and lock-screen access, then save again.",e);}
     });}
     private final java.util.concurrent.ExecutorService usageWorker=java.util.concurrent.Executors.newSingleThreadExecutor();
+    @PluginMethod public void openPaymentSettings(PluginCall call){getActivity().startActivity(new Intent(getContext(),PaymentSettingsActivity.class));call.resolve();}
     @PluginMethod public void openTrack(PluginCall call){getActivity().startActivity(new Intent(getContext(),TrackActivity.class));call.resolve();}
     @PluginMethod public void screenTimeTotals(PluginCall call){usageWorker.execute(()->{try{org.json.JSONObject totals=ScreenTime.dailyTotals(getContext());JSObject result=new JSObject(totals.toString());call.resolve(result);TrackWidgetProvider.refresh(getContext());}catch(Exception e){call.reject("Could not read screen time. Check Usage access and unlock your phone.",e);}});}
     @Override protected void handleOnDestroy(){usageWorker.shutdownNow();super.handleOnDestroy();}
@@ -90,6 +91,14 @@ public class DiaryAlarmsPlugin extends Plugin {
             Intent intent = getActivity().getIntent();
             String kind = intent.getStringExtra("transactionKind");
             JSObject result = new JSObject();
+            if(intent.hasExtra("paymentDraftId")){
+                String id=intent.getStringExtra("paymentDraftId");
+                try{org.json.JSONObject draft=PaymentNotifications.draft(getContext(),id);
+                    if(draft!=null){result.put("type","transaction");result.put("kind",draft.getString("kind"));result.put("amount",draft.getLong("amount"));result.put("date",draft.getString("date"));result.put("uid",draft.optString("uid","local"));result.put("requestId",id);result.put("paymentSuggestion",true);}
+                    else intent.removeExtra("paymentDraftId");
+                }catch(Exception e){intent.removeExtra("paymentDraftId");}
+                call.resolve(result);return;
+            }
             if(intent.hasExtra("diaryRecordId")){
                 String requestId=intent.getStringExtra("entryLaunchRequestId");if(requestId==null){requestId=java.util.UUID.randomUUID().toString();intent.putExtra("entryLaunchRequestId",requestId);}
                 result.put("type","entry");result.put("recordId",intent.getStringExtra("diaryRecordId"));result.put("uid",intent.getStringExtra("diaryUid"));result.put("requestId",requestId);call.resolve(result);return;
@@ -109,6 +118,7 @@ public class DiaryAlarmsPlugin extends Plugin {
     @PluginMethod public void acknowledgeLaunch(PluginCall call) {
         getActivity().runOnUiThread(() -> {
             Intent intent = getActivity().getIntent();
+            if(call.getString("requestId", "").equals(intent.getStringExtra("paymentDraftId"))){try{PaymentNotifications.acknowledge(getContext(),intent.getStringExtra("paymentDraftId"));intent.removeExtra("paymentDraftId");}catch(Exception e){call.reject("Could not acknowledge payment suggestion",e);return;}}
             if(call.getString("requestId", "").equals(intent.getStringExtra("entryLaunchRequestId"))){intent.removeExtra("diaryRecordId");intent.removeExtra("diaryUid");intent.removeExtra("entryLaunchRequestId");}
             if(call.getString("requestId", "").equals(intent.getStringExtra("noteLaunchRequestId"))) {
                 intent.removeExtra("noteId");intent.removeExtra("noteUid");intent.removeExtra("noteLaunchRequestId");intent.removeExtra("openNotes");
