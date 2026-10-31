@@ -1,6 +1,6 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/widget_note_card" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@drawable/widget_paper" android:padding="16dp">
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-        <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Maikal · Notes" android:textSize="11sp" android:textColor="#72756E" />
+        <TextView android:id="@+id/widget_note_theme_1" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="MANTRA · Notes" android:textSize="11sp" android:textColor="#72756E" />
         <TextView android:id="@+id/widget_note_change" android:layout_width="48dp" android:layout_height="40dp" android:text="Change" android:gravity="center" android:textColor="#285D79" android:textSize="11sp" android:contentDescription="Choose another note" />
     </LinearLayout>
     <TextView android:id="@+id/widget_note_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="22sp" android:fontFamily="serif" android:textColor="#253439" android:maxLines="2" android:ellipsize="end" />

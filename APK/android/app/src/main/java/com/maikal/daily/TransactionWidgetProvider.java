@@ -17,6 +17,7 @@ public class TransactionWidgetProvider extends AppWidgetProvider {
     }
     static RemoteViews views(Context c) {
             RemoteViews view = new RemoteViews(c.getPackageName(), R.layout.widget_transaction);
+            view.setImageViewResource(R.id.widget_add_transaction,MantraTheme.dark(c)?R.drawable.widget_transaction_circle_dark:R.drawable.widget_transaction_circle);
             Intent open = new Intent(c, MainActivity.class).setAction("com.maikal.daily.ADD_TRANSACTION")
                 .putExtra("transactionKind", "expense").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             view.setOnClickPendingIntent(R.id.widget_add_transaction,

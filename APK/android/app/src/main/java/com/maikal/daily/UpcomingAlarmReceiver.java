@@ -52,6 +52,6 @@ public class UpcomingAlarmReceiver extends BroadcastReceiver {
                 .setContentText(r.optString("title","Alarm")+" · "+clock).setContentIntent(open).setDeleteIntent(dismiss)
                 .addExtras(extras).setAutoCancel(false).setTimeoutAfter(Math.max(1000,occurrence-System.currentTimeMillis()))
                 .addAction(0,"Dismiss",dismiss).build());
-        }catch(Exception e){android.util.Log.e("Maikal","Upcoming alarm notification failed",e);}
+        }catch(Exception e){android.util.Log.e("MANTRA","Upcoming alarm notification failed",e);}
     }
 }

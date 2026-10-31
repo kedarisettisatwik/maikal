@@ -1,6 +1,23 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    match /appUsage/{installationId} {
+      function owner() { return request.auth != null && request.auth.uid == '0kX2kfDq3KV9MIhtDV7IDpuXnfJ3'; }
+      function count(n) { return n is int && n >= 0 && n <= 1000000; }
+      function valid() {
+        let d = request.resource.data;
+        return d.keys().hasOnly(['edition','version','firstSeen','updatedAt','goals','reminders','meetings','notifications','alarms','expenses','notes'])
+          && d.edition in ['local','firebase'] && d.version is string && d.version.size() <= 24
+          && d.firstSeen is string && d.firstSeen.size() <= 30 && d.updatedAt == request.time
+          && count(d.goals) && count(d.reminders) && count(d.meetings) && count(d.notifications) && count(d.alarms) && count(d.expenses) && count(d.notes);
+      }
+      allow read: if owner();
+      allow create: if request.auth != null && request.auth.uid == installationId && request.auth.token.firebase.sign_in_provider == 'anonymous' && valid();
+      allow update: if request.auth != null && request.auth.uid == installationId && request.auth.token.firebase.sign_in_provider == 'anonymous' && valid()
+        && request.resource.data.firstSeen == resource.data.firstSeen && request.resource.data.edition == resource.data.edition
+        && request.time > resource.data.updatedAt + duration.value(60, 's');
+      allow delete: if owner();
+    }
     match /users/{uid}/maikalRecords/{recordId} {
       allow read, write: if request.auth != null && request.auth.uid == uid && uid == '0kX2kfDq3KV9MIhtDV7IDpuXnfJ3';
     }

@@ -18,7 +18,7 @@ export default function App() {
     authReady.then(() => { if (live) stop = onAuthStateChanged(auth, next => {
       if (!live) return;
       if (next && !cloudEnabled(next.uid)) {
-        signOut(auth).catch(() => {}); toast.error('Cloud storage is available only for the authorized Maikal account.');
+        signOut(auth).catch(() => {}); toast.error('Cloud storage is available only for the authorized MANTRA account.');
         setUser(null); setRestoring(false); return;
       }
       if (next) {

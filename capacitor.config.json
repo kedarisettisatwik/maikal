@@ -1,6 +1,6 @@
 {
   "appId": "com.maikal.daily",
-  "appName": "Maikal",
+  "appName": "MANTRA",
   "webDir": "dist",
   "android": {
     "path": "APK/android"

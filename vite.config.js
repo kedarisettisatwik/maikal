@@ -20,7 +20,7 @@ export default defineConfig(({ command, mode }) => {
     registerType: 'prompt',
     includeAssets: ['favicon.ico', 'app-icons/*.png'],
     manifest: {
-      id: '/maikal/', name: 'Maikal', short_name: 'Maikal',
+      id: '/maikal/', name: 'MANTRA', short_name: 'MANTRA',
       description: 'Your goals, plans, money, and daily edition.',
       start_url: '/maikal/', scope: '/maikal/', display: 'standalone',
       theme_color: '#faf8ef', background_color: '#faf8ef',
@@ -34,11 +34,11 @@ export default defineConfig(({ command, mode }) => {
     workbox: {
       globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
       navigateFallback: '/maikal/index.html',
-      navigateFallbackDenylist: [/^\/api\//],
+      navigateFallbackDenylist: [/^\/api\//, /\/analytics\.html$/],
       cleanupOutdatedCaches: true,
     },
   })],
-  build: { rollupOptions: { output: { manualChunks: {
+  build: { rollupOptions: { input: android ? 'index.html' : { main: 'index.html', analytics: 'analytics.html' }, output: { manualChunks: {
     react: ['react', 'react-dom'],
     ...(!localOnly ? { 'firebase-auth': ['firebase/auth'], 'firebase-firestore': ['firebase/firestore'] } : {}),
   } } } },

@@ -1,5 +1,11 @@
 # Android downloads
 
+Version **2.3.0** rebrands the app and launcher as **MANTRA**, with the supplied lotus artwork. Package IDs, data keys and signing remain unchanged. More shows the version, a feature guide, and Light / Dark / System default themes. Native screens and home-screen widgets follow the preference. Both editions still install as updates over their matching earlier edition.
+
+The Local APK now has Internet permission solely to send anonymous usage counts. Personal diary records are never synced from the Local APK. Its analytics uses a separate anonymous Firebase Auth identity and a tightly validated `appUsage` document containing only counts, edition, version and report dates. No Firebase diary SDK is included in the Local bundle. Counts update while open, at most every 15 minutes, and retry after connectivity returns. Anonymous credentials are retained on-device. Clearing app data creates a new installation identity.
+
+The owner dashboard is `/maikal/analytics.html`. Firestore read access is limited to UID `0kX2kfDq3KV9MIhtDV7IDpuXnfJ3`; hiding the HTML is not the access control. Anonymous clients can only write their own aggregate document, not read analytics or personal records. GitHub download counts are separate from anonymous first launches. Client reports are best effort and can include multiple devices for one person. Historical APKs do not report retroactively.
+
 Version **2.2.1** removes payment-notification reading, its setup screen, parser and listener service. Upgrading clears the retired detector’s temporary drafts, duplicate fingerprints, settings and suggestion notifications without changing saved diary transactions. All features from 2.1.2 remain. Install over the matching edition without uninstalling.
 
 Version **2.1.2** adds a short outward burst of 24 green dots when completing a checkbox goal in the app. Unchecking does not celebrate; reduced-motion settings are respected. Report calendars have a small bottom gap. Install over the matching edition without uninstalling.

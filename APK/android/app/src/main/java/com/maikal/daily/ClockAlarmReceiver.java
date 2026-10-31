@@ -14,6 +14,6 @@ public class ClockAlarmReceiver extends BroadcastReceiver {
             UpcomingAlarmReceiver.clearNotifications(c,r.getString("id")); r.put("snoozedUntil",0);if(r.optBoolean("oneTime"))r.put("enabled",false);
             ClockAlarms.storeState(c,r);ClockAlarms.schedule(c,r);
             androidx.core.content.ContextCompat.startForegroundService(c,new Intent(c,ClockAlarmService.class).setAction("RING").putExtra("id",r.getString("id")).putExtra("title",r.getString("title")));
-        }catch(Exception e){android.util.Log.e("Maikal","Alarm could not ring",e);}
+        }catch(Exception e){android.util.Log.e("MANTRA","Alarm could not ring",e);}
     }
 }
