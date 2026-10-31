@@ -10,7 +10,6 @@ vi.mock('../native-notifications', () => ({ isNative: () => true, pendingNativeS
 vi.mock('../components/LeetcodeSection', () => ({ default: () => <h2>Private LeetCode</h2> }));
 vi.mock('../components/NewsSection', () => ({ default: () => <h2>Private News</h2> }));
 vi.mock('../components/JobsSection', () => ({ default: () => <h2>Private Jobs</h2> }));
-import EntryDialog from '../mobile/EntryDialog';
 import Dashboard, { GoalRow } from '../mobile/Dashboard';
 import { clearCelebration } from '../mobile/goal-celebration';
 import { expenseBreakdown, filterTransactions } from '../mobile/MoneyPage';
@@ -102,13 +101,4 @@ it('celebrates a completed checkbox only after its progress saves', () => {
     fireEvent.click(screen.getByRole('checkbox',{name:'Mark Read done'}));
     expect(document.querySelector('.goal-celebration')).toBeNull();
   } finally { clearCelebration(); Element.prototype.animate = original; view.unmount(); }
-});
-
-it('prefills a detected payment but leaves category blank and waits for Save', () => {
-  const save=vi.fn();
-  render(<EntryDialog entry={{type:'transaction',kind:'expense',amount:20000,date:'2026-10-31',paymentSuggestion:true}} categories={[mock.records.c]} save={save} notify={notify} onClose={vi.fn()} />);
-  expect(screen.getByLabelText('Amount (INR)').value).toBe('200.00');
-  expect(screen.getByLabelText('Date').value).toBe('2026-10-31');
-  expect(screen.getByLabelText('Category').value).toBe('');
-  expect(save).not.toHaveBeenCalled();
 });

@@ -108,10 +108,6 @@
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/><action android:name="android.intent.action.DATE_CHANGED"/><action android:name="android.intent.action.TIMEZONE_CHANGED"/><action android:name="android.intent.action.MY_PACKAGE_REPLACED"/></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_total_screen_time_info"/>
         </receiver>
-        <activity android:name=".PaymentSettingsActivity" android:exported="false" android:theme="@style/AlarmClockTheme" />
-        <service android:name=".PaymentNotificationListener" android:exported="true" android:label="Maikal payment suggestions" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
-            <intent-filter><action android:name="android.service.notification.NotificationListenerService" /></intent-filter>
-        </service>
     </application>
 
     <!-- Permissions -->

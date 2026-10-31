@@ -111,6 +111,7 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
         for (int i = 0; i < alarms.length(); i++) schedule(c, alarms.getJSONObject(i), i + 1);
     }
     @Override public void onReceive(Context c, Intent intent) {
+        if (Intent.ACTION_MY_PACKAGE_REPLACED.equals(intent.getAction())) LegacyPaymentCleanup.run(c);
         try {
             if ("com.maikal.daily.COMPLETE".equals(intent.getAction())) {
                 if (NativeDiaryStore.complete(c, intent.getStringExtra("uid"), intent.getStringExtra("goalId"), intent.getStringExtra("date"))) {

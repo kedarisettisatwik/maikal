@@ -10,6 +10,7 @@ public class MainActivity extends BridgeActivity {
     @Override public void onCreate(Bundle state) {
         registerPlugin(DiaryAlarmsPlugin.class);
         super.onCreate(state);
+        LegacyPaymentCleanup.run(this);
         SharedNotes.capture(this,getIntent());
         getBridge().getWebView().getSettings().setSupportZoom(true);
         getBridge().getWebView().getSettings().setBuiltInZoomControls(true);
