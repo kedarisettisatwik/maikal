@@ -47,6 +47,20 @@ public class DiaryAlarmsPlugin extends Plugin {
         getActivity().startActivity(new Intent(getContext(), AlarmsActivity.class));
         call.resolve();
     }
+    @PluginMethod public void listAlarms(PluginCall call) {
+        try { call.resolve(new JSObject().put("alarms", ClockAlarms.all(getContext()))); }
+        catch (Exception e) { call.reject("Could not read alarms", e); }
+    }
+    @PluginMethod public void setAlarmEnabled(PluginCall call) {
+        try {
+            org.json.JSONObject alarm = ClockAlarms.find(getContext(), call.getString("id", ""));
+            if (alarm == null) { call.reject("This alarm no longer exists"); return; }
+            alarm.put("enabled", call.getBoolean("enabled", false)); alarm.put("snoozedUntil", 0);
+            ClockAlarms.save(getContext(), alarm);
+            if (!alarm.optBoolean("enabled")) getContext().startService(new Intent(getContext(), ClockAlarmService.class).setAction("STOP").putExtra("id", alarm.getString("id")));
+            call.resolve();
+        } catch (Exception e) { call.reject("Open alarm settings to check access, then try again", e); }
+    }
     @PluginMethod
     public void replace(PluginCall call) {
         try {

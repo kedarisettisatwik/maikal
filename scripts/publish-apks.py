@@ -4,6 +4,7 @@ from pathlib import Path
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--tag', required=True)
+parser.add_argument('--target', default='main', help='Commit or branch containing the APK source')
 parser.add_argument('--notes', default='Track screen with Usage access setup, foreground app usage and total screen time; Maikal Track home-screen widget; daily screen-time totals synced from the connected Firebase APK to the website homepage. App-by-app usage stays on the device. Totals sync while Maikal is open or resumed, and pending changes retry on reconnect. Both editions display the app name Maikal. Debug APKs for direct installation on Android 8.0+. Install over the matching existing edition to preserve data.')
 args = parser.parse_args()
 repo = 'kedarisettisatwik/maikal'
@@ -30,7 +31,7 @@ try:
     except urllib.error.HTTPError as error:
         if error.code != 404:
             raise
-        release = api('POST', '/releases', {'tag_name': args.tag, 'target_commitish': 'main', 'name': 'Maikal Android ' + args.tag.removeprefix('android-v'), 'body': args.notes, 'draft': True, 'prerelease': False})
+        release = api('POST', '/releases', {'tag_name': args.tag, 'target_commitish': args.target, 'name': 'Maikal Android ' + args.tag.removeprefix('android-v'), 'body': args.notes, 'draft': True, 'prerelease': False})
     assets = {asset['name']: asset for asset in release.get('assets', [])}
     downloads = []
     for file in files:

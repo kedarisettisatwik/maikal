@@ -20,9 +20,14 @@ public class MainActivity extends BridgeActivity {
             @Override public void handleOnBackPressed() {
                 getBridge().getWebView().evaluateJavascript("Boolean(document.querySelector('dialog[open].native-form-page'))", open -> {
                     if ("true".equals(open)) getBridge().getWebView().evaluateJavascript("document.querySelector('dialog[open].native-form-page')?.dispatchEvent(new Event('cancel',{cancelable:true}))", null);
-                    else getBridge().getWebView().evaluateJavascript("Boolean(document.querySelector('[data-notes-page]'))", notes -> {
-                        if ("true".equals(notes)) getBridge().getWebView().evaluateJavascript("window.location.hash=''", null);
-                        else { setEnabled(false); getOnBackPressedDispatcher().onBackPressed(); setEnabled(true); }
+                    else getBridge().getWebView().evaluateJavascript("document.querySelector('.mobile-app')?.dataset.activeTab || ''", tab -> {
+                        if (!"\"\"".equals(tab) && !"null".equals(tab)) {
+                            if (!"\"home\"".equals(tab)) getBridge().getWebView().evaluateJavascript("window.dispatchEvent(new Event('maikal-mobile-home'))", null);
+                            else { setEnabled(false); getOnBackPressedDispatcher().onBackPressed(); setEnabled(true); }
+                        } else getBridge().getWebView().evaluateJavascript("Boolean(document.querySelector('[data-notes-page]'))", notes -> {
+                            if ("true".equals(notes)) getBridge().getWebView().evaluateJavascript("window.location.hash=''", null);
+                            else { setEnabled(false); getOnBackPressedDispatcher().onBackPressed(); setEnabled(true); }
+                        });
                     });
                 });
             }
