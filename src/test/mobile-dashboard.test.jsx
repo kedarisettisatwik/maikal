@@ -11,7 +11,7 @@ vi.mock('../components/LeetcodeSection', () => ({ default: () => <h2>Private Lee
 vi.mock('../components/NewsSection', () => ({ default: () => <h2>Private News</h2> }));
 vi.mock('../components/JobsSection', () => ({ default: () => <h2>Private Jobs</h2> }));
 import Dashboard from '../mobile/Dashboard';
-import { expenseBreakdown } from '../mobile/MoneyPage';
+import { expenseBreakdown, filterTransactions } from '../mobile/MoneyPage';
 const notify = vi.fn();
 beforeEach(() => {
   Element.prototype.scrollTo = vi.fn();
@@ -58,4 +58,20 @@ it('shows stored category icons in transactions and separates totals by month', 
   fireEvent.click(screen.getByRole('tab',{name:'Money'}));
   expect(screen.getByRole('tabpanel',{name:'money'}).textContent).toContain('🍱');
   expect(expenseBreakdown([{id:'1',date:'2026-10-31',kind:'expense',amount:350,categoryId:'c'},{id:'2',date:'2026-09-30',kind:'expense',amount:999,categoryId:'c'}],'2026-10')[0].amount).toBe(350);
+});
+
+it('filters money records consistently for all time, month and day', () => {
+  const rows = [{id:'a', date:'2026-10-31'}, {id:'b', date:'2026-10-01'}, {id:'c', date:'2026-09-30'}, {id:'d', date:'2026-10-31',deleted:true}];
+  expect(filterTransactions(rows,'day','2026-10-31').map(t=>t.id)).toEqual(['a']);
+  expect(filterTransactions(rows,'month','2026-10').map(t=>t.id)).toEqual(['a','b']);
+  expect(filterTransactions(rows,'all','').map(t=>t.id)).toEqual(['a','b','c']);
+});
+it('opens a saved-link editor with a separate source hint', () => {
+  render(<Dashboard user={{uid:'local'}} notify={notify} restoring={false} />);
+  fireEvent.click(screen.getByRole('tab',{name:'Note'}));
+  fireEvent.click(screen.getByRole('button',{name:'New note'}));
+  fireEvent.click(screen.getByRole('button',{name:'Saved link'}));
+  expect(screen.getByText('Paste a link to identify its source')).toBeTruthy();
+  expect(screen.getByLabelText('Description')).toBeTruthy();
+  expect(screen.getByRole('button',{name:'Save note'})).toBeTruthy();
 });

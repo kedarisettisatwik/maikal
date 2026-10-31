@@ -22,4 +22,6 @@
     <string name="title_activity_main">Maikal</string>
     <string name="package_name">com.maikal.daily</string>
     <string name="custom_url_scheme">com.maikal.daily</string>
+    <string name="widget_total_name">Maikal · Total screen time</string>
+    <string name="widget_total_description">Today’s total screen time without individual apps.</string>
 </resources>

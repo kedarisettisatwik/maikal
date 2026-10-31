@@ -20,6 +20,15 @@ public class MobileTabsTest {
         for (int i=0; i<100; i++) { if ("true".equals(js(screen, condition))) return; Thread.sleep(100); }
         fail(condition);
     }
+    private void capture(String name) throws Exception {
+        android.app.Instrumentation i=androidx.test.platform.app.InstrumentationRegistry.getInstrumentation();
+        i.waitForIdleSync();
+        Thread.sleep(500);
+        android.graphics.Bitmap image=i.getUiAutomation().takeScreenshot();
+        java.io.File file=new java.io.File(i.getTargetContext().getCacheDir(),name+".png");
+        try(java.io.FileOutputStream out=new java.io.FileOutputStream(file)){image.compress(android.graphics.Bitmap.CompressFormat.PNG,100,out);}
+        image.recycle();
+    }
     @Test public void mobileTabsFormsAndNativeBack() throws Exception {
         ActivityScenario<MainActivity> screen = ActivityScenario.launch(MainActivity.class);
         try {
@@ -35,12 +44,21 @@ public class MobileTabsTest {
             waitFor(screen, "!document.querySelector('dialog[open]')");
             js(screen, "document.querySelector('[role=tab][aria-label=Money]').click()");
             waitFor(screen, "document.querySelector('.mobile-app').dataset.activeTab==='money'");
+            assertEquals("true", js(screen, "document.querySelector('.donut').getBoundingClientRect().width>=220"));
+            js(screen, "const p=document.querySelector('[aria-label=\"Money period\"]');p.value='month';p.dispatchEvent(new Event('change',{bubbles:true}))");
+            waitFor(screen, "document.querySelector('[aria-label=\"Money date\"]').type==='month'");
+            waitFor(screen, "Math.abs(document.querySelector('.viewport').scrollLeft-document.querySelector('.viewport').clientWidth)<2 && document.querySelector('.mobile-app').dataset.activeTab==='money'");
+            capture("money");
             screen.onActivity(a -> a.getOnBackPressedDispatcher().onBackPressed());
             waitFor(screen, "document.querySelector('.mobile-app').dataset.activeTab==='home'");
             js(screen, "document.querySelector('[role=tab][aria-label=Note]').click()");
             waitFor(screen, "document.querySelector('.mobile-app').dataset.activeTab==='note'");
             js(screen, "document.querySelector('[aria-label=\"New note\"]').click()");
             waitFor(screen, "Boolean(document.querySelector('dialog[open]'))");
+            js(screen, "[...document.querySelectorAll('.notes-types button')].find(e=>e.textContent==='Saved link').click()");
+            waitFor(screen, "Boolean(document.querySelector('.notes-source-hint'))");
+            assertEquals("true", js(screen, "document.querySelector('.notes-source-hint').getBoundingClientRect().bottom <= [...document.querySelectorAll('.notes-field')].find(e=>e.textContent==='Description').getBoundingClientRect().top"));
+            capture("note-editor");
         } finally { screen.onActivity(Activity::finishAndRemoveTask); }
     }
 }
