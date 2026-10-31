@@ -9,7 +9,9 @@ async function identity(){let state=JSON.parse(localStorage.getItem(key)||'null'
   else {const result=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})}).then(responseJson);state={uid:result.localId,idToken:result.idToken,refreshToken:result.refreshToken,expires:Date.now()+Number(result.expiresIn)*1000,firstSeen:new Date().toISOString()};}
   localStorage.setItem(key,JSON.stringify(state));return state;
 }
-export async function reportUsage(records){if(!apiKey||!project)return;const counts=usageCounts(records),last=JSON.parse(localStorage.getItem(sentKey)||'null'),signature=JSON.stringify(counts);if(last&&Date.now()-last.at<15*60000)return;
+let sending;
+export function reportUsage(records){if(!sending)sending=sendUsage(records).finally(()=>{sending=null});return sending;}
+async function sendUsage(records){if(!apiKey||!project)return;const counts=usageCounts(records),last=JSON.parse(localStorage.getItem(sentKey)||'null'),signature=JSON.stringify(counts);if(last&&Date.now()-last.at<15*60000)return;
   const state=await identity(),fields={edition:{stringValue:localOnly?'local':'firebase'},version:{stringValue:APP_VERSION},firstSeen:{stringValue:state.firstSeen}};for(const [name,value]of Object.entries(counts))fields[name]={integerValue:String(Math.min(1000000,value))};
   await fetch(`https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents:commit`,{method:'POST',headers:{Authorization:`Bearer ${state.idToken}`,'Content-Type':'application/json'},body:JSON.stringify({writes:[{update:{name:`projects/${project}/databases/(default)/documents/appUsage/${state.uid}`,fields},updateTransforms:[{fieldPath:'updatedAt',setToServerValue:'REQUEST_TIME'}]}]})}).then(responseJson);localStorage.setItem(sentKey,JSON.stringify({at:Date.now(),signature}));
 }

@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
-const mock = vi.hoisted(() => ({ records: {}, save: vi.fn(), remove: vi.fn(), native: { listAlarms: vi.fn().mockResolvedValue({ alarms: [] }) } }));
+const mock = vi.hoisted(() => ({ records: {}, save: vi.fn(), remove: vi.fn(), native: { setTheme:vi.fn().mockResolvedValue({}), listAlarms: vi.fn().mockResolvedValue({ alarms: [] }) } }));
 vi.mock('../firebase', () => ({ auth: {} }));
 vi.mock('firebase/auth', () => ({ signOut: vi.fn().mockResolvedValue() }));
-vi.mock('@capacitor/core', () => ({ registerPlugin: () => mock.native }));
+vi.mock('@capacitor/core', () => ({ Capacitor:{isNativePlatform:()=>true},registerPlugin: () => mock.native }));
 vi.mock('../useRecords', () => ({ default: () => ({ records: mock.records, save: mock.save, remove: mock.remove, status:'Saved locally', error:'' }) }));
 vi.mock('../useScreenTime', () => ({ default: () => ({ loading: false, allowed: false }) }));
 vi.mock('../native-notifications', () => ({ isNative: () => true, pendingNativeShare: vi.fn().mockResolvedValue({}), consumeNativeLaunch: vi.fn().mockResolvedValue({}), acknowledgeNativeLaunch: vi.fn(), acknowledgeNativeShare: vi.fn(), openTrack: vi.fn().mockResolvedValue(), openAlarms: vi.fn().mockResolvedValue(), prepareAlarmAccess: vi.fn().mockResolvedValue(), enableNotifications: vi.fn().mockResolvedValue(), syncNotifications: vi.fn().mockResolvedValue(), openNoteLink: vi.fn() }));

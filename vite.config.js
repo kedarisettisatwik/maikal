@@ -42,6 +42,6 @@ export default defineConfig(({ command, mode }) => {
     react: ['react', 'react-dom'],
     ...(!localOnly ? { 'firebase-auth': ['firebase/auth'], 'firebase-firestore': ['firebase/firestore'] } : {}),
   } } } },
-  test: { environment: 'jsdom', setupFiles: './src/test/setup.js', restoreMocks: true },
+  test: { include: ['src/test/**/*.test.{js,jsx}'], environment: 'jsdom', setupFiles: './src/test/setup.js', restoreMocks: true },
   };
 });
