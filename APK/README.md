@@ -1,6 +1,8 @@
 # Android downloads
 
-**Production APK source:** use branch `codex/mantra-branding` (v2.3.0), which preserves the v2.2.1 five-tab mobile shell. `main` serves the website and retains the earlier APK source layout; do not publish APKs built from `main` over the current mobile edition. Build both editions from the APK branch with `npm run android:build`.
+Version **2.3.1** fixes dark screen-time cards and selected Notes filters, removes individual Money summary column backgrounds, and keeps the All day checkbox compact and inline in meeting/reminder forms in both themes.
+
+**Production APK source:** use branch `codex/mantra-branding` (current APKs), which preserves the v2.2.1 five-tab mobile shell. `main` serves the website and retains the earlier APK source layout; do not publish APKs built from `main` over the current mobile edition. Build both editions from the APK branch with `npm run android:build`.
 
 Version **2.3.0** rebrands the app and launcher as **MANTRA**, with the supplied lotus artwork. Package IDs, data keys and signing remain unchanged. More shows the version, a feature guide, and Light / Dark / System default themes. Native screens and home-screen widgets follow the preference. Both editions still install as updates over their matching earlier edition.
 
