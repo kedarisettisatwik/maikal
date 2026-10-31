@@ -1,4 +1,5 @@
 import {afterEach,expect,it,vi} from 'vitest';
+vi.hoisted(()=>{vi.stubEnv('VITE_FIREBASE_API_KEY','usage-test-key');vi.stubEnv('VITE_FIREBASE_PROJECT_ID','usage-test-project');});
 import {render,screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {usageCounts,reportUsage} from '../usage';

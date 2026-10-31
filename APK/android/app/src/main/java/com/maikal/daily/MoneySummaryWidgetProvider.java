@@ -43,7 +43,7 @@ public class MoneySummaryWidgetProvider extends AppWidgetProvider {
         view.setTextViewText(R.id.widget_money_period, "Today: " + date.format(DateTimeFormatter.ofPattern("d MMM")) + " · Month: " + date.format(DateTimeFormatter.ofPattern("MMM yyyy")));
         int[] fields = {R.id.widget_day_expense, R.id.widget_month_expense, R.id.widget_month_income, R.id.widget_month_saving};
         for (int i = 0; i < fields.length; i++) view.setTextViewText(fields[i], money.format(totals[i] / 100.0));
-        view.setTextColor(R.id.widget_month_saving, Color.parseColor(totals[3] < 0 ? "#E33D3D" : "#285D79"));
+        view.setTextColor(R.id.widget_month_saving, MantraTheme.color(c,Color.parseColor(totals[3] < 0 ? "#E33D3D" : "#285D79")));
         Intent open = new Intent(c, MainActivity.class).setAction("com.maikal.daily.MONEY").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         view.setOnClickPendingIntent(R.id.widget_money_summary, PendingIntent.getActivity(c, 8201, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
         return view;

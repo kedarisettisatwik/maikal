@@ -2,7 +2,7 @@ name: Deploy Firestore account rules
 on:
   push:
     branches: [main]
-    paths: [firestore.rules, scripts/deploy-firestore-rules.mjs, scripts/enable-usage-auth.mjs, .github/workflows/firestore-rules.yml]
+    paths: [firestore.rules, scripts/deploy-firestore-rules.mjs, scripts/enable-usage-auth.mjs, scripts/verify-usage-service.mjs, .github/workflows/firestore-rules.yml]
   workflow_dispatch:
 permissions:
   contents: read
