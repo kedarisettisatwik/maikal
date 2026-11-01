@@ -31,7 +31,7 @@ public class CustomWidgetProvider extends AppWidgetProvider {
   if(plan==null){root.setTextViewText(R.id.custom_name,"Set up widget");root.setOnClickPendingIntent(R.id.custom_root,configure);root.setViewVisibility(R.id.custom_header,View.VISIBLE);return root;}
   if("money".equals(plan.optString("type")))return CustomMoneyWidget.views(c,id,plan,options);
   boolean dark=false,transparent=false;int ink=dark?0xffe9e7df:0xff253439,accent=dark?0xffb3dfc0:0xff246841;
-  root.setInt(R.id.custom_root,"setBackgroundResource",android.R.color.white);
+  root.setInt(R.id.custom_root,"setBackgroundResource",R.drawable.widget_shortcuts_white);
   root.setTextViewText(R.id.custom_name,plan.getString("name"));root.setTextColor(R.id.custom_name,ink);root.setTextColor(R.id.custom_edit,accent);
   String size=plan.getString("size");int preferredColumns=Integer.parseInt(size.substring(0,1)),preferredRows=Integer.parseInt(size.substring(2));
   JSONArray actions=plan.getJSONArray("actions");int columns=Math.min(actions.length(),"3x3".equals(size)?2:preferredColumns),rows=(actions.length()+columns-1)/columns;

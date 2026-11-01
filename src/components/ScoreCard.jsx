@@ -1,97 +1,78 @@
-import ScoreImageEffects from './ScoreImageEffects';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
+import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/csr/ArrowCounterClockwise";
+import { ArrowClockwise } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
+import { DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
+import { Eye } from "@phosphor-icons/react/dist/csr/Eye";
+import { EyeSlash } from "@phosphor-icons/react/dist/csr/EyeSlash";
+import { X } from "@phosphor-icons/react/dist/csr/X";
+import { Dialog } from './EntryDialog';
+import ScoreEditorDock from './ScoreEditorDock';
 import { registerPlugin } from '@capacitor/core';
-import { goalComplete } from '../score-model';
 import { isNative } from '../native-notifications';
-import { defaultImageLayout, drawScoreImage, IMAGE_FONTS, IMAGE_HEIGHT, IMAGE_WIDTH, movePhoto, photoGeometry, pinchPhoto, scoreImageData } from '../score-image';
+import { assetUrl } from '../assets';
+import { EDITOR_FONTS, ensureEditorFonts, registerEditorFonts, usedEditorFonts } from '../editor-fonts';
+import { defaultImageLayout, drawScoreImage, hitText, IMAGE_HEIGHT, IMAGE_WIDTH, movePhoto, photoGeometry, pinchPhoto, scoreImageData, textBox } from '../score-image';
 import '../score.css';
-
-export function ScoreTotals({ score }) { return <div className="score-totals" aria-label="Your scores"><div><span>Today’s score</span><strong>{score.today.points}</strong></div><div><span>Overall score</span><strong>{score.overall}</strong></div></div>; }
-const labels = { photo: 'Photo', goals: 'Goals done', score: 'Yesterday’s score', overall: 'Overall score', name: 'Your name', date: 'Report date' };
-export default function ScoreCard({ user, score, onBack, notify, records = {}, embedded = false }) {
-  const report = score.yesterday, date = report.date;
-  const [name,setName] = useState(() => { try { return localStorage.getItem(`mantra-score-name-${user.uid}`) || user.displayName || (user.email?.includes('@') ? user.email.split('@')[0] : 'You'); } catch { return 'You'; } });
-  const [chosen,setChosen] = useState(false), [photo,setPhoto] = useState(null), [loading,setLoading] = useState(false), [error,setError] = useState(''), [busy,setBusy] = useState(false);
-  const [layout,setLayout] = useState(defaultImageLayout), [selected,setSelected] = useState('photo');
-  const canvas = useRef(null), stage = useRef(null), input = useRef(null), model = useRef(layout), boxes = useRef([]), pointers = useRef(new Map()), gesture = useRef(null), frame = useRef(0), request = useRef(0), alive = useRef(true);
-  const data = useMemo(() => scoreImageData(report,score.throughYesterday,records,name),[report,score.throughYesterday,records,name]);
-  const drawState = useRef(); drawState.current = { photo,data };
-  const [selectionBox,setSelectionBox] = useState(null);
-  const paint = useCallback(() => {
-    if (!canvas.current) return;
-    try { boxes.current = drawScoreImage(canvas.current,drawState.current.photo,model.current,drawState.current.data); setSelectionBox(boxes.current.find(b => b.id === selected) || null); }
-    catch(e) { setError(e.message); }
-  },[selected]);
-  const redraw = useCallback(() => { cancelAnimationFrame(frame.current); frame.current = requestAnimationFrame(paint); },[paint]);
-  function commit(next, live = false) { model.current = next; if (!live) setLayout(next); redraw(); }
-  useEffect(() => { if (chosen) redraw(); },[chosen,photo,data,layout,redraw]);
-  useEffect(() => { alive.current=true;return () => { alive.current=false;request.current++;cancelAnimationFrame(frame.current); }; },[]);
-  async function choosePhoto(event) {
-    const file = event.target.files?.[0]; if (!file) return;
-    const token = ++request.current; setError('');
-    if (!file.type.startsWith('image/') || file.size > 15*1024*1024) { setError('Choose an image smaller than 15 MB.'); event.target.value = ''; setLoading(false); return; }
-    setLoading(true); const url = URL.createObjectURL(file), image = new Image();
-    try {
-      image.src=url; await image.decode(); if (token!==request.current || !alive.current) return;
-      const scale=Math.min(1,3072/Math.max(image.naturalWidth,image.naturalHeight));
-      const reduced=document.createElement('canvas'); reduced.width=Math.max(1,Math.round(image.naturalWidth*scale)); reduced.height=Math.max(1,Math.round(image.naturalHeight*scale)); reduced.getContext('2d').drawImage(image,0,0,reduced.width,reduced.height);
-      setPhoto(reduced); setChosen(true); setSelected('photo'); commit({...model.current,photo:{x:.5,y:.5,zoom:1}});
-    } catch { if(token===request.current)setError('Could not open this image. Try a JPG or PNG photo.'); }
-    finally { URL.revokeObjectURL(url); event.target.value=''; if(token===request.current&&alive.current)setLoading(false); }
-  }
-  function point(e) { const r=stage.current.getBoundingClientRect(); return {x:(e.clientX-r.left)/r.width*IMAGE_WIDTH,y:(e.clientY-r.top)/r.height*IMAGE_HEIGHT}; }
-  function down(e) {
-    if(e.button!=null&&e.button!==0)return;
-    e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); const p=point(e); pointers.current.set(e.pointerId,p);
-    const points=[...pointers.current.values()];
-    if(points.length===2&&photo){const [a,b]=points;gesture.current={type:'pinch',start:{...model.current.photo},anchor:{x:(a.x+b.x)/2,y:(a.y+b.y)/2},distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y))};setSelected('photo');return;}
-    if(points.length!==1)return;
-    const hit=[...boxes.current].reverse().find(b=>p.x>=b.x&&p.x<=b.x+b.width&&p.y>=b.y&&p.y<=b.y+b.height);
-    if(hit){setSelected(hit.id);gesture.current={type:'text',id:hit.id,offset:{x:p.x-hit.x,y:p.y-hit.y}};}
-    else {setSelected('photo');gesture.current={type:'photo',start:{...model.current.photo},anchor:p};}
-  }
-  function move(e) {
-    if(!pointers.current.has(e.pointerId))return;
-    const p=point(e);pointers.current.set(e.pointerId,p);const g=gesture.current;if(!g)return;
-    if(g.type==='pinch'&&photo&&pointers.current.size>=2){const [a,b]=[...pointers.current.values()];commit({...model.current,photo:pinchPhoto(photo,g.start,g.anchor,{x:(a.x+b.x)/2,y:(a.y+b.y)/2},Math.hypot(a.x-b.x,a.y-b.y)/g.distance)},true);}
-    else if(g.type==='photo'&&photo)commit({...model.current,photo:movePhoto(photo,g.start,g.start.x+(p.x-g.anchor.x)/IMAGE_WIDTH,g.start.y+(p.y-g.anchor.y)/IMAGE_HEIGHT)},true);
-    else if(g.type==='text')commit({...model.current,blocks:model.current.blocks.map(b=>b.id===g.id?{...b,x:(p.x-g.offset.x)/IMAGE_WIDTH,y:(p.y-g.offset.y)/IMAGE_HEIGHT}:b)},true);
-  }
-  function up(e) {
-    pointers.current.delete(e.pointerId);if(e.currentTarget.hasPointerCapture?.(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);
-    setLayout({...model.current});gesture.current=null;
-    if(pointers.current.size===1&&photo){const p=[...pointers.current.values()][0];gesture.current={type:'photo',start:{...model.current.photo},anchor:p};}
-  }
-  function editBlock(patch) { commit({...model.current,blocks:model.current.blocks.map(b=>b.id===selected?{...b,...patch}:b)}); }
-  function toggle(id,on) { const found=model.current.blocks.some(b=>b.id===id),block={...defaultImageLayout([id.replace('goal:','')]).blocks.at(-1),id};commit({...model.current,blocks:found?model.current.blocks.map(b=>b.id===id?{...b,visible:on}:b):[...model.current.blocks,{...block,visible:on,y:Math.min(.75,.52+model.current.blocks.filter(b=>b.id.startsWith('goal:')&&b.visible).length*.08)}]});if(on)setSelected(id);else if(selected===id)setSelected('photo'); }
-  function reset() { const ids=model.current.blocks.filter(b=>b.id.startsWith('goal:')&&b.visible).map(b=>b.id.slice(5));commit({...defaultImageLayout(ids),effects:model.current.effects});setSelected(photo?'photo':'score'); }
-  async function download() {
-    if(!canvas.current||busy)return;setBusy(true);setError('');
-    try { drawScoreImage(canvas.current,photo,model.current,data);const image=canvas.current.toDataURL('image/png');
-      if(isNative()){const result=await registerPlugin('DiaryAlarms').saveScoreCard({image,filename:`MANTRA-report-${date}.png`});if(!result.cancelled)notify('Yesterday’s report saved');}
-      else {const a=document.createElement('a');a.href=image;a.download=`MANTRA-report-${date}.png`;a.click();}
-    }catch(e){setError(e.message||'Could not download this image.');}finally{if(alive.current)setBusy(false);}
-  }
-  const block=layout.blocks.find(b=>b.id===selected), zoomMinimum=photo?photoGeometry(photo,layout.photo).minZoom:1;
-  const title=id=>labels[id]||report.goals.find(g=>`goal:${g.id}`===id)?.title||'Goal';
-  return <section className="score-page photo-score-page">{!embedded&&<button className="score-back" onClick={onBack}>← Back</button>}<h1>Yesterday’s report</h1><p className="score-report-date">{data.date.text} · {report.completed}/{report.total} goals met · {report.points} points</p>
-    <input ref={input} hidden type="file" accept="image/*" onChange={choosePhoto} aria-label="Photo of the day"/>
-    {!chosen?<div className="score-photo-choice"><h2>Your photo, your progress.</h2><p>Choose a photo as the background, then arrange yesterday’s results over it. Photos stay on this device.</p><div className="score-actions"><button className="primary" disabled={loading} onClick={()=>input.current.click()}>{loading?'Opening photo…':'Choose photo'}</button><button disabled={loading} onClick={()=>{request.current++;setChosen(true);setSelected('score');}}>Skip</button></div></div>:<>
-      <div className="score-actions editor-actions"><button disabled={loading} onClick={()=>input.current.click()}>{loading?'Opening photo…':'Choose photo'}</button>{photo&&<button onClick={()=>{request.current++;setPhoto(null);setLoading(false);setSelected('score');}}>Remove photo</button>}<button onClick={reset}>Reset layout</button><button className="primary" disabled={busy||loading} onClick={download}>{busy?'Saving…':'Download score card'}</button></div>
-      <p className="score-editor-help">Drag text to position it. Drag the photo to move it, or pinch with two fingers to zoom. Export: 1080 × 1920.</p>
-      <div ref={stage} className="score-canvas-stage" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onLostPointerCapture={e=>{if(pointers.current.has(e.pointerId))up(e);}}>
-        <canvas ref={canvas} data-score-canvas width={IMAGE_WIDTH} height={IMAGE_HEIGHT} role="img" aria-label={`Editable yesterday report: ${report.points} points, ${report.completed} of ${report.total} goals, ${score.throughYesterday} overall`}/>
-        {selected!=='photo'&&selectionBox&&<div className="score-selection" aria-hidden="true" style={{left:`${selectionBox.x/IMAGE_WIDTH*100}%`,top:`${selectionBox.y/IMAGE_HEIGHT*100}%`,width:`${selectionBox.width/IMAGE_WIDTH*100}%`,height:`${selectionBox.height/IMAGE_HEIGHT*100}%`}}/>}
-      </div>
-      <div className="score-editor-controls"><label className="field"><span>Edit element</span><select value={selected} onChange={e=>setSelected(e.target.value)}><option value="photo">Photo</option>{layout.blocks.filter(b=>b.visible&&data[b.id]).map(b=><option key={b.id} value={b.id}>{title(b.id)}</option>)}</select></label>
-      {selected==='photo'?photo?<><label className="field"><span>Photo zoom</span><input type="range" min={zoomMinimum} max="4" step="0.01" value={layout.photo.zoom} onChange={e=>commit({...model.current,photo:{...model.current.photo,zoom:Number(e.target.value)}})}/></label><div className="score-actions"><button onClick={()=>commit({...model.current,photo:{x:.5,y:.5,zoom:zoomMinimum}})}>Fit photo</button><button onClick={()=>commit({...model.current,photo:{x:.5,y:.5,zoom:1}})}>Fill frame</button></div></>:<p className="small">Choose a photo to resize or move it.</p>:block&&<><div className="score-control-row"><label className="field"><span>Font</span><select value={block.font} onChange={e=>editBlock({font:e.target.value})}>{Object.keys(IMAGE_FONTS).map(f=><option key={f} value={f}>{({script:'Script',classic:'Classic',clean:'Clean',mono:'Monospace'})[f]}</option>)}</select></label><label className="field"><span>Text colour</span><input type="color" value={block.color} onChange={e=>editBlock({color:e.target.value})}/></label></div><label className="field"><span>Text size</span><input type="range" min="24" max="160" step="2" value={block.size} onChange={e=>editBlock({size:Number(e.target.value)})}/></label><label className="field"><span>Readability</span><select value={block.backing} onChange={e=>editBlock({backing:e.target.value})}><option value="none">Plain text</option><option value="shadow">Text shadow</option><option value="panel">Translucent background</option></select></label><div className="score-control-row"><label className="field"><span>Horizontal position</span><input type="range" min="0" max="95" value={Math.max(0,Math.min(95,block.x*100))} onChange={e=>editBlock({x:Number(e.target.value)/100})}/></label><label className="field"><span>Vertical position</span><input type="range" min="0" max="90" value={Math.max(0,Math.min(90,block.y*100))} onChange={e=>editBlock({y:Number(e.target.value)/100})}/></label></div></>}
-      {selected==='photo'&&<ScoreImageEffects value={layout.effects} onChange={effects=>commit({...model.current,effects})}/>}
-      <fieldset className="score-overlay-options"><legend>Show on image</legend>{['score','goals','overall','name','date'].map(id=><label key={id}><input type="checkbox" checked={Boolean(layout.blocks.find(b=>b.id===id)?.visible)} onChange={e=>toggle(id,e.target.checked)}/>{title(id)}</label>)}</fieldset>
-      <label className="field"><span>Your name</span><input value={name} maxLength={60} onChange={e=>{setName(e.target.value);try{localStorage.setItem(`mantra-score-name-${user.uid}`,e.target.value);}catch{}}}/></label>
-      <fieldset className="score-overlay-options"><legend>Add particular goals</legend>{report.goals.map(g=><label key={g.id}><input type="checkbox" checked={Boolean(layout.blocks.find(b=>b.id===`goal:${g.id}`)?.visible)} onChange={e=>toggle(`goal:${g.id}`,e.target.checked)}/><span>{g.title}<small>{goalComplete(records,g,date)?'Met':'Not met'}</small></span></label>)}{!report.goals.length&&<p>No goals were scheduled yesterday.</p>}</fieldset></div>
-    </>}
-    {error&&<p role="alert" className="error">{error}</p>}
-    <details className="report-goal-details"><summary>Yesterday’s goals</summary><ul className="report-goals">{report.goals.map(g=><li key={g.id}><strong>{g.title}</strong><span>{goalComplete(records,g,date)?'Met':'Not met'}{g.goalType==='tracker'?g.target!=null?` · ${g.targetRule==='atMost'?'At most':'At least'} ${g.target}`:' · No scoring target':''}</span></li>)}</ul></details>
-    <p className="score-rules">10 points per completed goal. All scheduled goals complete: 1.2× daily bonus. This image uses yesterday’s results and the overall score through yesterday. Only yesterday’s card is available here.</p>
-  </section>;
+export function ScoreTotals({score}){return <div className="score-totals" aria-label="Your scores"><div><span>Today’s score</span><strong>{score.today.points}</strong></div><div><span>Overall score</span><strong>{score.overall}</strong></div></div>;}
+const LABELS={photo:'Photo',goals:'Goals done',score:'Yesterday’s score',overall:'Overall score',name:'Your name',date:'Report date'};
+const clone=value=>JSON.parse(JSON.stringify(value));
+export default function ScoreCard({user,score,onBack,notify,records={}}){
+ const report=score.yesterday,date=report.date;
+ const initial=useRef();if(!initial.current){let name=user.displayName||(user.email?.includes('@')?user.email.split('@')[0]:'You');try{name=localStorage.getItem(`mantra-score-name-${user.uid}`)||name;}catch{}initial.current={...defaultImageLayout(),name};}
+ const [layout,setLayout]=useState(initial.current),[selected,setSelected]=useState('photo'),[tool,setToolState]=useState('photo'),[chosen,setChosen]=useState(false),[photo,setPhoto]=useState(null),[loading,setLoading]=useState(false),[busy,setBusy]=useState(false),[fontLoading,setFontLoading]=useState(false),[error,setError]=useState(''),[preview,setPreview]=useState(false),[historyState,setHistoryState]=useState({index:0,length:1}),[licence,setLicence]=useState(null),[licenceText,setLicenceText]=useState(''),[stageSize,setStageSize]=useState({width:300,height:533}),[selectionBox,setSelectionBox]=useState(null),[exportOptions,setExportOptions]=useState({format:'png',width:1080,quality:95});
+ const canvas=useRef(null),stage=useRef(null),well=useRef(null),input=useRef(null),model=useRef(layout),boxes=useRef([]),pointers=useRef(new Map()),gesture=useRef(null),frame=useRef(0),paintId=useRef(0),request=useRef(0),alive=useRef(true),transaction=useRef(false),history=useRef([clone(initial.current)]),historyIndex=useRef(0),saved=useRef(JSON.stringify(initial.current)),photoDirty=useRef(false),selectedRef=useRef(selected),drawState=useRef(null);
+ selectedRef.current=selected;drawState.current={photo,report,records,overall:score.throughYesterday};
+ const data=useMemo(()=>scoreImageData(report,score.throughYesterday,records,layout.name,layout.blocks),[report,score.throughYesterday,records,layout.name,layout.blocks]);
+ const paint=useCallback(async()=>{
+  if(!canvas.current)return;const token=++paintId.current,snapshot=model.current,source=drawState.current;
+  try{const pending=ensureEditorFonts(usedEditorFonts(snapshot));await pending;if(!alive.current||token!==paintId.current||!canvas.current)return;const values=scoreImageData(source.report,source.overall,source.records,snapshot.name,snapshot.blocks);boxes.current=drawScoreImage(canvas.current,source.photo,snapshot,values);setSelectionBox(boxes.current.find(b=>b.id===selectedRef.current)||null);setFontLoading(false);}catch(e){if(alive.current&&token===paintId.current){setError(e.message);setFontLoading(false);}}
+ },[]);
+ const redraw=useCallback(()=>{cancelAnimationFrame(frame.current);frame.current=requestAnimationFrame(paint);},[paint]);
+ function record(next){const serialized=JSON.stringify(next),current=history.current[historyIndex.current];if(serialized===JSON.stringify(current))return;let entries=history.current.slice(0,historyIndex.current+1);entries.push(clone(next));if(entries.length>60)entries=entries.slice(-60);history.current=entries;historyIndex.current=entries.length-1;setHistoryState({index:historyIndex.current,length:entries.length});}
+ function commit(next,live=false){model.current=next;if(!live){setLayout(next);if(!transaction.current)record(next);}redraw();}
+ function begin(){transaction.current=true;}
+ function end(){if(!transaction.current)return;transaction.current=false;setLayout({...model.current});record(model.current);redraw();}
+ function undo(delta){end();const index=historyIndex.current+delta;if(index<0||index>=history.current.length)return;historyIndex.current=index;model.current=clone(history.current[index]);setLayout(model.current);setHistoryState({index,length:history.current.length});redraw();}
+ function setTool(next,element){end();setPreview(false);setToolState(next);if(element){setSelected(element);return;}if(next==='text'&&(!model.current.blocks.some(b=>b.id===selected&&b.visible))){const first=model.current.blocks.find(b=>b.visible);if(first)setSelected(first.id);}}
+ useEffect(()=>{alive.current=true;registerEditorFonts();return()=>{alive.current=false;request.current++;paintId.current++;cancelAnimationFrame(frame.current);};},[]);
+ useEffect(()=>{if(chosen)redraw();},[chosen,photo,layout,selected,report,records,score.throughYesterday,redraw]);
+ useEffect(()=>{try{localStorage.setItem(`mantra-score-name-${user.uid}`,layout.name||'');}catch{}},[layout.name,user.uid]);
+ useLayoutEffect(()=>{if(!well.current)return;const size=()=>{const r=well.current.getBoundingClientRect(),width=Math.max(80,Math.min(r.width-24,(r.height-24)*9/16));setStageSize(old=>Math.abs(old.width-width)<1?old:{width,height:width*16/9});};size();const observer=typeof ResizeObserver==='undefined'?null:new ResizeObserver(size);observer?.observe(well.current);window.addEventListener('resize',size);return()=>{observer?.disconnect();window.removeEventListener('resize',size);};},[chosen,preview]);
+ useEffect(()=>{if(!licence)return;let live=true;setLicenceText('Loading licence…');fetch(assetUrl(licence.license)).then(r=>{if(!r.ok)throw Error();return r.text();}).then(text=>{if(live)setLicenceText(text);}).catch(()=>{if(live)setLicenceText('The licence is included with this APK. Please reopen this screen to try again.');});return()=>{live=false;};},[licence]);
+ function close(){if(licence){setLicence(null);return;}if(tool==='export'){setToolState('photo');return;}if(chosen&&(photoDirty.current||JSON.stringify(model.current)!==saved.current)&&!window.confirm('Leave the editor? Unsaved image edits will be lost.'))return;onBack();}
+ async function choosePhoto(event){const file=event.target.files?.[0];if(!file)return;const token=++request.current;setError('');if(!file.type.startsWith('image/')||file.size>20*1024*1024){setLoading(false);setError('Choose an image smaller than 20 MB.');event.target.value='';return;}setLoading(true);const url=URL.createObjectURL(file),image=new Image();try{image.src=url;await image.decode();if(token!==request.current||!alive.current)return;const scale=Math.min(1,3072/Math.max(image.naturalWidth,image.naturalHeight)),reduced=document.createElement('canvas');reduced.width=Math.max(1,Math.round(image.naturalWidth*scale));reduced.height=Math.max(1,Math.round(image.naturalHeight*scale));reduced.getContext('2d').drawImage(image,0,0,reduced.width,reduced.height);setPhoto(reduced);setChosen(true);setToolState('photo');setSelected('photo');const next={...model.current,photo:{...defaultImageLayout().photo}};model.current=next;setLayout(next);history.current=[clone(next)];historyIndex.current=0;setHistoryState({index:0,length:1});photoDirty.current=true;redraw();}catch{if(token===request.current)setError('Could not open this image. Try a JPG or PNG photo.');}finally{URL.revokeObjectURL(url);event.target.value='';if(token===request.current&&alive.current)setLoading(false);}}
+ function point(e){const r=stage.current.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*IMAGE_WIDTH,y:(e.clientY-r.top)/r.height*IMAGE_HEIGHT};}
+ function down(e){if(preview||e.button!=null&&e.button!==0)return;e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);const p=point(e);pointers.current.set(e.pointerId,p);const points=[...pointers.current.values()];begin();if(points.length===2&&photo){const [a,b]=points;gesture.current={type:'pinch',start:{...model.current.photo},anchor:{x:(a.x+b.x)/2,y:(a.y+b.y)/2},distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y))};setSelected('photo');return;}if(points.length!==1)return;const hit=[...boxes.current].reverse().find(b=>hitText(b,p));if(hit){setSelected(hit.id);gesture.current={type:'text',id:hit.id,offset:{x:p.x-hit.x,y:p.y-hit.y}};}else{setSelected('photo');gesture.current={type:'photo',start:{...model.current.photo},anchor:p};}}
+ function handleDown(e,type){e.stopPropagation();e.preventDefault();stage.current.setPointerCapture(e.pointerId);const box=boxes.current.find(b=>b.id===selected),block=model.current.blocks.find(b=>b.id===selected);if(!box||!block)return;const p=point(e);pointers.current.set(e.pointerId,p);begin();gesture.current={type,id:selected,box,block:{...block},distance:Math.max(1,Math.hypot(p.x-box.cx,p.y-box.cy)),angle:Math.atan2(p.y-box.cy,p.x-box.cx)};}
+ function move(e){if(!pointers.current.has(e.pointerId))return;const p=point(e);pointers.current.set(e.pointerId,p);const g=gesture.current;if(!g)return;
+  if(g.type==='pinch'&&photo&&pointers.current.size>=2){const [a,b]=[...pointers.current.values()];commit({...model.current,photo:pinchPhoto(photo,g.start,g.anchor,{x:(a.x+b.x)/2,y:(a.y+b.y)/2},Math.hypot(a.x-b.x,a.y-b.y)/g.distance)},true);}
+  else if(g.type==='photo'&&photo)commit({...model.current,photo:movePhoto(photo,g.start,g.start.x+(p.x-g.anchor.x)/IMAGE_WIDTH,g.start.y+(p.y-g.anchor.y)/IMAGE_HEIGHT)},true);
+  else if(g.type==='text')commit({...model.current,blocks:model.current.blocks.map(b=>b.id===g.id?{...b,x:(p.x-g.offset.x)/IMAGE_WIDTH,y:(p.y-g.offset.y)/IMAGE_HEIGHT}:b)},true);
+  else if(g.type==='resize'||g.type==='rotate'){const patch=g.type==='rotate'?{rotation:((g.block.rotation||0)+(Math.atan2(p.y-g.box.cy,p.x-g.box.cx)-g.angle)*180/Math.PI+540)%360-180}:{size:Math.max(24,Math.min(220,g.block.size*Math.hypot(p.x-g.box.cx,p.y-g.box.cy)/g.distance))};let next={...g.block,...patch};if(g.type==='resize'){const ctx=canvas.current.getContext('2d'),box=textBox(ctx,next,data[g.id]);next={...next,x:(g.box.cx-box.width/2)/IMAGE_WIDTH,y:(g.box.cy-box.height/2)/IMAGE_HEIGHT};}commit({...model.current,blocks:model.current.blocks.map(b=>b.id===g.id?next:b)},true);}
+ }
+ function up(e){if(!pointers.current.has(e.pointerId))return;pointers.current.delete(e.pointerId);if(stage.current?.hasPointerCapture?.(e.pointerId))stage.current.releasePointerCapture(e.pointerId);const type=gesture.current?.type;gesture.current=null;if(pointers.current.size===1&&photo){const p=[...pointers.current.values()][0];gesture.current={type:'photo',start:{...model.current.photo},anchor:p};return;}end();if(type==='text'||type==='resize'||type==='rotate')setToolState('text');else if(type==='photo'||type==='pinch')setToolState('photo');}
+ function changeBlock(patch){if(patch.font||patch.valueFont)setFontLoading(true);commit({...model.current,blocks:model.current.blocks.map(b=>b.id===selected?{...b,...patch}:b)});}
+ function toggle(id,on){const found=model.current.blocks.some(b=>b.id===id),base={...defaultImageLayout([id.replace('goal:','')]).blocks.at(-1),id};commit({...model.current,blocks:found?model.current.blocks.map(b=>b.id===id?{...b,visible:on}:b):[...model.current.blocks,{...base,visible:on,y:.48+model.current.blocks.filter(b=>b.id.startsWith('goal:')&&b.visible).length*.07}]});if(on)setSelected(id);else if(selected===id)setSelected('photo');}
+ function addCaption(){const base={...defaultImageLayout().blocks[0],id:`custom:${crypto.randomUUID()}`,x:.12,y:.45,size:54,font:'clean',content:'Your text'};commit({...model.current,blocks:[...model.current.blocks,base]});setSelected(base.id);setToolState('text');}
+ function duplicate(){const b=model.current.blocks.find(b=>b.id===selected);if(!b)return;const copy={...b,id:`copy:${crypto.randomUUID()}`,source:b.source||b.id,x:b.x+.025,y:b.y+.025};if(b.id.startsWith('custom:')){copy.id=`custom:${crypto.randomUUID()}`;delete copy.source;}commit({...model.current,blocks:[...model.current.blocks,copy]});setSelected(copy.id);}
+ function remove(){const b=model.current.blocks.find(b=>b.id===selected);if(!b)return;commit({...model.current,blocks:b.id.startsWith('custom:')||b.id.startsWith('copy:')?model.current.blocks.filter(x=>x.id!==selected):model.current.blocks.map(x=>x.id===selected?{...x,visible:false}:x)});setSelected(model.current.blocks.find(b=>b.visible)?.id||'photo');}
+ function layer(step){const blocks=[...model.current.blocks],i=blocks.findIndex(b=>b.id===selected),next=i+step;if(i<0||next<0||next>=blocks.length)return;[blocks[i],blocks[next]]=[blocks[next],blocks[i]];commit({...model.current,blocks});}
+ function reset(){const ids=model.current.blocks.filter(b=>b.id.startsWith('goal:')&&b.visible).map(b=>b.id.slice(5));commit({...defaultImageLayout(ids),effects:model.current.effects,name:model.current.name});setSelected('score');}
+ function applyLayout(name){const positions=name==='Left column'?{score:[.05,.1,116],goals:[.05,.26,90],overall:[.05,.4,100]}:name==='Bottom panel'?{score:[.06,.65,100],goals:[.55,.65,90],overall:[.06,.79,94]}:name==='Minimal'?{score:[.06,.76,150],goals:[.56,.8,70],overall:[.06,.06,66]}:{score:[.57,.12,120],goals:[.06,.07,100],overall:[.06,.77,110]};commit({...model.current,blocks:model.current.blocks.map(b=>positions[b.id]?{...b,x:positions[b.id][0],y:positions[b.id][1],size:positions[b.id][2],rotation:0,backing:name==='Bottom panel'?'panel':'shadow',font:name==='Minimal'?'clean':b.font}:b)});}
+ async function download(){if(!canvas.current||busy||loading)return;end();setBusy(true);setError('');try{await ensureEditorFonts(usedEditorFonts(model.current));drawScoreImage(canvas.current,photo,model.current,scoreImageData(report,score.throughYesterday,records,model.current.name,model.current.blocks));let output=canvas.current;if(exportOptions.width!==IMAGE_WIDTH){output=document.createElement('canvas');output.width=exportOptions.width;output.height=exportOptions.width*16/9;output.getContext('2d').drawImage(canvas.current,0,0,output.width,output.height);}const mime=exportOptions.format==='jpeg'?'image/jpeg':'image/png',image=output.toDataURL(mime,exportOptions.quality/100),filename=`MANTRA-report-${date}.${exportOptions.format==='jpeg'?'jpg':'png'}`;if(isNative()){const result=await registerPlugin('DiaryAlarms').saveScoreCard({image,filename});if(!result.cancelled){saved.current=JSON.stringify(model.current);photoDirty.current=false;notify('Yesterday’s report saved');}}else{const a=document.createElement('a');a.href=image;a.download=filename;a.click();saved.current=JSON.stringify(model.current);photoDirty.current=false;}}catch(e){setError(e.message||'Could not save this image.');}finally{if(alive.current)setBusy(false);}}
+ const title=id=>LABELS[id]||report.goals.find(g=>`goal:${g.id}`===id)?.title||(id.startsWith('custom:')?'Caption':'Text copy');
+ return <Dialog title="Yesterday’s report" onClose={close} hideHeader className="score-editor-shell"><section className="score-page photo-editor-app" data-score-editor>
+  <header className="editor-topbar"><button aria-label="Back to diary" onClick={close}><ArrowLeft size={23}/></button><div className="editor-title"><h1>Yesterday’s report</h1><small>{fontLoading?'Loading font…':data.date.text}</small></div><button aria-label="Undo" disabled={historyState.index===0} onClick={()=>undo(-1)}><ArrowCounterClockwise size={22}/></button><button aria-label="Redo" disabled={historyState.index>=historyState.length-1} onClick={()=>undo(1)}><ArrowClockwise size={22}/></button><button aria-label={preview?'Show editing tools':'Preview image'} aria-pressed={preview} disabled={!chosen} onClick={()=>setPreview(!preview)}>{preview?<EyeSlash size={21}/>:<Eye size={21}/>}</button><button className="editor-download" aria-label="Download score card" disabled={!chosen||loading||fontLoading||busy} onClick={()=>setTool('export')}><DownloadSimple size={23}/></button></header>
+  <input ref={input} hidden type="file" accept="image/*" onChange={choosePhoto} aria-label="Photo of the day"/>
+  <div className="editor-preview-well" ref={well}>
+   {!chosen?<div className="score-photo-choice editor-start"><strong>{report.points} points</strong><h2>Your photo. Yesterday’s progress.</h2><p>Choose a photo, arrange your results and make it yours.</p><button className="editor-save" disabled={loading} onClick={()=>input.current.click()}>{loading?'Opening photo…':'Choose photo'}</button><button className="editor-skip" disabled={loading} onClick={()=>{request.current++;setChosen(true);setSelected('score');setToolState('text');}}>Skip</button><small>Photos and edits stay on this device.</small></div>:<div ref={stage} className="score-canvas-stage" style={{width:stageSize.width,height:stageSize.height}} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onLostPointerCapture={up}>
+    <canvas ref={canvas} data-selected={selected} data-score-canvas width={IMAGE_WIDTH} height={IMAGE_HEIGHT} role="img" aria-label={`Editable yesterday report: ${report.points} points, ${report.completed} of ${report.total} goals, ${score.throughYesterday} overall`}/>
+    {!preview&&selected!=='photo'&&selectionBox&&<div className="score-selection" style={{left:`${selectionBox.x/IMAGE_WIDTH*100}%`,top:`${selectionBox.y/IMAGE_HEIGHT*100}%`,width:`${selectionBox.width/IMAGE_WIDTH*100}%`,height:`${selectionBox.height/IMAGE_HEIGHT*100}%`,transform:`rotate(${selectionBox.rotation}deg)`}}>{['tl','tr','bl','br'].map(corner=><button key={corner} className={`editor-handle ${corner}`} aria-label={`Resize selected text ${corner}`} onPointerDown={e=>handleDown(e,'resize')}/>)}<button className="editor-rotate-handle" aria-label="Rotate selected text" onPointerDown={e=>handleDown(e,'rotate')}><ArrowClockwise size={13}/></button></div>}
+   </div>}
+  </div>
+  {chosen&&(!preview?<ScoreEditorDock {...{tool,setTool,model:layout,photo,selected,data,report,title,begin,end,toggle,addCaption,duplicate,remove,layer,reset,applyLayout,exportOptions,setExportOptions,download,busy,fontLoading}} select={setSelected} choosePhoto={()=>input.current.click()} removePhoto={()=>{request.current++;setPhoto(null);setLoading(false);photoDirty.current=true;setSelected('photo');}} changeBlock={changeBlock} changePhoto={patch=>commit({...model.current,photo:{...model.current.photo,...patch}})} changeEffects={(patch,replace)=>commit({...model.current,effects:replace?patch:{...model.current.effects,...patch}})} nameChange={name=>commit({...model.current,name})} zoomMinimum={photo?photoGeometry(photo,layout.photo).minZoom:1} showLicences={()=>setLicence(EDITOR_FONTS.find(f=>f.license))}/>:<button className="editor-preview-exit" onClick={()=>setPreview(false)}>Back to editing</button>)}
+  {error&&<div role="alert" className="editor-error">{error}<button aria-label="Dismiss editor error" onClick={()=>setError('')}><X size={17}/></button></div>}
+  {licence&&<section className="editor-licence"><header><button aria-label="Back to editor" onClick={()=>setLicence(null)}><ArrowLeft size={23}/></button><h2>Font licences</h2></header><label>Font<select value={licence.id} onChange={e=>setLicence(EDITOR_FONTS.find(f=>f.id===e.target.value))}>{EDITOR_FONTS.filter(f=>f.license).map(f=><option key={f.id} value={f.id}>{f.name}</option>)}</select></label><pre>{licenceText}</pre></section>}
+ </section></Dialog>;
 }

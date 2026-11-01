@@ -82,3 +82,12 @@ Version 1.4.1 uses Maikal's default cream (#FAF8EF) background, ink text, blue c
 An advance notification is scheduled **10 minutes before each regular alarm occurrence**. Its **Dismiss** action (or swiping away the notice) hides only that occurrence's notification; it does not cancel the ringing alarm or future repeat notifications. Editing/disabling/deleting the alarm cancels stale advance notices. Alarms created less than ten minutes before ringing do not generate a retroactive notice. Five-minute snoozes do not receive another ten-minute advance notice.
 
 Rebuild both APKs with `npm run android:build` from the repository root. Keep `android/`: it contains the native alarm and widget source, not disposable output.
+
+
+### MANTRA 2.8.0 photo report editor
+
+Yesterday's report now opens a dedicated full-screen editor with horizontally scrolling tool rails. It includes photo pan/zoom/rotation/flips, 42 offline font choices (38 bundled Google Fonts families plus 4 system choices), font search, separate statistic label/number styling, custom captions, goal result overlays, text resize/rotation/layers, shadows/backgrounds/outlines, four shape masks, seven gradient presets, twelve filters and manual adjustments. Undo/redo keeps up to 60 edit states; replacing the photo starts a fresh undo history. Photos/edits stay on the device and are not uploaded. PNG/JPEG exports support 1080x1920 and 720x1280; JPEG includes quality selection. Android's document picker saves exports from private temporary files so large images do not enter saved activity state. Font redistribution licences are bundled and accessible under Layout > Font licences. Font source URLs and SHA-256 checksums are in src/assets/editor-fonts/manifest.json; scripts/sync-editor-fonts.py refreshes the library.
+
+Single-figure money widgets now request **2 columns x 1 row** (width x height); summaries remain 3x3. Existing pinned money widgets must be removed and re-added to request the corrected launcher size. Shortcut widget white panels have rounded corners and transparent icon tiles.
+
+2.8.0 uses versionCode 32 and the existing app identities/signing certificate, so it installs as an update without uninstalling. Website UI remains unchanged; only APK download targets are advanced.

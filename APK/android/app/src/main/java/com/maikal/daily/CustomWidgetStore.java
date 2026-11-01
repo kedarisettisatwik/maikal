@@ -11,7 +11,7 @@ final class CustomWidgetStore {
  static final String[] LABELS={"Add note","Add transaction","Add goal","Add event"};
  static SharedPreferences prefs(Context c){return c.getSharedPreferences("mantra_custom_widgets",0);}
  static String label(String action){for(int i=0;i<ACTIONS.length;i++)if(ACTIONS[i].equals(action))return LABELS[i];return "Open MANTRA";}
- static String moneySize(String view){return view.endsWith("summary")?"3x3":"1x2";}
+ static String moneySize(String view){return view.endsWith("summary")?"3x3":"2x1";}
  static int capacity(String size){String[] n=size.split("x");return Math.min(4,Integer.parseInt(n[0])*Integer.parseInt(n[1]));}
  static JSONObject defaults()throws JSONException{return new JSONObject().put("type","shortcuts").put("moneyView","today_summary").put("uid","").put("name","").put("size","2x2").put("appearance","app").put("actions",new JSONArray(Arrays.asList(ACTIONS)));}
  static JSONObject validate(JSONObject input)throws JSONException{
