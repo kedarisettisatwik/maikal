@@ -12,3 +12,11 @@ html[data-theme="dark"] .expense{color:#ff9c9c}html[data-theme="dark"] .income{c
 .field.all-day-field>input[type="checkbox"]{width:18px;height:18px;min-height:18px;flex:0 0 18px;display:inline-block;margin:0;padding:0;accent-color:var(--green)}
 html[data-theme="dark"] :is(.notes-sidebar,.notes-mobile-tags,.notes-types) button[aria-pressed="true"],html[data-theme="dark"] .notes-tabs button[aria-selected="true"]{background:#2c403a;color:#b3dfc0;border-color:#648a75}
 html[data-theme="dark"] .screen-time-summary{background:var(--paper);border-color:var(--line)}
+
+/* Tag filters: neutral white choices, colour reserved for the selection. */
+html .notes-mobile-tags button,html .notes-sidebar button,html[data-theme="dark"] .notes-mobile-tags button,html[data-theme="dark"] .notes-sidebar button{background:#fff;color:#245436;border-color:#d1e4d6}
+html .notes-mobile-tags button[aria-pressed="true"],html .notes-sidebar button[aria-pressed="true"]{background:#cde8d5;color:#173e27;border-color:#729e80}
+html[data-theme="dark"] .notes-mobile-tags button[aria-pressed="true"],html[data-theme="dark"] .notes-sidebar button[aria-pressed="true"]{background:#3c5d48;color:#effaf2;border-color:#86b593}
+
+html .notes-sidebar button:not([aria-pressed="true"]) small{color:#53675a}
+html .notes-sidebar button[aria-pressed="true"] small{color:inherit}
