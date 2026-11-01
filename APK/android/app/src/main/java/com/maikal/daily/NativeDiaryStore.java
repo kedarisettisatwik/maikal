@@ -35,7 +35,7 @@ final class NativeDiaryStore {
         }
         for (int i = 0; i < actions.length(); i++) {
             JSONObject a = actions.getJSONObject(i);
-            if (uid(c).equals(a.optString("uid")) && goalId.equals(a.optString("goalId")) && date.equals(a.optString("date")) && a.optLong("timestamp") >= timestamp) return true;
+            if (uid(c).equals(a.optString("uid")) && goalId.equals(a.optString("goalId")) && date.equals(a.optString("date")) && !a.has("value") && a.optLong("timestamp") >= timestamp) return true;
         }
         if (value != null) return value.optBoolean("value");
         JSONObject goal = goal(c, goalId);
@@ -54,6 +54,18 @@ final class NativeDiaryStore {
         actions.put(new JSONObject().put("id", UUID.randomUUID().toString()).put("uid", account).put("goalId", goalId).put("date", date).put("timestamp", System.currentTimeMillis()));
         if (!prefs(c).edit().putString("actions", actions.toString()).commit()) throw new Exception("Could not save completion");
         return true;
+    }
+    static synchronized boolean track(Context c,String account,String goalId,String date,double value)throws Exception{
+        if(!uid(c).equals(account)||!Double.isFinite(value)||value<0||value>1e9)return false;
+        JSONObject goal=goal(c,goalId);if(goal==null||!"tracker".equals(goal.optString("goalType")))return false;
+        LocalDate day=LocalDate.parse(date);if(!day.equals(DiaryAlarmReceiver.nextDate(goal,day)))return false;
+        JSONArray actions=actions(c);actions.put(new JSONObject().put("id",UUID.randomUUID().toString()).put("uid",account).put("goalId",goalId).put("date",date).put("value",value).put("timestamp",System.currentTimeMillis()));
+        if(!prefs(c).edit().putString("actions",actions.toString()).commit())throw new Exception("Could not save tracker value");return true;
+    }
+    static double trackerValue(Context c,String goalId,String date)throws Exception{
+        JSONObject goal=goal(c,goalId);double value=goal!=null&&goal.optJSONObject("trackerValues")!=null?goal.optJSONObject("trackerValues").optDouble(date):0;long timestamp=0;
+        JSONArray records=records(c);for(int i=0;i<records.length();i++){JSONObject r=records.getJSONObject(i);if(("progress_"+goalId+"_"+date).equals(r.optString("id"))&&!r.optBoolean("deleted")&&r.optLong("updatedAt")>=timestamp){value=r.optDouble("value");timestamp=r.optLong("updatedAt");}}
+        JSONArray actions=actions(c);for(int i=0;i<actions.length();i++){JSONObject a=actions.getJSONObject(i);if(uid(c).equals(a.optString("uid"))&&goalId.equals(a.optString("goalId"))&&date.equals(a.optString("date"))&&a.has("value")&&a.optLong("timestamp")>=timestamp){value=a.optDouble("value");timestamp=a.optLong("timestamp");}}return value;
     }
     static synchronized JSONArray pending(Context c, String uid) throws Exception {
         JSONArray all = actions(c), result = new JSONArray();

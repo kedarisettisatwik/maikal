@@ -10,6 +10,7 @@ import org.json.JSONArray;
 
 @CapacitorPlugin(name = "DiaryAlarms")
 public class DiaryAlarmsPlugin extends Plugin {
+    @PluginMethod public void timeTools(PluginCall call){try{call.resolve(new JSObject(TimeTools.control(getContext(),call.getString("command","status"),call.getInt("durationMs",0)).toString()));}catch(Exception e){call.reject(e.getMessage(),e);}}
     @PluginMethod public void setTheme(PluginCall call){MantraTheme.save(getContext(),call.getString("theme","system"));call.resolve();}
     @PluginMethod public void prepareAlarmAccess(PluginCall call){getActivity().runOnUiThread(()->{
         try{

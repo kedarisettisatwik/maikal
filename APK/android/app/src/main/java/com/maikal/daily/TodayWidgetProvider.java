@@ -37,13 +37,7 @@ public class TodayWidgetProvider extends AppWidgetProvider {
         boolean done = goal && !tracker && NativeDiaryStore.completed(c, r.getString("id"), date);
         String detail;
         if (tracker) {
-            double value = 0; JSONObject legacy = r.optJSONObject("trackerValues");
-            if (legacy != null) value = legacy.optDouble(date, 0);
-            JSONArray records = NativeDiaryStore.records(c);
-            for (int i = 0; i < records.length(); i++) {
-                JSONObject p = records.getJSONObject(i);
-                if (("progress_" + r.getString("id") + "_" + date).equals(p.optString("id")) && !p.optBoolean("deleted")) value = p.optDouble("value", 0);
-            }
+            double value = NativeDiaryStore.trackerValue(c,r.getString("id"),date);
             detail = "Tracker · " + (value == Math.rint(value) ? String.valueOf((long)value) : String.valueOf(value)) + ("time".equals(r.optString("trackerUnit")) ? " mins" : " count");
         } else detail = goal ? done ? "Goal · Completed" : "Goal · To do" : r.optString("kind", "Reminder") + " · " + (r.optBoolean("allDay") ? "All day" : r.optString("startTime"));
         row.setTextViewText(R.id.widget_row_title, (done ? "✓ " : "") + r.optString("title"));

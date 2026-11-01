@@ -4,7 +4,7 @@
     <string name="widget_track_description">Today’s screen time and your three most used apps</string>
     <string name="widget_note_name">MANTRA Note</string>
     <string name="widget_note_description">Keep a selected note on your home screen and tap to open it</string>
-    <string name="widget_today_name">MANTRA Today</string>
+    <string name="widget_today_name">MANTRA</string>
     <string name="widget_today_description">Today’s goals, reminders and meetings</string>
     <string name="widget_today_empty">No goals or plans for today. Tap the heading to open MANTRA.</string>
     <string name="widget_money_name">Quick transaction</string>

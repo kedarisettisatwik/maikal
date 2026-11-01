@@ -29,6 +29,7 @@ import noteIcon from './assets/note.png';
 import timeIcon from './assets/time.png';
 import moreIcon from './assets/more.png';
 import './mobile.css';
+import TimeToolsPanel from './TimeToolsPanel';
 import { celebrateGoal, clearCelebration } from './goal-celebration';
 
 const native = registerPlugin('DiaryAlarms');
@@ -56,10 +57,10 @@ export function GoalRow({ goal, records, date, onProgress, onEdit, remove, notif
 export function PlanRow({ event, manage, onEdit, remove }) {
   return <article className="plan"><div className="plan-time">{event.allDay ? 'All day' : event.startTime || '-'}</div><div className="grow"><h3>{event.title}</h3><p>{manage ? describe(event.schedule || { type: 'everyday' }) : event.notes || (event.allDay ? 'All day' : `${event.startTime} - ${event.endTime}`)}</p></div>{manage && <div className="row-actions"><ActionIconButton action="edit" label={`Edit reminder ${event.title}`} onClick={() => onEdit(event)} /><ActionIconButton action="delete" label={`Delete reminder ${event.title}`} onClick={() => remove(event.id)} /></div>}</article>;
 }
-function TimePage({ records, uid, notify, onEdit, active, revision }) {
+function AlarmsPage({ records, uid, notify, onEdit, active, revision }) {
   const [alarms, setAlarms] = useState([]), [error, setError] = useState(''), [busy, setBusy] = useState('');
   const alive = useRef(false);
-  async function refresh() { try { const result = await native.listAlarms(); if (alive.current) { setAlarms((result.alarms || []).sort((a, b) => a.time.localeCompare(b.time))); setError(''); } } catch { if (alive.current) setError('Could not read alarms. Open alarm settings to check permissions.'); } }
+  async function refresh() { try { const result = await native.listAlarms(); if (alive.current) { setAlarms((result.alarms || []).filter(a=>!a.timer).sort((a, b) => a.time.localeCompare(b.time))); setError(''); } } catch { if (alive.current) setError('Could not read alarms. Open alarm settings to check permissions.'); } }
   useEffect(() => {
     if (!active) return; alive.current = true; refresh();
     const resume = () => { if (!document.hidden) refresh(); };
@@ -69,6 +70,8 @@ function TimePage({ records, uid, notify, onEdit, active, revision }) {
   async function toggle(alarm, enabled) { setBusy(alarm.id); try { if (enabled) await prepareAlarmAccess(); await native.setAlarmEnabled({ id: alarm.id, enabled }); await refresh(); } catch (e) { notify(e.message || 'Could not update this alarm.'); } finally { setBusy(''); } }
   return <><div className="page-top"><div className="eyebrow">Your scheduled alerts</div><h1>Alarms</h1><p className="lead">Ringing alarms for goals, reminders and your day.</p></div><Heading title="All alarms"><button className="view-all" onClick={() => openAlarms().catch(e => notify(e.message))}>+ New alarm</button></Heading>{error && <p role="status" className="helper">{error}</p>}{!alarms.length && <p className="empty">No ringing alarms yet. Add one here, or set alarm times in a goal or reminder.</p>}{alarms.map(alarm => <div className={`alarm ${alarm.enabled ? '' : 'off'}`} key={alarm.id}><div className="alarm-time">{alarm.time}</div><div className="grow"><h3>{alarm.title}</h3><small>{alarm.diaryLinked ? 'Linked entry' : 'Standalone alarm'}</small><button className="text-button alarm-edit" onClick={() => { const source = records[alarm.sourceId]; if (alarm.diaryLinked && alarm.sourceUid === uid && source && !source.deleted) onEdit(source); else openAlarms().catch(e => notify(e.message)); }}>Edit</button></div><input className="toggle" type="checkbox" aria-label={`Enable ${alarm.title}`} disabled={busy === alarm.id} checked={Boolean(alarm.enabled)} onChange={e => toggle(alarm, e.target.checked)} /></div>)}<p className="helper">Notification times are separate from ringing alarms. Manage both in the linked goal or reminder form.</p><button className="text-button" onClick={() => openAlarms().catch(e => notify(e.message))}>Alarm settings & permissions ↗</button></>;
 }
+
+function TimePage(props){const [tool,setTool]=useState('alarms');return <><div className="time-subtabs" role="tablist" aria-label="Time tools">{['alarms','timer','stopwatch'].map(name=><button type="button" key={name} role="tab" aria-label={name==='alarms'?'Alarms':name==='timer'?'Timer':'Stopwatch'} aria-selected={tool===name} onClick={()=>setTool(name)}>{name==='alarms'?'Alarms':name==='timer'?'Timer':'Stopwatch'}</button>)}</div>{tool==='alarms'?<AlarmsPage {...props}/>:<TimeToolsPanel mode={tool} active={props.active} notify={props.notify}/>}</>}
 
 export default function Dashboard({ user, notify, onConnect, restoring }) {
   const { records, save, remove, error, status } = useRecords(user.uid, notify);

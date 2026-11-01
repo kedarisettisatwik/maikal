@@ -391,3 +391,14 @@ html[data-maikal-mobile][data-theme="dark"] .notes-mobile-tags button,html[data-
 html[data-maikal-mobile][data-theme="dark"] .notes-mobile-tags button[aria-pressed="true"],html[data-maikal-mobile][data-theme="dark"] .notes-tabs button[aria-selected="true"]{background:#2c403a;color:#b3dfc0;border-color:#648a75}
 html[data-maikal-mobile] .field.all-day-field{display:flex;align-items:center;gap:10px;min-height:44px}
 html[data-maikal-mobile] .field.all-day-field>input[type="checkbox"]{display:inline-block;width:18px;height:18px;min-height:18px;flex:0 0 18px;margin:0;padding:0;accent-color:var(--green)}
+
+html[data-maikal-mobile] .note-rich-text{white-space:pre-wrap;overflow-wrap:anywhere;tab-size:4}
+
+html[data-maikal-mobile] .time-subtabs{display:flex;gap:8px;padding:0 0 18px;border-bottom:1px solid var(--line);margin-bottom:20px}
+html[data-maikal-mobile] .time-subtabs button{flex:1;padding:11px 6px;border:1px solid var(--line);border-radius:8px;color:var(--muted)}
+html[data-maikal-mobile] .time-subtabs button[aria-selected="true"]{background:var(--soft);color:var(--green);border-color:var(--green)}
+html[data-maikal-mobile] .tool-clock{font-size:clamp(36px,11vw,58px);font-variant-numeric:tabular-nums;text-align:center;padding:32px 0;color:var(--ink);letter-spacing:-1px}
+html[data-maikal-mobile] .timer-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:20px 0}
+html[data-maikal-mobile] .timer-fields label{font-size:12px;color:var(--muted)}html[data-maikal-mobile] .timer-fields input{width:100%;padding:12px 8px;border:1px solid var(--line);border-radius:8px;background:var(--white);margin-top:8px}
+html[data-maikal-mobile] .tool-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}.tool-actions button{padding:12px 18px;border:1px solid var(--line);border-radius:8px;min-height:44px}
+html[data-maikal-mobile] .tool-laps{list-style:none;padding:0;margin:24px 0}.tool-laps li{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
