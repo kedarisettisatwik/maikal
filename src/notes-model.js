@@ -24,15 +24,14 @@ export function shareDraft(share) {
   return { id:'note_share_'+share.id, noteType:url?'link':'text', title:(share.title || (url ? 'Saved from '+noteSource(url) : 'Shared note')).slice(0,150), url, body:String(share.text||'').replace(first?.text||'\0','').trim(), tags:[], source:url?noteSource(url):'Shared text', shared:true };
 }
 export function makeNote(input, previous, now = Date.now()) {
-  const title=String(input.title||'').trim(), body=String(input.body||'').trim(), kind=input.noteType;
+  const title=String(input.title||'').trim(), body=String(input.body||''), kind=input.noteType;
   if(!noteTypes.includes(kind)) throw Error('Choose a note type.');
   if(!title || title.length>150) throw Error('Enter a title of up to 150 characters.');
   if(body.length>16000) throw Error('Keep your note under 16,000 characters.');
   const url=kind==='link'?safeNoteUrl(input.url):'';
   if(kind==='link'&&!url) throw Error('Enter a valid http or https link.');
   const tags=normalizeTags(input.tags);
-  if(input.shared&&(!body||!tags.length)) throw Error('Add a description and at least one tag for your shared note.');
-  if(kind==='text'&&!body) throw Error('Enter your note text.');
+  if(input.shared&&!tags.length) throw Error('Add at least one tag for your shared note.');
   const items=kind==='checklist'?body.split('\n').map(s=>s.trim()).filter(Boolean).map((text,index)=>({id:previous?.items?.[index]?.text===text?previous.items[index].id:crypto.randomUUID(),text,done:previous?.items?.find(item=>item.text===text)?.done||false})):[];
   if(kind==='checklist'&&!items.length) throw Error('Add at least one checklist item.');
   if(items.length>200) throw Error('Use up to 200 checklist items.');

@@ -19,7 +19,7 @@ export function Dialog({ children, title = 'A new entry', onClose }) {
     dialog.showModal();
     return () => { dialog.close(); if (native) { const mode = document.documentElement.dataset.maikalView; if (mode) applyViewMode(mode); else if (previous) viewport?.setAttribute('content', previous); if (previousDialog === null) document.documentElement.removeAttribute('data-maikal-dialog'); else document.documentElement.setAttribute('data-maikal-dialog',previousDialog); } };
   }, [native]);
-  return <dialog ref={ref} className={native ? 'native-form-page' : undefined} onCancel={e => { e.preventDefault(); onClose(); }}><div className="dialoghead"><span className="kicker">{title}</span><button type="button" onClick={onClose} aria-label={native ? 'Back to diary' : 'Close dialog'}>{native ? '← Back' : '×'}</button></div>{children}<Toaster toasterId="dialog" position="top-center" toastOptions={{ duration: 4200 }} /></dialog>;
+  return <dialog ref={ref} className={native ? 'native-form-page' : undefined} onCancel={e => { e.preventDefault(); onClose(); }}><div className="dialoghead"><button type="button" onClick={onClose} aria-label={native ? 'Back to diary' : 'Close dialog'}>{native ? '← Back' : '×'}</button><span className="kicker">{title}</span></div>{children}<Toaster toasterId="dialog" position="top-center" toastOptions={{ duration: 4200 }} /></dialog>;
 }
 export function Icon({ record }) { return record.iconMode === 'emoji' ? <span style={{ fontSize: 26 }}>{record.icon}</span> : record.icon ? <img src={assetUrl(record.icon)} alt="" /> : null; }
 export function IconPicker({ paths, value, onChange, children }) {

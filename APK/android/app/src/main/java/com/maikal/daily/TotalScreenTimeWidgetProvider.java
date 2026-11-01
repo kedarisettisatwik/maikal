@@ -11,6 +11,7 @@ public class TotalScreenTimeWidgetProvider extends AppWidgetProvider {
     private static final ExecutorService worker=Executors.newSingleThreadExecutor();
     static RemoteViews views(Context c) {
         RemoteViews view=new RemoteViews(c.getPackageName(),R.layout.widget_total_screen_time);
+        view.setInt(R.id.widget_total_card,"setBackgroundResource",MantraTheme.dark(c)?R.drawable.widget_paper_dark:R.drawable.widget_total_paper);view.setTextColor(R.id.widget_total_label,MantraTheme.color(c,0xff536159));view.setTextColor(R.id.widget_total_value,MantraTheme.color(c,0xff25704d));
         Intent open=new Intent(c,TrackActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TOP);
         view.setOnClickPendingIntent(R.id.widget_total_card,PendingIntent.getActivity(c,9302,open,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE));
         try {

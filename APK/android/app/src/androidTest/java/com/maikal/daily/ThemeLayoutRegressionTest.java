@@ -19,7 +19,7 @@ public class ThemeLayoutRegressionTest {
     assertEquals("true",js(screen,"[...document.querySelectorAll('.stats>.stat')].length===3&&[...document.querySelectorAll('.stats>.stat')].every(e=>getComputedStyle(e).backgroundColor==='rgba(0, 0, 0, 0)')"));
     if("dark".equals(theme)){
      assertEquals("true",js(screen,"getComputedStyle(document.querySelector('.mobile-screen-time')).backgroundColor==='rgb(32, 49, 43)'"));
-     assertEquals("true",js(screen,"(()=>{const tag=document.querySelector('.notes-mobile-tags button[aria-pressed=true]');const style=getComputedStyle(tag);return style.backgroundColor==='rgb(44, 64, 58)'&&style.color==='rgb(179, 223, 192)';})()"));
+     assertEquals("true",js(screen,"(()=>{const tag=document.querySelector('.notes-mobile-tags button[aria-pressed=true]');const style=getComputedStyle(tag);return style.backgroundColor==='rgb(60, 93, 72)'&&style.color==='rgb(239, 250, 242)';})()"));
     }
     for(String kind:new String[]{"meeting","reminder"}){
      js(screen,"[...document.querySelectorAll('.mobile-more button')].find(b=>b.querySelector('strong')?.textContent==='Add "+kind+"').click()");
