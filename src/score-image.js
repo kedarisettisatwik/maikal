@@ -16,9 +16,13 @@ export function scoreImageData(report,overall,records,name){
 const clamp=(v,low,high)=>Math.min(high,Math.max(low,v));
 function wrap(ctx,text,width){const lines=[];let line='';for(const word of text.split(/\s+/)){if(line&&ctx.measureText(line+word).width>width){lines.push(line.trim());line='';}for(const char of word){if(line&&ctx.measureText(line+char).width>width){lines.push(line.trim());line='';}line+=char;}line+=' ';}if(line.trim())lines.push(line.trim());return lines.length?lines:[''];}
 export function textBox(ctx,block,data){
- const family=IMAGE_FONTS[block.font]||IMAGE_FONTS.clean,max=IMAGE_WIDTH-64,specs=data.text?[{text:data.text,size:block.size}]:[{text:data.label,size:block.size*.48},{text:data.value,size:block.size}],lines=[];
- for(const spec of specs){ctx.font=`600 ${spec.size}px ${family}`;for(const text of wrap(ctx,spec.text,max-32))lines.push({text,size:spec.size,width:ctx.measureText(text).width});}
- const width=Math.min(max,Math.max(40,...lines.map(l=>l.width))+32),height=lines.reduce((h,l)=>h+l.size*1.35,0)+24;
+ const family=IMAGE_FONTS[block.font]||IMAGE_FONTS.clean,max=IMAGE_WIDTH-64;let lines=[],height=0,scale=1;
+ do {
+  lines=[];const specs=data.text?[{text:data.text,size:block.size*scale}]:[{text:data.label,size:block.size*.48*scale},{text:data.value,size:block.size*scale}];
+  for(const spec of specs){ctx.font=`600 ${spec.size}px ${family}`;for(const text of wrap(ctx,spec.text,max-32))lines.push({text,size:spec.size,width:ctx.measureText(text).width});}
+  height=lines.reduce((h,l)=>h+l.size*1.35,0)+24;if(height<=IMAGE_HEIGHT-132)break;scale*=.9;
+ }while(scale>.1);
+ const width=Math.min(max,Math.max(40,...lines.map(l=>l.width))+32);
  return {id:block.id,x:clamp(block.x*IMAGE_WIDTH,16,IMAGE_WIDTH-width-16),y:clamp(block.y*IMAGE_HEIGHT,16,IMAGE_HEIGHT-height-100),width,height,lines,family};
 }
 export function photoGeometry(photo,t){const width=photo.naturalWidth||photo.width,height=photo.naturalHeight||photo.height,cover=Math.max(IMAGE_WIDTH/width,IMAGE_HEIGHT/height);return {width:width*cover*t.zoom,height:height*cover*t.zoom,minZoom:Math.min(IMAGE_WIDTH/width,IMAGE_HEIGHT/height)/cover,x:t.x*IMAGE_WIDTH,y:t.y*IMAGE_HEIGHT};}
