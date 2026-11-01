@@ -7,14 +7,21 @@ describe('saved notes',()=>{
     expect(safeNoteUrl('javascript:alert(1)')).toBe('');expect(safeNoteUrl('https://user:password@example.com')).toBe('');
     expect(noteSource('https://instagram.com.evil.test/')).toBe('Web');expect(noteSource('https://amzn.in/d/123')).toBe('Amazon');
   });
-  it('turns a shared URL into a deterministic draft requiring description and tags',()=>{
+  it('turns a shared URL into a deterministic draft requiring tags with an optional description',()=>{
     const draft=shareDraft({id:'request-1',text:'https://www.instagram.com/reel/123/'});
     expect(draft.id).toBe('note_share_request-1');expect(draft.body).toBe('');expect(draft.source).toBe('Instagram');
-    expect(()=>makeNote(draft)).toThrow('description');const note=makeNote({...draft,body:'Watch this later',tags:'Fitness, #fitness, Saved'},undefined,100);expect(note.tags).toEqual(['fitness','saved']);expect(note.type).toBe('note');
+    expect(()=>makeNote(draft)).toThrow('tag');const note=makeNote({...draft,body:'Watch this later',tags:'Fitness, #fitness, Saved'},undefined,100);expect(note.tags).toEqual(['fitness','saved']);expect(note.type).toBe('note');
   });
   it('preserves checklist completion during editing and supports note sync',()=>{
     let note=makeNote({noteType:'checklist',title:'Weekend',body:'Clean room\nWater plants',tags:'home'},undefined,100);note.items[0].done=true;
     const updated=makeNote({...note,body:'Clean room\nWater plants\nRead'},note,200);expect(updated.items[0].done).toBe(true);expect(updated.items[2].done).toBe(false);
     expect(mergeRecords({}, {}, [{...updated,updatedAt:300}]).records[note.id].type).toBe('note');
   });
+});
+
+it('accepts empty descriptions and preserves description spacing',()=>{
+ expect(makeNote({noteType:'text',title:'Title only',body:''}).body).toBe('');
+ expect(makeNote({...shareDraft({id:'optional',text:'https://example.com/'}),tags:['saved']}).body).toBe('');
+ expect(makeNote({noteType:'text',title:'Spacing',body:'  First line\n\nLast line\n'}).body).toBe('  First line\n\nLast line\n');
+ expect(()=>makeNote({noteType:'checklist',title:'List',body:''})).toThrow('checklist item');
 });
