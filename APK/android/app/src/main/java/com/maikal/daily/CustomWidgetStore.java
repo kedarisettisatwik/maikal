@@ -11,14 +11,15 @@ final class CustomWidgetStore {
  static final String[] LABELS={"Add note","Add transaction","Add goal","Add reminder / meeting"};
  static SharedPreferences prefs(Context c){return c.getSharedPreferences("mantra_custom_widgets",0);}
  static String label(String action){for(int i=0;i<ACTIONS.length;i++)if(ACTIONS[i].equals(action))return LABELS[i];return "Open MANTRA";}
+ static String moneySize(String view){return view.endsWith("summary")?"3x3":"1x2";}
  static int capacity(String size){String[] n=size.split("x");return Math.min(4,Integer.parseInt(n[0])*Integer.parseInt(n[1]));}
- static JSONObject defaults()throws JSONException{return new JSONObject().put("type","shortcuts").put("moneyView","today_summary").put("uid","").put("name","My shortcuts").put("size","2x2").put("appearance","app").put("actions",new JSONArray(Arrays.asList(ACTIONS)));}
+ static JSONObject defaults()throws JSONException{return new JSONObject().put("type","shortcuts").put("moneyView","today_summary").put("uid","").put("name","").put("size","2x2").put("appearance","app").put("actions",new JSONArray(Arrays.asList(ACTIONS)));}
  static JSONObject validate(JSONObject input)throws JSONException{
   String size=input.optString("size"),appearance=input.optString("appearance","app"),name=input.optString("name","My shortcuts").trim();
   if(!Arrays.asList(SIZES).contains(size))throw new IllegalArgumentException("Choose a widget size");
   if(!Arrays.asList("app","light","dark","transparent").contains(appearance))throw new IllegalArgumentException("Choose an appearance");
-  if(name.isEmpty()||name.length()>40)throw new IllegalArgumentException("Use a widget name of up to 40 characters");
-  String type=input.optString("type","shortcuts"),moneyView=input.optString("moneyView","today_summary");if(!Arrays.asList("shortcuts","money").contains(type))throw new IllegalArgumentException("Choose a widget type");if(!Arrays.asList(MONEY_VIEWS).contains(moneyView))throw new IllegalArgumentException("Choose a money figure");if("money".equals(type)&&moneyView.endsWith("summary")&&capacity(size)<3)throw new IllegalArgumentException("Choose at least three cells for a full summary, or show a single figure");
+  name="";
+  String type=input.optString("type","shortcuts"),moneyView=input.optString("moneyView","today_summary");if(!Arrays.asList("shortcuts","money").contains(type))throw new IllegalArgumentException("Choose a widget type");if(!Arrays.asList(MONEY_VIEWS).contains(moneyView))throw new IllegalArgumentException("Choose a money figure");if("money".equals(type))size=moneySize(moneyView);
   JSONArray actions=input.optJSONArray("actions");if(actions==null)actions=new JSONArray();if("shortcuts".equals(type)&&(actions.length()<1||actions.length()>capacity(size)))throw new IllegalArgumentException("Choose 1 to "+capacity(size)+" actions for this size");
   Set<String> seen=new HashSet<>();for(int i=0;i<actions.length();i++)if(!Arrays.asList(ACTIONS).contains(actions.getString(i))||!seen.add(actions.getString(i)))throw new IllegalArgumentException("Choose each action only once");
   return new JSONObject().put("type",type).put("moneyView",moneyView).put("uid",input.optString("uid","")).put("name",name).put("size",size).put("appearance",appearance).put("actions",new JSONArray(actions.toString()));

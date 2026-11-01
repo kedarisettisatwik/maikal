@@ -30,17 +30,17 @@ public class CustomWidgetProvider extends AppWidgetProvider {
   root.setOnClickPendingIntent(R.id.custom_edit,configure);
   if(plan==null){root.setTextViewText(R.id.custom_name,"Set up widget");root.setOnClickPendingIntent(R.id.custom_root,configure);root.setViewVisibility(R.id.custom_header,View.VISIBLE);return root;}
   if("money".equals(plan.optString("type")))return CustomMoneyWidget.views(c,id,plan,options);
-  boolean dark=dark(c,plan),transparent="transparent".equals(plan.optString("appearance"));int ink=dark?0xffe9e7df:0xff253439,accent=dark?0xffb3dfc0:0xff246841;
-  root.setInt(R.id.custom_root,"setBackgroundResource",transparent?android.R.color.transparent:dark?R.drawable.widget_paper_dark:R.drawable.widget_paper);
+  boolean dark=false,transparent=false;int ink=dark?0xffe9e7df:0xff253439,accent=dark?0xffb3dfc0:0xff246841;
+  root.setInt(R.id.custom_root,"setBackgroundResource",android.R.color.white);
   root.setTextViewText(R.id.custom_name,plan.getString("name"));root.setTextColor(R.id.custom_name,ink);root.setTextColor(R.id.custom_edit,accent);
   String size=plan.getString("size");int preferredColumns=Integer.parseInt(size.substring(0,1)),preferredRows=Integer.parseInt(size.substring(2));
   JSONArray actions=plan.getJSONArray("actions");int columns=Math.min(actions.length(),"3x3".equals(size)?2:preferredColumns),rows=(actions.length()+columns-1)/columns;
   int height=options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT,preferredRows*70),width=options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH,preferredColumns*70);
-  boolean header=height>=140&&width>=100;root.setViewVisibility(R.id.custom_header,header?View.VISIBLE:View.GONE);root.removeAllViews(R.id.custom_rows);
+  boolean header=height>=140&&width>=100;root.setViewVisibility(R.id.custom_header,View.GONE);root.removeAllViews(R.id.custom_rows);
   boolean compact=(height-(header?28:0)-12)/rows<60||width/columns<55;
   for(int row=0;row<rows;row++){RemoteViews line=new RemoteViews(c.getPackageName(),R.layout.widget_custom_row);
    for(int col=0;col<columns;col++){int index=row*columns+col;if(index>=actions.length())break;String action=actions.getString(index);RemoteViews tile=new RemoteViews(c.getPackageName(),R.layout.widget_custom_action);
-    tile.setInt(R.id.custom_action,"setBackgroundResource",dark?R.drawable.custom_tile_dark:R.drawable.custom_tile_light);tile.setImageViewBitmap(R.id.custom_icon,icon(c,action,accent));tile.setTextColor(R.id.custom_label,ink);tile.setTextViewText(R.id.custom_label,"plan".equals(action)?"Reminder\nMeeting":CustomWidgetStore.label(action));tile.setTextViewTextSize(R.id.custom_label,android.util.TypedValue.COMPLEX_UNIT_SP,columns>=3?9:10);tile.setViewVisibility(R.id.custom_label,compact?View.GONE:View.VISIBLE);tile.setContentDescription(R.id.custom_action,CustomWidgetStore.label(action));
+    tile.setInt(R.id.custom_action,"setBackgroundResource",android.R.color.transparent);tile.setImageViewBitmap(R.id.custom_icon,icon(c,action,accent));tile.setTextColor(R.id.custom_label,ink);tile.setTextViewText(R.id.custom_label,"plan".equals(action)?"Reminder\nMeeting":CustomWidgetStore.label(action));tile.setTextViewTextSize(R.id.custom_label,android.util.TypedValue.COMPLEX_UNIT_SP,columns>=3?9:10);tile.setViewVisibility(R.id.custom_label,View.GONE);tile.setContentDescription(R.id.custom_action,CustomWidgetStore.label(action));
     tile.setOnClickPendingIntent(R.id.custom_action,PendingIntent.getActivity(c,0,launch(c,id,action),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE));line.addView(R.id.custom_columns,tile);
    }root.addView(R.id.custom_rows,line);
   }return root;
