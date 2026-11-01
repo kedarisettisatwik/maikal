@@ -35,3 +35,13 @@ describe('Android notification completion import', () => {
     expect(importNativeCompletions([action], NEWS_READER_UID, () => ({ g1: goal }), save)).toEqual(['action-1']);
   });
 });
+
+it('imports the latest queued tracker total, including zero, without incrementing it',()=>{
+ let records={t:{id:'t',type:'goal',goalType:'tracker'}};const save=vi.fn(r=>{records={...records,[r.id]:{...r,updatedAt:Date.now()}}});
+ const actions=[{id:'old',uid:'local',goalId:'t',date:'2026-11-01',timestamp:100,value:12.5},{id:'new',uid:'local',goalId:'t',date:'2026-11-01',timestamp:200,value:0}];
+ expect(new Set(importNativeCompletions(actions,'local',()=>records,save))).toEqual(new Set(['old','new']));expect(save).toHaveBeenCalledTimes(1);expect(save).toHaveBeenCalledWith(expect.objectContaining({value:0}));
+});
+it('rejects invalid totals and does not turn an old tracker reply into checkbox completion',()=>{
+ const save=vi.fn();for(const value of [-1,Infinity,1e10])importNativeCompletions([{id:'a',uid:'local',goalId:'t',date:'2026-11-01',timestamp:1,value}],'local',()=>({t:{id:'t',type:'goal',goalType:'tracker'}}),save);
+ importNativeCompletions([{id:'a',uid:'local',goalId:'t',date:'2026-11-01',timestamp:1,value:3}],'local',()=>({t:{id:'t',type:'goal',goalType:'checklist'}}),save);expect(save).not.toHaveBeenCalled();
+});

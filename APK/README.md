@@ -1,5 +1,7 @@
 # Android downloads
 
+Version **2.4.0** preserves saved Notes line breaks and indentation in the mobile reader. Goal check-ins rotate content each day at delivery time, keeping the existing schedule. The goals widget heading is MANTRA with its date. Tracker reminder notifications offer Reply with total: a count or minutes value replaces that day’s total and is stored durably on Android, then imported and synced when the APK next opens. Time now has Alarms, Timer and Stopwatch subtabs. Countdown timers use a native elapsed-time alarm and ring while the app is closed; stopwatch supports pause, resume, laps and reset. Tools remain device-local.
+
 Version **2.3.1** fixes dark screen-time cards and selected Notes filters, removes individual Money summary column backgrounds, and keeps the All day checkbox compact and inline in meeting/reminder forms in both themes.
 
 **Production APK source:** use branch `codex/mantra-branding` (current APKs), which preserves the v2.2.1 five-tab mobile shell. `main` serves the website and retains the earlier APK source layout; do not publish APKs built from `main` over the current mobile edition. Build both editions from the APK branch with `npm run android:build`.
