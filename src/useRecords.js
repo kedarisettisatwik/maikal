@@ -1,3 +1,4 @@
+import { withScoreHistory } from './score-model';
 import { useEffect, useRef, useState } from 'react';
 import { collection, doc, onSnapshot, query, setDoc, where } from 'firebase/firestore';
 import { db } from './firebase';
@@ -38,7 +39,7 @@ export default function useRecords(uid, notify) {
   useEffect(() => {
     alive.current = true; ready.current = false;
     if (!cloud) return () => { alive.current = false; };
-    const stop = onSnapshot(query(collection(db, 'users', uid, 'maikalRecords'), where('type', 'in', ['goal', 'event', 'category', 'transaction', 'progress', 'note', 'screentime'])), { includeMetadataChanges: true }, snapshot => {
+    const stop = onSnapshot(query(collection(db, 'users', uid, 'maikalRecords'), where('type', 'in', ['goal', 'event', 'category', 'transaction', 'progress', 'note', 'screentime', 'score'])), { includeMetadataChanges: true }, snapshot => {
       if (!alive.current) return;
       persist(mergeRecords(ref.current.records, ref.current.dirty, snapshot.docs.filter(d => !d.metadata.hasPendingWrites).map(d => d.data())));
       setConnected(!snapshot.metadata.fromCache);
@@ -58,7 +59,8 @@ export default function useRecords(uid, notify) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid, retry, cloud]);
   const save = record => {
-    const r = { ...record, updatedAt: Math.max(Date.now(), (ref.current.records[record.id]?.updatedAt || 0) + 1) };
+    const scored = record.type === 'goal' ? withScoreHistory(record, ref.current.records[record.id]) : record;
+    const r = { ...scored, updatedAt: Math.max(Date.now(), (ref.current.records[record.id]?.updatedAt || 0) + 1) };
     persist({ records: { ...ref.current.records, [r.id]: r }, dirty: cloud ? { ...ref.current.dirty, [r.id]: true } : {} });
     push(r);
     return r;

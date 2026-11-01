@@ -1,3 +1,4 @@
+import { scoreNudgesEnabled } from './score-model';
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
@@ -20,9 +21,9 @@ export async function enableNotifications() {
 export async function syncNotifications(records, uid = 'local') {
   if (!isNative()) return;
   const entries = Object.values(records).filter(r => !r.deleted && ['goal', 'event'].includes(r.type) && r.notificationTimes?.length)
-    .map(r => ({ id: r.id, title: r.title, kind: r.kind || 'goal', goalType: r.goalType || 'checklist', schedule: r.schedule, createdDate: r.createdDate, times: r.notificationTimes }));
-  const snapshot = Object.values(records).filter(r => ['goal', 'event', 'progress', 'transaction', 'note'].includes(r.type));
-  await DiaryAlarms.replace({ entries, uid, records: snapshot });
+    .map(r => ({ id: r.id, title: r.title, kind: r.type === 'event' ? 'event' : 'goal', goalType: r.goalType || 'checklist', schedule: r.schedule, createdDate: r.createdDate, times: r.notificationTimes }));
+  const snapshot = Object.values(records).filter(r => ['goal', 'event', 'progress', 'transaction', 'note', 'score'].includes(r.type));
+  await DiaryAlarms.replace({ entries, uid, records: snapshot, scoreNudges: scoreNudgesEnabled(uid) });
 }
 export const pendingNativeActions = uid => DiaryAlarms.pendingActions({ uid });
 export const acknowledgeNativeActions = ids => DiaryAlarms.acknowledgeActions({ ids });

@@ -16,5 +16,5 @@ it('hides reminder and meeting notification times, retaining actual meeting hour
   const view=render(<Dashboard user={{uid:'local',email:'On this device'}} notify={vi.fn()} onConnect={vi.fn()} restoring={false}/>);
   for(const time of ['10:30','15:50','11:00'])expect(screen.queryByText(time,{exact:false})).toBeNull();
   expect(screen.getByText('16:10')).toBeTruthy();view.container.querySelectorAll('details').forEach(d=>d.open=true);
-  expect(screen.getByRole('button',{name:'Edit meeting Planning'})).toBeTruthy();expect(screen.getByRole('button',{name:'Delete reminder Water plants'})).toBeTruthy();
+  expect(screen.getByRole('button',{name:'Edit event Planning'})).toBeTruthy();expect(screen.getByRole('button',{name:'Delete event Water plants'})).toBeTruthy();
 });

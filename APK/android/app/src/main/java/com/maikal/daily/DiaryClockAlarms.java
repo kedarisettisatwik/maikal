@@ -23,7 +23,7 @@ final class DiaryClockAlarms {
                 boolean same=previous!=null&&signature(source).equals(previous.optString("sourceSignature"));
                 JSONObject alarm=same?new JSONObject(previous.toString()):new JSONObject();
                 alarm.put("id",id).put("title",source.getString("title")).put("time",time).put("schedule",new JSONObject(source.getJSONObject("schedule").toString())).put("createdDate",source.optString("createdDate"))
-                    .put("diaryLinked",true).put("sourceId",source.getString("id")).put("sourceUid",uid).put("sourceKind","goal".equals(type)?"goal":source.optString("kind","reminder")).put("sourceSignature",signature(source)).put("oneTime",false);
+                    .put("diaryLinked",true).put("sourceId",source.getString("id")).put("sourceUid",uid).put("sourceKind","goal".equals(type)?"goal":"event").put("sourceSignature",signature(source)).put("oneTime",false);
                 if(!same)alarm.put("enabled",true).put("snoozedUntil",0);
                 if(ClockAlarms.nextMillis(alarm,ZonedDateTime.now())==0)alarm.put("enabled",false);
                 ClockAlarms.validate(alarm);result.put(alarm);

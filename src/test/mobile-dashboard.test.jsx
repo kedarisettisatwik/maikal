@@ -1,3 +1,4 @@
+import { consumeNativeLaunch, acknowledgeNativeLaunch } from '../native-notifications';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 const mock = vi.hoisted(() => ({ records: {}, save: vi.fn(), remove: vi.fn(), native: { setTheme:vi.fn().mockResolvedValue({}), listAlarms: vi.fn().mockResolvedValue({ alarms: [] }) } }));
@@ -19,7 +20,7 @@ beforeEach(() => {
   window.history.replaceState(null, '', '/');
   mock.records = {
     g: { id:'g',type:'goal',title:'Read',goalType:'checklist',iconMode:'emoji',icon:'📚',schedule:{type:'everyday'},notificationTimes:['09:00'],alarmTimes:['08:00'],updatedAt:1 },
-    e: { id:'e',type:'event',kind:'meeting',title:'Team meeting',allDay:true,schedule:{type:'everyday'},updatedAt:1 },
+    e: { id:'e',type:'event',kind:'event',title:'Team meeting',allDay:true,schedule:{type:'everyday'},updatedAt:1 },
     c: { id:'c',type:'category',name:'Food',kind:'expense',iconMode:'emoji',icon:'🍱',updatedAt:1 }
   };
 });
@@ -28,7 +29,7 @@ it('uses five icon-only bottom tabs and combined plans, with screen time below t
   render(<Dashboard user={{uid:'local'}} notify={notify} restoring={false} />);
   expect(within(screen.getByRole('tablist', {name:'Main navigation'})).getAllByRole('tab')).toHaveLength(5);
   expect(screen.getByRole('tab',{name:'Money'}).textContent).toBe('');
-  expect(screen.getByRole('heading',{name:'Reminders & Meetings'})).toBeTruthy();
+  expect(screen.getByRole('heading',{name:'Events'})).toBeTruthy();
   const home = screen.getByRole('tabpanel',{name:'home'});
   expect(within(home).getByRole('heading',{name:'Today’s screen time'})).toBeTruthy();
   expect(within(home).queryByText('09:00')).toBeNull();
@@ -101,4 +102,12 @@ it('celebrates a completed checkbox only after its progress saves', () => {
     fireEvent.click(screen.getByRole('checkbox',{name:'Mark Read done'}));
     expect(document.querySelector('.goal-celebration')).toBeNull();
   } finally { clearCelebration(); Element.prototype.animate = original; view.unmount(); }
+});
+
+it('opens yesterday report directly from its native notification', async () => {
+ vi.mocked(consumeNativeLaunch).mockResolvedValueOnce({type:'quick',action:'report',requestId:'report-test'});
+ render(<Dashboard user={{uid:'local'}} notify={notify} restoring={false}/>);
+ expect(await screen.findByRole('heading',{name:'Yesterday’s report'})).toBeTruthy();
+ expect(screen.getByRole('button',{name:'Skip'})).toBeTruthy();
+ expect(acknowledgeNativeLaunch).toHaveBeenCalledWith('report-test');
 });

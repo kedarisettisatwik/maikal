@@ -7,7 +7,7 @@ import EntryDialog from '../components/EntryDialog';
 afterEach(()=>{platform.native=true;});
 function form(type,save=vi.fn(),record){const close=vi.fn();render(<EntryDialog entry={{type,record}} categories={[]} save={save} removeCategory={vi.fn()} notify={vi.fn()} onClose={close}/>);return {save,close};}
 it.each(['goal','reminder','meeting'])('lets an APK %s use an alarm without notification times',async type=>{
-  const user=userEvent.setup(),{save}=form(type);await user.type(screen.getByLabelText('Title'),'Linked '+type);await user.click(screen.getByRole('button',{name:'+ Add alarm time'}));await user.click(screen.getByRole('button',{name:'Create '+type}));
+  const user=userEvent.setup(),{save}=form(type);await user.type(screen.getByLabelText('Title'),'Linked '+type);await user.click(screen.getByRole('button',{name:'+ Add alarm time'}));await user.click(screen.getByRole('button',{name:'Create '+(type==='goal'?'goal':'event')}));
   expect(save).toHaveBeenCalledWith(expect.objectContaining({alarmTimes:['09:00'],notificationTimes:[],title:'Linked '+type}));
 });
 it('supports a notification and an alarm at the same time and removes them independently',async()=>{

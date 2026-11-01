@@ -39,7 +39,7 @@ public class TodayWidgetProvider extends AppWidgetProvider {
         if (tracker) {
             double value = NativeDiaryStore.trackerValue(c,r.getString("id"),date);
             detail = "Tracker · " + (value == Math.rint(value) ? String.valueOf((long)value) : String.valueOf(value)) + ("time".equals(r.optString("trackerUnit")) ? " mins" : " count");
-        } else detail = goal ? done ? "Goal · Completed" : "Goal · To do" : r.optString("kind", "Reminder") + " · " + (r.optBoolean("allDay") ? "All day" : r.optString("startTime"));
+        } else detail = goal ? done ? "Goal · Completed" : "Goal · To do" : "Event" + " · " + (r.optBoolean("allDay") ? "All day" : r.optString("startTime"));
         row.setTextViewText(R.id.widget_row_title, (done ? "✓ " : "") + r.optString("title"));
         row.setTextViewText(R.id.widget_row_detail, detail);
         row.setTextColor(R.id.widget_row_title, MantraTheme.color(c,MantraTheme.color(c,Color.parseColor(done ? "#008B47" : "#253439"))));

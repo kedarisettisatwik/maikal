@@ -1,9 +1,10 @@
+import { goalComplete, hasTrackerValue } from '../score-model';
 import { useEffect, useRef, useState } from 'react';
 import { describe, progress, unit } from '../model';
 import ActionIconButton from './ActionIconButton';
 import { Icon } from './EntryDialog';
 
-function Tracker({ goal, date, value, onSave, notify }) {
+function Tracker({ goal, date, value, onSave, notify, entered }) {
   const [draft, setDraft] = useState(String(Number(value) || 0));
   const focused = useRef(false);
   useEffect(() => { if (!focused.current) setDraft(String(Number(value) || 0)); }, [value, date]);
@@ -11,12 +12,12 @@ function Tracker({ goal, date, value, onSave, notify }) {
     focused.current = false;
     const number = Number(draft);
     if (!draft.trim() || !Number.isFinite(number) || number < 0 || number > 1e9) { setDraft(String(Number(value) || 0)); notify('Enter a value from 0 to 1,000,000,000.'); return; }
-    if (number !== Number(value)) onSave(goal.id, number, date);
+    if (number !== Number(value) || !entered) onSave(goal.id, number, date);
   }
   return <div className="tracker"><input type="number" min="0" max="1000000000" step="any" aria-label={`${goal.title} ${unit(goal)}`} value={draft} onChange={e => setDraft(e.target.value)} onFocus={() => focused.current = true} onBlur={save} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} /></div>;
 }
 export default function GoalBoard({ goals, todayGoals, records, date, onProgress, remove, notify, onEdit }) {
-  return <><div>{todayGoals.length ? todayGoals.map(goal => { const value = progress(records, goal, date), tracker = goal.goalType === 'tracker'; return <div className={`item ${!tracker && value ? 'done' : ''}`} key={goal.id}>{!tracker && <input type="checkbox" checked={Boolean(value)} onChange={e => onProgress(goal.id, e.target.checked, date)} aria-label={`Mark ${goal.title} done`} />}<Icon record={goal} /><div className="body"><div className="entry-title-row"><h3>{goal.title}</h3></div><small>{tracker ? `Track in ${unit(goal)}` : value ? 'Completed today' : 'One step for today'}</small></div>{tracker && <Tracker key={`${goal.id}-${date}`} goal={goal} date={date} value={value} onSave={onProgress} notify={notify} />}</div>; }) : <p className="empty">A fresh page. Add a goal to begin.</p>}</div>
+  return <><div>{todayGoals.length ? todayGoals.map(goal => { const value = progress(records, goal, date), tracker = goal.goalType === 'tracker'; return <div className={`item ${goalComplete(records, goal, date) ? 'done' : ''}`} key={goal.id}>{!tracker && <input type="checkbox" checked={Boolean(value)} onChange={e => onProgress(goal.id, e.target.checked, date)} aria-label={`Mark ${goal.title} done`} />}<Icon record={goal} /><div className="body"><div className="entry-title-row"><h3>{goal.title}</h3></div><small>{tracker ? `Track in ${unit(goal)}${goal.target != null ? ` · ${goal.targetRule === 'atMost' ? 'At most' : 'At least'} ${goal.target}${goalComplete(records, goal, date) ? ' · Target met' : ''}` : ''}` : value ? 'Completed today' : 'One step for today'}</small></div>{tracker && <Tracker key={`${goal.id}-${date}`} goal={goal} date={date} value={value} entered={hasTrackerValue(records, goal, date)} onSave={onProgress} notify={notify} />}</div>; }) : <p className="empty">A fresh page. Add a goal to begin.</p>}</div>
     <details style={{ marginTop: 18 }}><summary>All saved goals</summary>{goals.length ? goals.map(g => <div className="item" key={g.id}><Icon record={g} /><div className="body"><div className="entry-title-row"><h3 className="saved-title">{g.title}</h3></div><small>{describe(g.schedule)} · {g.goalType === 'tracker' ? `Tracker / ${unit(g)}` : 'Checkbox'}</small></div><ActionIconButton action="edit" label={`Edit goal ${g.title}`} onClick={() => onEdit(g)} /><ActionIconButton action="delete" label={`Delete goal ${g.title}`} onClick={() => remove(g.id)} /></div>) : <p className="empty">No goals created yet.</p>}</details>
   </>;
 }

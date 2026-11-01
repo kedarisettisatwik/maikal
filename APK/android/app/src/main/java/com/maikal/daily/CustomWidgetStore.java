@@ -8,7 +8,7 @@ final class CustomWidgetStore {
  static final String[] SIZES={"1x1","1x2","1x3","1x4","2x1","3x1","4x1","2x2","3x3"};
  static final String[] MONEY_VIEWS={"today_summary","today_expense","today_income","today_saving","month_summary","month_expense","month_income","month_saving"};
  static final String[] ACTIONS={"note","transaction","goal","plan"};
- static final String[] LABELS={"Add note","Add transaction","Add goal","Add reminder / meeting"};
+ static final String[] LABELS={"Add note","Add transaction","Add goal","Add event"};
  static SharedPreferences prefs(Context c){return c.getSharedPreferences("mantra_custom_widgets",0);}
  static String label(String action){for(int i=0;i<ACTIONS.length;i++)if(ACTIONS[i].equals(action))return LABELS[i];return "Open MANTRA";}
  static String moneySize(String view){return view.endsWith("summary")?"3x3":"1x2";}

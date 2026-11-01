@@ -36,6 +36,7 @@ public class CustomWidgetProvider extends AppWidgetProvider {
   String size=plan.getString("size");int preferredColumns=Integer.parseInt(size.substring(0,1)),preferredRows=Integer.parseInt(size.substring(2));
   JSONArray actions=plan.getJSONArray("actions");int columns=Math.min(actions.length(),"3x3".equals(size)?2:preferredColumns),rows=(actions.length()+columns-1)/columns;
   int height=options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT,preferredRows*70),width=options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH,preferredColumns*70);
+  if(android.os.Build.VERSION.SDK_INT>=31)root.setViewLayoutWidth(R.id.custom_root,Math.max(40,Math.min(width-8,columns*52+16)),android.util.TypedValue.COMPLEX_UNIT_DIP);
   boolean header=height>=140&&width>=100;root.setViewVisibility(R.id.custom_header,View.GONE);root.removeAllViews(R.id.custom_rows);
   boolean compact=(height-(header?28:0)-12)/rows<60||width/columns<55;
   for(int row=0;row<rows;row++){RemoteViews line=new RemoteViews(c.getPackageName(),R.layout.widget_custom_row);

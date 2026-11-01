@@ -36,13 +36,14 @@ export function Schedule({ value, onChange }) {
 }
 const initialSchedule = () => ({ type: 'everyday', days: [], dates: [''], from: '', to: '' });
 export default function EntryDialog({ entry, categories, save, removeCategory, notify, onClose }) {
-  const type = entry.type;
+  const type = ['meeting','reminder'].includes(entry.type) ? 'event' : entry.type;
   const editing = entry.transaction || entry.record;
   const [schedule, setSchedule] = useState(() => editing?.schedule || initialSchedule());
   const [icon, setIcon] = useState(editing?.icon || (type === 'category' ? expenseIcons[3] : goalIcons[0]));
   const [iconMode, setIconMode] = useState(editing?.iconMode || 'select');
   const [emoji, setEmoji] = useState(editing?.iconMode === 'emoji' ? editing.icon : '');
   const [goalType, setGoalType] = useState(editing?.goalType || 'checklist');
+  const [targetEnabled, setTargetEnabled] = useState(editing?.target != null);
   const [allDay, setAllDay] = useState(editing?.allDay ?? true);
   const [kind, setKind] = useState(editing?.kind || entry.kind || 'expense');
   const [categoryId, setCategoryId] = useState(editing?.categoryId || '');
@@ -50,7 +51,7 @@ export default function EntryDialog({ entry, categories, save, removeCategory, n
   const [notificationTimes, setNotificationTimes] = useState(editing?.notificationTimes || []);
   const [alarmTimes, setAlarmTimes] = useState(editing?.alarmTimes || []);
   const [saving, setSaving] = useState(false);
-  const title = editing && type !== 'transaction' ? `Edit ${type}` : type === 'goal' ? 'Create a goal' : type === 'category' ? 'Create a category' : type === 'transaction' ? editing ? 'Edit transaction' : 'Add a transaction' : `Create a ${type}`;
+  const title = editing && type !== 'transaction' ? `Edit ${type}` : type === 'goal' ? 'Create a goal' : type === 'category' ? 'Create a category' : type === 'transaction' ? editing ? 'Edit transaction' : 'Add a transaction' : type === 'event' ? 'Create an event' : `Create a ${type}`;
   async function submit(e) {
     e.preventDefault(); setError('');
     if (saving) return;
@@ -58,7 +59,7 @@ export default function EntryDialog({ entry, categories, save, removeCategory, n
     const data = new FormData(e.currentTarget);
     try {
       let record = { ...editing, id: editing?.id || crypto.randomUUID(), type };
-      if (type === 'goal' || type === 'meeting' || type === 'reminder') {
+      if (type === 'goal' || type === 'event') {
         const title = data.get('title').trim();
         if (!title) throw new Error('Enter a title.');
         record = { ...record, title, schedule: validateSchedule(schedule), createdDate: editing?.createdDate || localDate(), notificationTimes };
@@ -66,10 +67,13 @@ export default function EntryDialog({ entry, categories, save, removeCategory, n
         if (type === 'goal') {
           if (iconMode === 'emoji' && !emoji.trim()) throw new Error('Enter an emoji or choose another icon style.');
           record = { ...record, iconMode, icon: iconMode === 'select' ? icon : iconMode === 'emoji' ? emoji.trim() : '', goalType, trackerUnit: data.get('trackerUnit') || 'count' };
+          const target = targetEnabled && goalType === 'tracker' ? Number(data.get('target')) : null;
+          if (target !== null && (!data.get('target')?.trim() || !Number.isFinite(target) || target < 0 || target > 1e9)) throw new Error('Enter a target from 0 to 1,000,000,000.');
+          record = { ...record, target, targetRule: data.get('targetRule') || 'atLeast' };
         } else {
           const startTime = allDay ? '' : data.get('startTime'), endTime = allDay ? '' : data.get('endTime');
           if (!allDay && (!startTime || !endTime || endTime <= startTime)) throw new Error('End time must be after start time.');
-          record = { ...record, type: 'event', kind: type, allDay, startTime, endTime, notes: data.get('notes').trim(), timezone: Intl.DateTimeFormat().resolvedOptions().timeZone };
+          record = { ...record, type: 'event', kind: editing?.kind || 'reminder', allDay, startTime, endTime, notes: data.get('notes').trim(), timezone: Intl.DateTimeFormat().resolvedOptions().timeZone };
         }
       } else if (type === 'category') {
         const name = data.get('name').trim();
@@ -88,9 +92,10 @@ export default function EntryDialog({ entry, categories, save, removeCategory, n
     finally { setSaving(false); }
   }
   return <Dialog onClose={onClose}><form onSubmit={submit}><h2>{title}</h2>
-    {(type === 'goal' || type === 'meeting' || type === 'reminder') && <>
+    {(type === 'goal' || type === 'event') && <>
       <label className="field"><span>Title</span><input name="title" defaultValue={editing?.title} required maxLength={150} placeholder={type === 'goal' ? 'e.g. Read for 20 minutes' : 'Give your plan a name'} /></label>
       {type === 'goal' ? <><span className="label">Make it yours</span>{iconMode === 'select' && <IconPicker paths={goalIcons} value={icon} onChange={setIcon} />}<div className="row"><label className="field"><span>Icon style</span><select value={iconMode} onChange={e => setIconMode(e.target.value)}><option value="select">Choose an icon</option><option value="emoji">My own emoji</option><option value="none">No icon</option></select></label>{iconMode === 'emoji' && <label className="field"><span>Your emoji</span><input value={emoji} onChange={e => setEmoji(e.target.value)} maxLength={16} /></label>}</div><div className="row"><label className="field"><span>Goal type</span><select value={goalType} onChange={e => setGoalType(e.target.value)}><option value="checklist">Checkbox</option><option value="tracker">Tracker</option></select></label>{goalType === 'tracker' && <label className="field"><span>Track in</span><select name="trackerUnit" defaultValue={editing?.trackerUnit || 'count'}><option value="count">Count</option><option value="time">Minutes</option></select></label>}</div></> : <label className="field"><span>Notes or location</span><textarea name="notes" defaultValue={editing?.notes} rows={2} maxLength={1000} placeholder="Add a little context" /></label>}
+      {type === 'goal' && goalType === 'tracker' && <div className="tracker-target"><label className="field all-day-field"><input type="checkbox" checked={targetEnabled} onChange={e => setTargetEnabled(e.target.checked)}/> Set a scoring target</label>{targetEnabled && <div className="row"><label className="field"><span>Target condition</span><select name="targetRule" defaultValue={editing?.targetRule || 'atLeast'}><option value="atLeast">At least</option><option value="atMost">At most</option></select></label><label className="field"><span>Target value</span><input name="target" type="number" min="0" max="1000000000" step="any" required defaultValue={editing?.target ?? ''}/></label></div>}<p className="small">Enter your daily progress to earn 10 points when the target is met. Trackers without targets do not earn points.</p></div>}
       <Schedule value={schedule} onChange={setSchedule} />
       {type !== 'goal' && <><label className="field all-day-field"><input type="checkbox" checked={allDay} onChange={e => setAllDay(e.target.checked)} /> All day</label>{!allDay && <div className="row"><label className="field"><span>Start time</span><input name="startTime" defaultValue={editing?.startTime} type="time" required /></label><label className="field"><span>End time</span><input name="endTime" defaultValue={editing?.endTime} type="time" required /></label></div>}<p className="small" style={{ marginBottom: 20 }}>Times use your device’s local timezone. Notifications follow the times selected below.</p></>}
       <NotificationTimes times={notificationTimes} onChange={setNotificationTimes} />
@@ -104,5 +109,5 @@ export default function EntryDialog({ entry, categories, save, removeCategory, n
   </form></Dialog>;
 }
 export function NewDialog({ onChoose, onClose }) {
-  return <Dialog title="What would you like to add?" onClose={onClose}><div className="choices">{[['goal', 'A goal', 'Build a habit or track your progress.'], ['meeting', 'A meeting', 'Make time for a conversation.'], ['reminder', 'A reminder', 'Keep something important in sight.'], ['category', 'A category', 'Organize your income and expenses.'], ['transaction', 'A transaction', 'Record money coming in or going out.']].map(([type, title, subtitle]) => <button key={type} onClick={() => onChoose(type)}>{title}<small>{subtitle}</small></button>)}</div></Dialog>;
+  return <Dialog title="What would you like to add?" onClose={onClose}><div className="choices">{[['goal', 'A goal', 'Build a habit or track your progress.'], ['event', 'An event', 'Keep your plans and appointments together.'], ['category', 'A category', 'Organize your income and expenses.'], ['transaction', 'A transaction', 'Record money coming in or going out.']].map(([type, title, subtitle]) => <button key={type} onClick={() => onChoose(type)}>{title}<small>{subtitle}</small></button>)}</div></Dialog>;
 }

@@ -1,0 +1,56 @@
+package com.maikal.daily;
+import android.app.Activity;
+import android.content.Context;
+import android.view.MotionEvent;
+import android.view.InputDevice;
+import android.view.accessibility.AccessibilityNodeInfo;
+import androidx.test.core.app.*;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
+import org.json.*;
+import org.junit.*;
+import org.junit.runner.RunWith;
+import java.time.LocalDate;
+import static org.junit.Assert.*;
+
+@RunWith(AndroidJUnit4.class)
+public class PhotoScoreEditorTest {
+ final Context c=ApplicationProvider.getApplicationContext();
+ private String js(ActivityScenario<MainActivity> screen,String code)throws Exception{java.util.concurrent.CountDownLatch done=new java.util.concurrent.CountDownLatch(1);java.util.concurrent.atomic.AtomicReference<String> value=new java.util.concurrent.atomic.AtomicReference<>("");screen.onActivity(a->a.getBridge().getWebView().evaluateJavascript(code,v->{value.set(v);done.countDown();}));assertTrue(done.await(25,java.util.concurrent.TimeUnit.SECONDS));return value.get();}
+ private void waitFor(ActivityScenario<MainActivity> s,String code)throws Exception{for(int i=0;i<200;i++){if("true".equals(js(s,code)))return;Thread.sleep(100);}fail(code);}
+ private void change(ActivityScenario<MainActivity> s,String label,String value)throws Exception{js(s,"window.changeScoreControl("+JSONObject.quote(label)+","+JSONObject.quote(value)+");true");Thread.sleep(100);}
+ private void click(ActivityScenario<MainActivity> s,String label)throws Exception{js(s,"[...document.querySelectorAll('.score-page button')].find(b=>b.textContent==="+JSONObject.quote(label)+").click();true");Thread.sleep(100);}
+ private void touch(long start,int action,float x,float y){MotionEvent event=MotionEvent.obtain(start,android.os.SystemClock.uptimeMillis(),action,x,y,0);event.setSource(InputDevice.SOURCE_TOUCHSCREEN);assertTrue(InstrumentationRegistry.getInstrumentation().getUiAutomation().injectInputEvent(event,true));event.recycle();}
+ private void drag(ActivityScenario<MainActivity> s)throws Exception{
+  js(s,"document.querySelector('.score-canvas-stage').scrollIntoView({block:'center',behavior:'instant'});true");Thread.sleep(350);String json=js(s,"(()=>{const r=document.querySelector('.score-selection').getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2,devicePixelRatio]})()");JSONArray p=new JSONArray(json);int[] origin=new int[2];s.onActivity(a->a.getBridge().getWebView().getLocationOnScreen(origin));float x=origin[0]+(float)(p.getDouble(0)*p.getDouble(2)),y=origin[1]+(float)(p.getDouble(1)*p.getDouble(2));long start=android.os.SystemClock.uptimeMillis();touch(start,MotionEvent.ACTION_DOWN,x,y);Thread.sleep(100);for(int n=1;n<=12;n++){touch(start,MotionEvent.ACTION_MOVE,x+n*5,y+n*5);Thread.sleep(20);}touch(start,MotionEvent.ACTION_UP,x+60,y+60);Thread.sleep(200);
+ }
+ private boolean clickNative(AccessibilityNodeInfo node,String text){if(node==null)return false;CharSequence t=node.getText();if(t!=null&&text.equalsIgnoreCase(t.toString())&&node.isEnabled()){AccessibilityNodeInfo button=node;for(int i=0;i<3&&!button.isClickable()&&button.getParent()!=null;i++)button=button.getParent();if(button.isClickable())return button.performAction(AccessibilityNodeInfo.ACTION_CLICK);}for(int i=0;i<node.getChildCount();i++)if(clickNative(node.getChild(i),text))return true;return false;}
+ private JSONObject progress(String id,String date,Object value)throws Exception{return new JSONObject().put("id","progress_"+id+"_"+date).put("type","progress").put("goalId",id).put("date",date).put("value",value).put("updatedAt",1);}
+ @Test public void photoEffectsGesturesAndDownloadCreateFinishedSample()throws Exception{
+  ActivityScenario<MainActivity> screen=ActivityScenario.launch(MainActivity.class);String original=null;
+  try{
+   waitFor(screen,"Boolean(document.querySelector('.mobile-app'))");original=js(screen,"localStorage.getItem('maikal-v2-local')");LocalDate now=LocalDate.now();String yesterday=now.minusDays(1).toString();JSONObject records=new JSONObject();String[] ids={"pushups","read","walk","stretch","clean","water","journal"},names={"Pushups","Read 20 minutes","Walk","Stretch","Clean room","Hydrate","Journal"};
+   for(int i=0;i<ids.length;i++){JSONObject g=new JSONObject().put("id",ids[i]).put("type","goal").put("title",names[i]).put("createdDate",i<4?now.minusDays(26).toString():yesterday).put("schedule",new JSONObject().put("type","everyday")).put("goalType",i==0?"tracker":"checklist").put("updatedAt",1);if(i==0)g.put("target",20).put("targetRule","atLeast");records.put(ids[i],g);JSONObject p=progress(ids[i],yesterday,i==0?20:(Object)(i!=3&&i!=6));records.put(p.getString("id"),p);}
+   for(int day=2;day<=26;day++)for(int i=0;i<4;i++){JSONObject p=progress(ids[i],now.minusDays(day).toString(),i==0?20:(Object)true);records.put(p.getString("id"),p);}
+   String seed=new JSONObject().put("records",records).put("dirty",new JSONObject()).toString();js(screen,"localStorage.setItem('maikal-v2-local',"+JSONObject.quote(seed)+");location.reload();true");waitFor(screen,"Boolean(document.querySelector('.mobile-app'))");waitFor(screen,"JSON.parse(localStorage.getItem('maikal-v2-local')).records['score_"+yesterday+"']?.points===50");
+   js(screen,"document.querySelector('[role=tab][aria-label=More]').click();true");waitFor(screen,"document.querySelector('.mobile-more .score-totals')?.textContent.includes('1250')");js(screen,"[...document.querySelectorAll('.mobile-more button')].find(b=>b.textContent.includes('Yesterday')).click();true");waitFor(screen,"Boolean(document.querySelector('.score-photo-choice'))");
+   String source;try(android.os.ParcelFileDescriptor.AutoCloseInputStream in=new android.os.ParcelFileDescriptor.AutoCloseInputStream(InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand("base64 /data/local/tmp/mantra-sample-source.png"))){source=new String(in.readAllBytes(),java.nio.charset.StandardCharsets.UTF_8).replaceAll("\\s","");}assertTrue("Sample source photo missing",source.length()>1000);
+   js(screen,"fetch('data:image/png;base64,"+source+"').then(r=>r.blob()).then(blob=>{const dt=new DataTransfer();dt.items.add(new File([blob],'portrait.png',{type:'image/png'}));const input=document.querySelector('input[type=file]');input.files=dt.files;input.dispatchEvent(new Event('change',{bubbles:true}));});true");
+   waitFor(screen,"Boolean(document.querySelector('[data-score-canvas]'))&&Boolean([...document.querySelectorAll('.score-page button')].find(b=>b.textContent==='Remove photo'))");waitFor(screen,"document.querySelector('[data-score-canvas]').width===1080&&document.querySelector('[data-score-canvas]').height===1920");
+   js(screen,"window.changeScoreControl=(label,value)=>{const l=[...document.querySelectorAll('.score-page label')].find(l=>l.querySelector('span')?.childNodes[0]?.textContent.trim()===label);if(!l)throw Error(label);const el=l.querySelector('input,select'),proto=el.tagName==='SELECT'?HTMLSelectElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(proto,'value').set.call(el,value);el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));};true");
+   click(screen,"Dark fade");change(screen,"Brightness","104");change(screen,"Contrast","106");change(screen,"Saturation","96");change(screen,"Vignette","14");change(screen,"Start opacity","0");change(screen,"End opacity","85");change(screen,"Gradient strength","78");
+   for(String shape:new String[]{"rounded","oval","circle","full"})change(screen,"Shape mask",shape);
+   change(screen,"Edit element","goals");waitFor(screen,"Boolean(document.querySelector('.score-selection'))");double before=Double.parseDouble(js(screen,"parseFloat(document.querySelector('.score-selection').style.left)"));drag(screen);double after=Double.parseDouble(js(screen,"parseFloat(document.querySelector('.score-selection').style.left)"));assertTrue("Text did not move",after>before);
+   change(screen,"Horizontal position","6");change(screen,"Vertical position","5");change(screen,"Text size","104");change(screen,"Font","script");
+   change(screen,"Edit element","score");change(screen,"Horizontal position","60");change(screen,"Vertical position","9");change(screen,"Text size","124");
+   change(screen,"Edit element","overall");change(screen,"Horizontal position","6");change(screen,"Vertical position","74");change(screen,"Text size","136");
+   js(screen,"[...document.querySelectorAll('.score-overlay-options label')].find(l=>l.textContent.includes('Pushups')).querySelector('input').click();true");change(screen,"Horizontal position","62");change(screen,"Vertical position","48");change(screen,"Text size","54");
+   js(screen,"[...document.querySelectorAll('.score-overlay-options label')].find(l=>l.textContent.includes('Clean room')).querySelector('input').click();true");change(screen,"Horizontal position","62");change(screen,"Vertical position","55");change(screen,"Text size","54");
+   change(screen,"Your name","SATWIK");js(screen,"[...document.querySelectorAll('.score-overlay-options label')].find(l=>l.textContent==='Your name').querySelector('input').click();true");change(screen,"Font","clean");change(screen,"Text size","40");change(screen,"Horizontal position","6");change(screen,"Vertical position","2");
+   change(screen,"Edit element","photo");change(screen,"Photo zoom","1.2");assertEquals("true",js(screen,"Number([...document.querySelectorAll('label')].find(l=>l.textContent.includes('Photo zoom')).querySelector('input').value)>1"));click(screen,"Fill frame");Thread.sleep(250);
+   String picture=new JSONArray("["+js(screen,"document.querySelector('[data-score-canvas]').toDataURL('image/png')")+"]").getString(0);assertTrue(picture.length()>100000);
+   android.content.ContentValues media=new android.content.ContentValues();media.put(android.provider.MediaStore.Images.Media.DISPLAY_NAME,"MANTRA-photo-sample-"+c.getPackageName()+".png");media.put(android.provider.MediaStore.Images.Media.MIME_TYPE,"image/png");media.put(android.provider.MediaStore.Images.Media.RELATIVE_PATH,"Pictures");android.net.Uri uri=c.getContentResolver().insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,media);assertNotNull(uri);try(java.io.OutputStream out=c.getContentResolver().openOutputStream(uri)){out.write(android.util.Base64.decode(picture.substring(22),android.util.Base64.DEFAULT));}
+   click(screen,"Download score card");boolean saved=false;for(int i=0;i<80&&!saved;i++){saved=clickNative(InstrumentationRegistry.getInstrumentation().getUiAutomation().getRootInActiveWindow(),"Save");if(!saved)Thread.sleep(250);}assertTrue("Native save document screen missing",saved);Thread.sleep(600);clickNative(InstrumentationRegistry.getInstrumentation().getUiAutomation().getRootInActiveWindow(),"Replace");waitFor(screen,"Boolean([...document.querySelectorAll('.score-page button')].find(b=>b.textContent==='Download score card'&&!b.disabled))");
+  }finally{if(original!=null)js(screen,"localStorage."+("null".equals(original)?"removeItem('maikal-v2-local')":"setItem('maikal-v2-local',"+original+")")+";true");screen.onActivity(Activity::finishAndRemoveTask);}
+ }
+}
