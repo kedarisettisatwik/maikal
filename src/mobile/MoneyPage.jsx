@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { money, transactionTotals } from '../model';
 import ActionIconButton from '../components/ActionIconButton';
 import { Icon } from './EntryDialog';
@@ -12,8 +12,9 @@ export function expenseBreakdown(transactions, month) {
 export function filterTransactions(transactions, period, value) {
   return transactions.filter(t => !t.deleted && (period === 'all' || (period === 'month' ? t.date.startsWith(value + '-') : t.date === value)));
 }
-export default function MoneyPage({ records, date, transactions, onAdd, onEdit, remove }) {
+export default function MoneyPage({ launch, records, date, transactions, onAdd, onEdit, remove }) {
   const [period, setPeriod] = useState('day'), [day, setDay] = useState(date), [month, setMonth] = useState(date.slice(0,7));
+  useEffect(()=>{if(launch?.requestId){setPeriod(launch.period==='month'?'month':'day');setDay(date);setMonth(date.slice(0,7));}},[launch?.requestId]);
   const selected = period === 'month' ? month : day;
   const filtered = filterTransactions(transactions, period, selected);
   const daily = transactionTotals(filtered);

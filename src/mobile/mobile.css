@@ -423,11 +423,18 @@ html[data-maikal-mobile] .notes-mobile-tags button{background:#edf6ef;color:#245
 html[data-maikal-mobile] .notes-mobile-tags button[aria-pressed="true"]{background:#cde8d5;color:#173e27;border-color:#729e80}
 html[data-maikal-mobile][data-theme="dark"] .notes-mobile-tags button{background:#294333;color:#d1ead8;border-color:#496b54}
 html[data-maikal-mobile][data-theme="dark"] .notes-mobile-tags button[aria-pressed="true"]{background:#3c5d48;color:#effaf2;border-color:#86b593}
-html[data-maikal-mobile] .notes-results{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;margin:16px 0;border:1px solid var(--line);border-radius:10px;background:var(--soft);color:var(--ink)}
+html[data-maikal-mobile] .notes-results{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;margin:16px 0;border:0;border-radius:0;background:transparent;color:var(--ink)}
 html[data-maikal-mobile] .notes-results>span{flex:1;min-width:0}
-html[data-maikal-mobile] .notes-results>button{flex:none;padding:8px 10px;min-height:36px;border:1px solid var(--line);border-radius:7px;background:var(--white);color:var(--green);font-size:12px}
+html[data-maikal-mobile] .notes-results>button{flex:none;padding:8px 10px;min-height:36px;border:0;border-radius:0;background:transparent;color:var(--green);font-size:12px}
 
 html[data-maikal-mobile] .notes-suggestions{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0}
 html[data-maikal-mobile] .notes-suggestions button{background:#edf6ef;color:#245436;border:1px solid #d1e4d6;padding:9px 12px;border-radius:8px;min-height:40px}
 html[data-maikal-mobile][data-theme="dark"] .notes-suggestions button{background:#294333;color:#d1ead8;border-color:#496b54}
 html[data-maikal-mobile] .duration-wheel[aria-disabled="true"]{pointer-events:none;opacity:.6}
+
+html[data-maikal-mobile] .notes-editor .notes-suggestions{gap:6px;margin:10px 0}
+html[data-maikal-mobile] .notes-editor .notes-suggestions button{font-size:10px;min-height:28px;padding:4px 8px;border-radius:6px}
+
+html[data-maikal-mobile] .notes-mobile-tags button,html[data-maikal-mobile][data-theme="dark"] .notes-mobile-tags button{background:#fff;color:#245436;border-color:#d1e4d6}
+html[data-maikal-mobile] .notes-mobile-tags button[aria-pressed="true"]{background:#cde8d5;color:#173e27;border-color:#729e80}
+html[data-maikal-mobile][data-theme="dark"] .notes-mobile-tags button[aria-pressed="true"]{background:#3c5d48;color:#effaf2;border-color:#86b593}

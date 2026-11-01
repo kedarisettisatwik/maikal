@@ -33,7 +33,7 @@ public class MantraThemeTest {
  @Test public void moreShowsVersionThemeAndAppGuide()throws Exception{
   ActivityScenario<MainActivity> screen=ActivityScenario.launch(MainActivity.class);String previous=null;
   try{waitFor(screen,"Boolean(document.querySelector('.mobile-app'))");previous=js(screen,"localStorage.getItem('mantra-theme')");js(screen,"document.querySelector('[role=tab][aria-label=More]').click()");
-   waitFor(screen,"document.querySelector('.mobile-more').textContent.includes('Version 2.5.0')");assertEquals("true",js(screen,"document.querySelector('.brand').textContent.includes('MANTRA')"));
+   waitFor(screen,"document.querySelector('.mobile-more').textContent.includes('Version 2.6.0')");assertEquals("true",js(screen,"document.querySelector('.brand').textContent.includes('MANTRA')"));
    js(screen,"(()=>{const s=document.querySelector('.mobile-more select[aria-label=Theme]');Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value').set.call(s,'dark');s.dispatchEvent(new Event('change',{bubbles:true}));return true;})()");waitFor(screen,"document.documentElement.dataset.theme==='dark'");
    for(int i=0;i<40&&!"dark".equals(MantraTheme.choice(context));i++)Thread.sleep(100);assertEquals("dark",MantraTheme.choice(context));
    waitFor(screen,"getComputedStyle(document.querySelector('.phone')).backgroundColor==='rgb(24, 33, 38)'");Thread.sleep(2000);

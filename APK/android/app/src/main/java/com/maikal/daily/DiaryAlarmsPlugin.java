@@ -10,6 +10,7 @@ import org.json.JSONArray;
 
 @CapacitorPlugin(name = "DiaryAlarms")
 public class DiaryAlarmsPlugin extends Plugin {
+    @PluginMethod public void openCustomWidgetBuilder(PluginCall call){getActivity().startActivity(new Intent(getContext(),CustomWidgetConfigureActivity.class));call.resolve();}
     @PluginMethod public void timeTools(PluginCall call){try{call.resolve(new JSObject(TimeTools.control(getContext(),call.getString("command","status"),call.getInt("durationMs",0)).toString()));}catch(Exception e){call.reject(e.getMessage(),e);}}
     @PluginMethod public void setTheme(PluginCall call){MantraTheme.save(getContext(),call.getString("theme","system"));call.resolve();}
     @PluginMethod public void prepareAlarmAccess(PluginCall call){getActivity().runOnUiThread(()->{
@@ -69,7 +70,7 @@ public class DiaryAlarmsPlugin extends Plugin {
             JSONArray entries = call.getArray("entries");
             if (entries == null) { call.reject("Missing entries"); return; }
             JSONArray records = call.getArray("records");
-            NativeDiaryStore.snapshot(getContext(), call.getString("uid", "local"), records == null ? new JSONArray() : records);
+            NativeDiaryStore.snapshot(getContext(), call.getString("uid", "local"), records == null ? new JSONArray() : records);CustomWidgetProvider.refresh(getContext());
             ClockAlarms.syncDiary(getContext(),call.getString("uid","local"),records==null?new JSONArray():records);
             NoteWidgetProvider.refresh(getContext());
             JSONArray greetings = GreetingReminders.entries();
@@ -92,6 +93,10 @@ public class DiaryAlarmsPlugin extends Plugin {
             Intent intent = getActivity().getIntent();
             String kind = intent.getStringExtra("transactionKind");
             JSObject result = new JSObject();
+            String quick=intent.getStringExtra("quickAction");
+            if(java.util.Arrays.asList("note","transaction","goal","plan","money").contains(quick)){
+                String requestId=intent.getStringExtra("quickRequestId");if(requestId==null){requestId=java.util.UUID.randomUUID().toString();intent.putExtra("quickRequestId",requestId);}result.put("type","quick");result.put("action",quick);result.put("requestId",requestId);result.put("moneyPeriod","month".equals(intent.getStringExtra("moneyPeriod"))?"month":"day");call.resolve(result);return;
+            }
             if(intent.hasExtra("diaryRecordId")){
                 String requestId=intent.getStringExtra("entryLaunchRequestId");if(requestId==null){requestId=java.util.UUID.randomUUID().toString();intent.putExtra("entryLaunchRequestId",requestId);}
                 result.put("type","entry");result.put("recordId",intent.getStringExtra("diaryRecordId"));result.put("uid",intent.getStringExtra("diaryUid"));result.put("requestId",requestId);call.resolve(result);return;
@@ -111,6 +116,7 @@ public class DiaryAlarmsPlugin extends Plugin {
     @PluginMethod public void acknowledgeLaunch(PluginCall call) {
         getActivity().runOnUiThread(() -> {
             Intent intent = getActivity().getIntent();
+            if(call.getString("requestId", "").equals(intent.getStringExtra("quickRequestId"))){intent.removeExtra("quickAction");intent.removeExtra("quickRequestId");intent.removeExtra("moneyPeriod");}
             if(call.getString("requestId", "").equals(intent.getStringExtra("entryLaunchRequestId"))){intent.removeExtra("diaryRecordId");intent.removeExtra("diaryUid");intent.removeExtra("entryLaunchRequestId");}
             if(call.getString("requestId", "").equals(intent.getStringExtra("noteLaunchRequestId"))) {
                 intent.removeExtra("noteId");intent.removeExtra("noteUid");intent.removeExtra("noteLaunchRequestId");intent.removeExtra("openNotes");
