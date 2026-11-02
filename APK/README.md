@@ -95,3 +95,7 @@ Single-figure money widgets now request **2 columns x 1 row** (width x height); 
 
 ### MANTRA 2.8.1 final refinements
 The photo report editor, report entry button and report reminders are removed. More retains Score with today and overall totals; historical score records are preserved. The editor/font files and export API are removed from the app bundle. Money filters are remembered per account on the same device/browser. Summary figures are centered and rounded to whole rupees for display; transaction amounts retain stored paise precision. Today widget rows show plain goal/event titles, tracker count / target on the same row, and event start/end times or All day. VersionCode 33 uses the existing signing identity.
+
+
+### MANTRA 2.8.2 alarm dismissal
+The advance notification Dismiss button cancels the upcoming ringing occurrence. One-time alarms become disabled; repeating alarms retain their future schedule. The skipped occurrence persists through reboot and unchanged diary sync. Swiping away the notification only hides that notice. Stale notification actions do not cancel a newer occurrence. VersionCode 34 keeps the existing update signing identity.

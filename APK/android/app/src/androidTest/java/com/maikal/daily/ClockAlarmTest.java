@@ -13,19 +13,20 @@ import static org.junit.Assert.*;
 
 @RunWith(AndroidJUnit4.class)
 public class ClockAlarmTest {
+    @org.junit.Before public void grantAlarmAccess()throws Exception{Context c=ApplicationProvider.getApplicationContext();for(String command:new String[]{"appops set "+c.getPackageName()+" SCHEDULE_EXACT_ALARM allow","pm grant "+c.getPackageName()+" android.permission.POST_NOTIFICATIONS","appops set "+c.getPackageName()+" USE_FULL_SCREEN_INTENT allow"})try(android.os.ParcelFileDescriptor.AutoCloseInputStream in=new android.os.ParcelFileDescriptor.AutoCloseInputStream(androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(command))){in.readAllBytes();}}
     private void dragHandle(androidx.test.core.app.ActivityScenario<RingingAlarmActivity> screen,boolean right){
         screen.onActivity(activity->{android.view.View slider=activity.findViewById(android.R.id.content).findViewWithTag("alarmSwipe");float x=slider.getWidth()/2f,y=slider.getHeight()/2f,end=right?slider.getWidth()-8:8;long now=android.os.SystemClock.uptimeMillis();
             for(int i=0;i<3;i++){android.view.MotionEvent event=android.view.MotionEvent.obtain(now,now+100*i,i==0?android.view.MotionEvent.ACTION_DOWN:i==1?android.view.MotionEvent.ACTION_MOVE:android.view.MotionEvent.ACTION_UP,i==0?x:end,y,0);slider.dispatchTouchEvent(event);event.recycle();}
         });
     }
     private void capture(String name)throws Exception {android.graphics.Bitmap bitmap=androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();if(bitmap!=null){try(java.io.FileOutputStream out=new java.io.FileOutputStream(new java.io.File(ApplicationProvider.getApplicationContext().getCacheDir(),name))){bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,out);}bitmap.recycle();}}
-    @Test public void advanceNoticeDismissesOnlyTheCurrentNotification() throws Exception {
+    @Test public void advanceNoticeDismissSkipsCurrentAlarmAndKeepsRepeat() throws Exception {
         Context c=ApplicationProvider.getApplicationContext();String id="upcoming-test";NotificationManager manager=(NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE);
         try{JSONObject r=alarm(id);r.put("time",LocalTime.now().plusMinutes(15).withSecond(0).withNano(0).toString());ClockAlarms.save(c,r);long due=ClockAlarms.nextMillis(r,ZonedDateTime.now());assertEquals(600000,due-UpcomingAlarmReceiver.noticeTime(due));
             Intent show=new Intent().setAction(UpcomingAlarmReceiver.SHOW).putExtra("id",id).putExtra("occurrence",due);new UpcomingAlarmReceiver().onReceive(c,show);
             android.app.Notification notice=null;for(StatusBarNotification n:manager.getActiveNotifications())if(n.getId()==UpcomingAlarmReceiver.NOTICE)notice=n.getNotification();assertNotNull(notice);assertEquals("Dismiss",notice.actions[0].title.toString());notice.actions[0].actionIntent.send();
             for(int i=0;i<30&&ClockAlarms.find(c,id).optLong("dismissedUpcoming")!=due;i++)Thread.sleep(100);
-            JSONObject after=ClockAlarms.find(c,id);assertTrue(after.getBoolean("enabled"));assertEquals(due,after.getLong("dismissedUpcoming"));assertEquals(due,ClockAlarms.nextMillis(after,ZonedDateTime.now()));
+            JSONObject after=ClockAlarms.find(c,id);assertTrue(after.getBoolean("enabled"));assertEquals(due,after.getLong("dismissedUpcoming"));assertEquals(due,after.getLong("skippedOccurrence"));assertTrue(ClockAlarms.nextMillis(after,ZonedDateTime.now())>due);
             new UpcomingAlarmReceiver().onReceive(c,show);for(StatusBarNotification n:manager.getActiveNotifications())assertNotEquals("The dismissed occurrence must stay hidden",UpcomingAlarmReceiver.NOTICE,n.getId());
             long future=ClockAlarms.nextMillis(after,ZonedDateTime.now().plusDays(1));assertNotEquals(future,after.optLong("dismissedUpcoming"));
         }finally{ClockAlarms.delete(c,id);}
@@ -69,4 +70,11 @@ public class ClockAlarmTest {
             for(StatusBarNotification n:manager.getActiveNotifications())assertNotEquals(ClockAlarmService.NOTICE,n.getId());
         }finally{ClockAlarms.delete(c,id);}
     }
+    @Test public void dismissDisablesOneTimeButSwipingOnlyHidesNotice()throws Exception{
+        Context c=ApplicationProvider.getApplicationContext();String id="dismiss-once";try{JSONObject r=alarm(id).put("oneTime",true).put("time",LocalTime.now().plusMinutes(20).withSecond(0).withNano(0).toString());ClockAlarms.save(c,r);long due=ClockAlarms.nextMillis(r,ZonedDateTime.now());new UpcomingAlarmReceiver().onReceive(c,new Intent().setAction(UpcomingAlarmReceiver.HIDE).putExtra("id",id).putExtra("occurrence",due));assertEquals(due,ClockAlarms.nextMillis(ClockAlarms.find(c,id),ZonedDateTime.now()));new UpcomingAlarmReceiver().onReceive(c,new Intent().setAction(UpcomingAlarmReceiver.DISMISS).putExtra("id",id).putExtra("occurrence",due));assertFalse(ClockAlarms.find(c,id).getBoolean("enabled"));assertEquals(due,ClockAlarms.find(c,id).getLong("skippedOccurrence"));}finally{ClockAlarms.delete(c,id);}
+    }
+    @Test public void staleDismissCannotSkipANewerAlarm()throws Exception{
+        Context c=ApplicationProvider.getApplicationContext();String id="dismiss-stale";try{JSONObject r=alarm(id).put("time",LocalTime.now().plusMinutes(20).withSecond(0).withNano(0).toString());ClockAlarms.save(c,r);long old=ClockAlarms.nextMillis(r,ZonedDateTime.now());r.put("time",LocalTime.now().plusMinutes(30).withSecond(0).withNano(0).toString());ClockAlarms.save(c,r);long next=ClockAlarms.nextMillis(r,ZonedDateTime.now());new UpcomingAlarmReceiver().onReceive(c,new Intent().setAction(UpcomingAlarmReceiver.DISMISS).putExtra("id",id).putExtra("occurrence",old));assertEquals(next,ClockAlarms.nextMillis(ClockAlarms.find(c,id),ZonedDateTime.now()));assertEquals(0,ClockAlarms.find(c,id).optLong("skippedOccurrence"));}finally{ClockAlarms.delete(c,id);}
+    }
+    @Test public void dismissAcrossMidnightSkipsTomorrowEvenBeforeMidnight()throws Exception{ZonedDateTime now=LocalDate.of(2026,11,2).atTime(23,55).atZone(ZoneId.systemDefault());JSONObject r=alarm("midnight").put("time","00:05");long skipped=now.toLocalDate().plusDays(1).atTime(0,5).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();r.put("skippedOccurrence",skipped);assertEquals(now.toLocalDate().plusDays(2).atTime(0,5).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),ClockAlarms.nextMillis(r,now));}
 }

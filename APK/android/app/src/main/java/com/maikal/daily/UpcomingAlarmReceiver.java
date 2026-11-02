@@ -9,9 +9,9 @@ import android.os.Build;
 import androidx.core.app.NotificationCompat;
 import org.json.JSONObject;
 
-/** Advance notice only. Dismissing it never cancels the ringing alarm. */
+/** Advance notice: its Dismiss button skips the upcoming ringing occurrence. */
 public class UpcomingAlarmReceiver extends BroadcastReceiver {
-    static final String SHOW="com.maikal.daily.UPCOMING_ALARM",DISMISS="com.maikal.daily.DISMISS_UPCOMING";
+    static final String SHOW="com.maikal.daily.UPCOMING_ALARM",DISMISS="com.maikal.daily.DISMISS_UPCOMING",HIDE="com.maikal.daily.HIDE_UPCOMING";
     static final long LEAD_MS=10*60*1000L;
     static final int NOTICE=70301;
     private static PendingIntent pending(Context c,String id,long occurrence,String action){
@@ -35,9 +35,9 @@ public class UpcomingAlarmReceiver extends BroadcastReceiver {
             JSONObject r=ClockAlarms.find(c,id);if(r==null)return;
             if(!DiaryClockAlarms.current(c,r))return;
             NotificationManager manager=(NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE);
-            if(DISMISS.equals(intent.getAction())){
+            if(DISMISS.equals(intent.getAction())||HIDE.equals(intent.getAction())){
                 // Ignore actions from stale notifications without touching a newer occurrence.
-                if(occurrence>System.currentTimeMillis()&&ClockAlarms.nextMillis(r,java.time.ZonedDateTime.now())==occurrence){r.put("dismissedUpcoming",occurrence);ClockAlarms.storeState(c,r);}
+                if(occurrence>System.currentTimeMillis()&&ClockAlarms.nextMillis(r,java.time.ZonedDateTime.now())==occurrence){if(DISMISS.equals(intent.getAction()))ClockAlarms.dismissOccurrence(c,r,occurrence);else{r.put("dismissedUpcoming",occurrence);ClockAlarms.storeState(c,r);}}
                 manager.cancel(tag(id,occurrence),NOTICE);return;
             }
             if(!SHOW.equals(intent.getAction())||!r.optBoolean("enabled")||r.optLong("dismissedUpcoming")==occurrence||occurrence<=System.currentTimeMillis()||ClockAlarms.nextMillis(r,java.time.ZonedDateTime.now())!=occurrence)return;
@@ -49,7 +49,7 @@ public class UpcomingAlarmReceiver extends BroadcastReceiver {
             String clock=java.time.Instant.ofEpochMilli(occurrence).atZone(java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"));
             manager.notify(tag(id,occurrence),NOTICE,new NotificationCompat.Builder(c,"maikal_upcoming_alarms")
                 .setSmallIcon(R.drawable.ic_stat_maikal).setContentTitle("Alarm coming in 10 minutes")
-                .setContentText(r.optString("title","Alarm")+" · "+clock).setContentIntent(open).setDeleteIntent(dismiss)
+                .setContentText(r.optString("title","Alarm")+" · "+clock).setContentIntent(open).setDeleteIntent(pending(c,id,occurrence,HIDE))
                 .addExtras(extras).setAutoCancel(false).setTimeoutAfter(Math.max(1000,occurrence-System.currentTimeMillis()))
                 .addAction(0,"Dismiss",dismiss).build());
         }catch(Exception e){android.util.Log.e("MANTRA","Upcoming alarm notification failed",e);}
