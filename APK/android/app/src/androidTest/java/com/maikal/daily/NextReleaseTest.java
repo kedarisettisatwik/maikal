@@ -73,4 +73,11 @@ import static org.junit.Assert.*;
    }finally{js(screen,"document.querySelector('#icon-style-test')?.remove();document.documentElement.dataset.theme="+theme);}
   }
  }
+ @Test public void screenTimeWidgetIsTwoByOneWithOnlyOneTotalField()throws Exception{
+  AppWidgetProviderInfo info=AppWidgetManager.getInstance(c).getInstalledProviders().stream().filter(p->p.provider.equals(new ComponentName(c,TrackWidgetProvider.class))).findFirst().orElseThrow();
+  assertEquals(2,info.targetCellWidth);assertEquals(1,info.targetCellHeight);
+  android.view.View root=TrackWidgetProvider.views(c).apply(c,new FrameLayout(c));assertTrue(root instanceof FrameLayout);assertEquals(1,((FrameLayout)root).getChildCount());
+  TextView total=root.findViewById(R.id.widget_track_total);assertNotNull(total);assertFalse(total.getText().toString().isEmpty());
+ }
+
 }

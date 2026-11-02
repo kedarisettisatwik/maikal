@@ -19,7 +19,6 @@ public class TotalScreenTimeWidgetTest {
             i.runOnMainSync(()->{
                 View root=TotalScreenTimeWidgetProvider.views(c).apply(c,new FrameLayout(c));
                 assertNotNull(root.findViewById(R.id.widget_total_value));
-                assertNull(root.findViewById(R.id.widget_track_apps));
                 assertEquals(2,((ViewGroup)root).getChildCount());
                 root.findViewById(R.id.widget_total_card).performClick();
             });

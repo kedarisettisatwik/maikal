@@ -452,3 +452,16 @@ html[data-maikal-mobile] dialog.native-form-page .calendar-grid button[aria-pres
 html[data-maikal-mobile] dialog.native-form-page .calendar-nav button{min-width:44px;min-height:44px}
 
 html[data-maikal-mobile][data-theme="dark"] .goal-row .action-icon img{filter:brightness(0) invert(1);opacity:1}
+
+html[data-maikal-mobile] .completion-section{margin-top:28px}
+html[data-maikal-mobile] .score-restart{margin-top:16px}
+
+html[data-maikal-mobile] .task-list-row{display:flex;align-items:center;gap:12px;padding:16px 0;border-bottom:1px solid var(--line)}
+html[data-maikal-mobile] .task-list-content{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;flex:1;min-width:0}
+html[data-maikal-mobile] .task-list-content h3{margin:0;font-size:18px;overflow-wrap:anywhere}
+html[data-maikal-mobile] .task-title{font:inherit;text-align:left;padding:0}
+html[data-maikal-mobile] .task-meta{font-size:10px;color:var(--muted);line-height:1.5}
+html[data-maikal-mobile] .task-list-row>input[type=checkbox]{width:23px;height:23px;flex:none;margin:0}
+html[data-maikal-mobile] .task-details h2{margin:20px 0 12px;overflow-wrap:anywhere}
+html[data-maikal-mobile] .task-time-details{margin-top:24px}
+html[data-maikal-mobile] .task-detail-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}

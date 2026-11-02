@@ -115,3 +115,6 @@ Local analytics and Internet permission are removed. Personal diary data is neve
 
 ### MANTRA 2.10.0
 See docs/MANTRA-2.10.0-RELEASE.md. Both APKs add non-repeating tasks, weighted completion percentages, monthly schedules, native focus, managed screen-time goals, total notification replies and simplified fixed widgets. Version code 40. Local stays offline. scripts/build-play-apks.ps1 produces checked signed release APK/AABs for both editions; existing website update APKs retain debug signing to avoid forcing an uninstall.
+
+## 2.10.1
+Deleted goals are excluded from percentages; Start over restarts the scoring period today without clearing diary data. The screen-time widget is total-only, 2 x 1.

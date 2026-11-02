@@ -117,3 +117,26 @@ it('shows score totals without a photo editor or report button',()=>{render(<Das
 it('includes trackers with targets in the home progress bar',()=>{const d=new Date(),date=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;mock.records.t={id:'t',type:'goal',title:'Pushups',goalType:'tracker',target:40,schedule:{type:'everyday'}};mock.records.free={id:'free',type:'goal',title:'Steps',goalType:'tracker',schedule:{type:'everyday'}};mock.records['progress_g_'+date]={type:'progress',value:true};mock.records['progress_t_'+date]={type:'progress',value:40};render(<Dashboard user={{uid:'local'}} notify={notify} restoring={false}/>);const bar=within(screen.getByRole('tabpanel',{name:'home'})).getByRole('progressbar');expect(bar.getAttribute('aria-valuemax')).toBe('2');expect(bar.getAttribute('aria-valuenow')).toBe('2');expect(bar.firstChild.style.width).toBe('100%');});
 
 it('routes managed screen-time entry launches to Track instead of its goal editor',async()=>{mock.records.g={...mock.records.g,managedBy:'screenTime',goalType:'tracker',trackerUnit:'time',target:120};vi.mocked(consumeNativeLaunch).mockResolvedValueOnce({type:'entry',recordId:'g',uid:'local',requestId:'managed-launch'});render(<Dashboard user={{uid:'local'}} notify={notify} restoring={false}/>);await waitFor(()=>expect(openTrack).toHaveBeenCalled());expect(screen.queryByRole('button',{name:'Update goal'})).toBeNull();expect(acknowledgeNativeLaunch).toHaveBeenCalledWith('managed-launch');});
+
+it('confirms Start over and saves only the scoring baseline, preserving all diary records',()=>{
+ const confirm=vi.spyOn(window,'confirm').mockReturnValue(false);mock.save.mockClear();
+ render(<Dashboard user={{uid:'local'}} notify={notify} restoring={false}/>);
+ fireEvent.click(screen.getByRole('tab',{name:'More'}));
+ mock.save.mockClear();fireEvent.click(screen.getByRole('button',{name:/^Start over/}));expect(mock.save).not.toHaveBeenCalled();
+ confirm.mockReturnValue(true);fireEvent.click(screen.getByRole('button',{name:/^Start over/}));
+ expect(confirm).toHaveBeenCalledWith(expect.stringContaining("Today's completed goals"));
+ expect(mock.save).toHaveBeenCalledTimes(1);expect(mock.save).toHaveBeenCalledWith(expect.objectContaining({id:'score_settings',type:'scoreSettings',startDate:expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/)}));
+ expect(mock.records.g.deleted).toBeUndefined();confirm.mockRestore();
+});
+
+it('keeps Home tasks compact and opens time, target and actions in a separate task view',()=>{
+ mock.records.t={id:'t',type:'task',title:'Build app',description:'Keep this in detail view',startDate:'2026-01-01',deadline:'2026-12-01',trackTime:true,target:60,targetRule:'atLeast',focusEnabled:true,timeAdjustment:15};
+ render(<Dashboard user={{uid:'local'}} notify={notify} restoring={false}/>);
+ const home=screen.getByRole('tabpanel',{name:'home'}),row=within(home).getByRole('button',{name:'Build app'}).closest('article');
+ expect(within(row).getByText(/Deadline · 2026-12-01 · 15 min/)).toBeTruthy();expect(within(row).queryByRole('button',{name:'Edit task'})).toBeNull();expect(within(row).queryByRole('spinbutton')).toBeNull();expect(within(row).queryByText('Keep this in detail view')).toBeNull();
+ mock.save.mockClear();fireEvent.click(within(row).getByRole('checkbox',{name:'Complete task Build app'}));expect(mock.save).toHaveBeenCalledWith(expect.objectContaining({id:'t',completed:true}));
+ fireEvent.click(within(row).getByRole('button',{name:'Build app'}));const detail=screen.getByRole('dialog');
+ expect(within(detail).getByRole('heading',{name:'Build app'})).toBeTruthy();expect(within(detail).getByText('Keep this in detail view')).toBeTruthy();expect(within(detail).getByRole('spinbutton',{name:'Total minutes for Build app'}).value).toBe('15');expect(within(detail).getByText('Target · At least 60 min')).toBeTruthy();expect(within(detail).getByRole('button',{name:'Focus'})).toBeTruthy();
+ fireEvent.click(within(detail).getByRole('button',{name:'Delete task'}));expect(mock.remove).toHaveBeenCalledWith('t');
+ fireEvent.click(within(detail).getByRole('button',{name:'Edit task'}));expect(screen.getByDisplayValue('Build app')).toBeTruthy();expect(screen.getByRole('button',{name:'Save task'})).toBeTruthy();
+});

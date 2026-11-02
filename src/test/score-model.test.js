@@ -1,5 +1,7 @@
+import {goalProgressSummary} from '../goal-progress';
+import {mergeRecords} from '../model';
 import { describe, expect, it } from 'vitest';
-import { goalComplete, scoreDay, scoreSummary, scoreUpdates, withScoreHistory } from '../score-model';
+import { goalComplete, scoreDay, scoreSummary, scoreUpdates, withScoreHistory, restartScoring } from '../score-model';
 const day = '2026-11-01';
 const goal = (id, extra = {}) => ({ id, type: 'goal', title: id, goalType: 'checklist', createdDate: day, schedule: { type: 'everyday' }, ...extra });
 const value = (id, amount, date = day) => ({ id: `progress_${id}_${date}`, type: 'progress', date, goalId: id, value: amount, updatedAt: 3 });
@@ -28,7 +30,7 @@ describe('daily goal scoring', () => {
     const r = records(goal('future', { createdDate: '2026-11-02' }), goal('monday', { schedule: { type: 'days', days: [1] } }), goal('removed', { deleted: true }));
     expect(scoreDay(r, day)).toMatchObject({ total: 0, completed: 0, percentage:null });
   });
-  it('preserves previous-day targets and totals when today’s goal is changed or deleted', () => {
+  it('preserves edited historical targets but removes deleted goals from every score', () => {
     const yesterday = '2026-10-31';
     const original = goal('p', { createdDate: yesterday, goalType: 'tracker', target: 40 });
     const edited = withScoreHistory({ ...original, target: 50 }, original, day);
@@ -36,8 +38,8 @@ describe('daily goal scoring', () => {
     let summary = scoreSummary(r, day); expect(summary.yesterday).toMatchObject({ percentage:100, total: 1, completed: 1 }); expect(summary.overall).toBe(100); expect(summary.throughYesterday).toBe(100);
     r[summary.yesterday.id] = { ...summary.yesterday, updatedAt: 4 };
     r.p = withScoreHistory({ ...edited, deleted: true }, edited, day);
-    summary = scoreSummary(r, day); expect(summary.today.percentage).toBeNull(); expect(summary.yesterday.percentage).toBe(100); expect(summary.overall).toBe(100);
-    r[value('p', 39, yesterday).id] = value('p', 39, yesterday); expect(scoreSummary(r, day).yesterday.percentage).toBe(0);
+    summary = scoreSummary(r, day); expect(summary.today.percentage).toBeNull(); expect(summary.yesterday.percentage).toBeNull(); expect(summary.overall).toBeNull();
+    r[value('p', 39, yesterday).id] = value('p', 39, yesterday); expect(scoreSummary(r, day).yesterday.percentage).toBeNull();
   });
   it('handles year rollover and Firestore key ordering without repeated writes', () => {
     const r = records(goal('a', { createdDate: '2026-12-31' }), value('a', true, '2026-12-31'));
@@ -55,10 +57,38 @@ it('includes goals arriving from another diary without replacing the saved histo
  expect(scoreSummary(merged,date).yesterday).toMatchObject({completed:2,total:2,percentage:100});
  expect(scoreSummary(merged,date).yesterday.goals.find(g=>g.id==='a').target).toBe(40);
 });
-it('honours older-website edits today while retaining yesterday’s revision', () => {
+it('honours deletion from the older website across all scoring dates', () => {
  const g=withScoreHistory(goal('g',{createdDate:'2026-10-31',goalType:'tracker',target:40}),undefined,'2026-10-31');
  const edited={...g,deleted:true,updatedAt:new Date('2026-11-01T12:00:00').getTime()};
  const r=records(edited,value('g',40,'2026-10-31'));
  expect(scoreSummary(r,'2026-11-01').today.total).toBe(0);
- expect(scoreSummary(r,'2026-11-01').yesterday.percentage).toBe(100);
+ expect(scoreSummary(r,'2026-11-01').yesterday.percentage).toBeNull();
+});
+
+it('recalculates deletion against persisted snapshots and shows empty after all goals are deleted',()=>{
+ const yesterday='2026-10-31', a=goal('a',{createdDate:yesterday}), b=goal('b',{createdDate:yesterday});
+ const r=records(a,b,value('a',true,yesterday),value('a',true));const old=scoreDay(r,yesterday);r[old.id]=old;
+ expect(scoreSummary(r,day).overall).toBe(50);
+ r.b=withScoreHistory({...b,deleted:true},b,day);expect(scoreSummary(r,day)).toMatchObject({overall:100,overallTotal:2,overallCompleted:2});
+ r.a=withScoreHistory({...a,deleted:true},a,day);expect(scoreSummary(r,day)).toMatchObject({overall:null,overallTotal:0,today:{percentage:null,total:0}});
+ expect(scoreUpdates(r,day).find(x=>x.date===yesterday)).toMatchObject({total:0,percentage:null});
+});
+it('start over excludes old scores but immediately counts today and persists across later days',()=>{
+ const a=goal('a',{createdDate:'2026-10-01'}),b=goal('b',{createdDate:'2026-10-01'});
+ const r=records(a,b,value('a',true),restartScoring(day));
+ const old=scoreDay(records(a,b),'2026-10-31');r[old.id]=old;
+ expect(scoreSummary(r,day)).toMatchObject({overall:50,overallTotal:2,overallCompleted:1,today:{percentage:50},yesterday:{total:0}});
+ expect(scoreUpdates(r,day).every(x=>x.date>=day)).toBe(true);
+ expect(scoreSummary(r,'2026-11-02')).toMatchObject({overall:25,overallTotal:4,overallCompleted:1});
+ const copy=JSON.parse(JSON.stringify(r));expect(scoreSummary(copy,day).overall).toBe(50);
+ expect(copy.a).toEqual(a);expect(copy['progress_a_'+day].value).toBe(true);
+ copy.score_settings=restartScoring('2026-11-02');expect(scoreSummary(copy,'2026-11-02')).toMatchObject({overall:0,overallTotal:2});
+});
+
+it('removes deleted targets from the home progress denominator and merges reset settings across sync',()=>{
+ const a=goal('a'),b=goal('b',{deleted:true});const r=records(a,b,value('a',true));
+ expect(goalProgressSummary([a,b],r,day)).toEqual({total:1,completed:1,percent:100});
+ expect(goalProgressSummary([{...a,deleted:true},b],r,day)).toEqual({total:0,completed:0,percent:0});
+ const setting={...restartScoring(day),updatedAt:10};const merged=mergeRecords(r,{},[setting]);
+ expect(merged.records.score_settings).toEqual(setting);expect(scoreSummary(merged.records,day).overall).toBe(100);
 });

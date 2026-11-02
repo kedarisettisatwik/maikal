@@ -16,9 +16,9 @@ public class TrackWidgetProvider extends AppWidgetProvider {
         Intent open=new Intent(c,TrackActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TOP);
         view.setOnClickPendingIntent(R.id.widget_track_card,PendingIntent.getActivity(c,9301,open,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE));
         try{
-            if(!ScreenTime.allowed(c)){view.setTextViewText(R.id.widget_track_total,"Set up screen time");view.setTextViewText(R.id.widget_track_subtitle,"Tap to enable usage access in MANTRA.");view.setTextViewText(R.id.widget_track_apps,"");view.setTextViewText(R.id.widget_track_updated,"Usage access needed");return view;}
-            ScreenTime.Result usage=ScreenTime.read(c,0);view.setTextViewText(R.id.widget_track_total,ScreenTime.duration(usage.total));view.setTextViewText(R.id.widget_track_subtitle,"Total screen time · Today");StringBuilder apps=new StringBuilder();List<Map.Entry<String,Long>> rows=ScreenTime.sorted(usage);for(int i=0;i<Math.min(3,rows.size());i++){Map.Entry<String,Long> app=rows.get(i);if(i>0)apps.append('\n');apps.append(ScreenTime.label(c,app.getKey())).append("  ·  ").append(ScreenTime.duration(app.getValue()));}view.setTextViewText(R.id.widget_track_apps,rows.isEmpty()?"No app usage yet today":apps.toString());view.setTextViewText(R.id.widget_track_updated,"Updated "+LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
-        }catch(Exception e){view.setTextViewText(R.id.widget_track_total,"Usage unavailable");view.setTextViewText(R.id.widget_track_subtitle,"Unlock your phone and open Track.");view.setTextViewText(R.id.widget_track_apps,"");view.setTextViewText(R.id.widget_track_updated,"Tap to retry");}
+            if(!ScreenTime.allowed(c)){view.setTextViewText(R.id.widget_track_total,"Enable usage access");return view;}
+            ScreenTime.Result usage=ScreenTime.read(c,0);view.setTextViewText(R.id.widget_track_total,ScreenTime.duration(usage.total));
+        }catch(Exception e){view.setTextViewText(R.id.widget_track_total,"Tap to retry");}
         return view;
     }
     static void refresh(Context c){TotalScreenTimeWidgetProvider.refresh(c);Context app=c.getApplicationContext();int[] ids=AppWidgetManager.getInstance(app).getAppWidgetIds(new ComponentName(app,TrackWidgetProvider.class));if(ids.length>0)worker.execute(()->update(app,ids));}

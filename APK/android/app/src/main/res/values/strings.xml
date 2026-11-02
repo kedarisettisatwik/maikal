@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="widget_track_name">MANTRA Track</string>
-    <string name="widget_track_description">Today’s screen time and your three most used apps</string>
+    <string name="widget_track_name">MANTRA Screen time</string>
+    <string name="widget_track_description">Today’s total screen time</string>
     <string name="widget_note_name">MANTRA Note</string>
     <string name="widget_note_description">Keep a selected note on your home screen and tap to open it</string>
     <string name="widget_today_name">MANTRA</string>
