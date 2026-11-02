@@ -41,11 +41,11 @@ describe('React entry interactions', () => {
     expect(screen.getByDisplayValue('Lunch')).toBeTruthy(); const amount = screen.getByRole('spinbutton'); await user.clear(amount); await user.type(amount, '25.50'); await user.click(screen.getByRole('button', { name: 'Update transaction' }));
     expect(save).toHaveBeenCalledWith(expect.objectContaining({ id: 'tx', amount: 2550, categoryId: 'food' }));
   });
-  it('renders historical transaction actions and an expense-only donut', () => {
+  it('renders historical transaction actions and an income-based donut', () => {
     const remove = vi.fn(), edit = vi.fn(), tx = [{ id: 'old', amount: 7500, kind: 'expense', categoryId: 'food', date: '2026-09-02', note: 'Dinner' }, { id: 'pay', amount: 100000, kind: 'income', categoryId: 'salary', date: '2026-09-01' }];
     render(<MoneySection month="2026-09" setMonth={vi.fn()} transactions={tx} records={{ food: { name: 'Food' } }} onEdit={edit} remove={remove} />);
-    expect(screen.getByRole('img').getAttribute('aria-label')).toContain('Food ₹75.00, 100.0%');
-    expect(screen.getByRole('img').getAttribute('aria-label')).not.toContain('1,000');
+    expect(screen.getByRole('img').getAttribute('aria-label')).toContain('Food ₹75');
+    expect(screen.getByRole('img').getAttribute('aria-label')).toContain('Income ₹1,000');
     fireEvent.click(screen.getByRole('button', { name: 'Delete transaction Dinner' })); expect(remove).toHaveBeenCalledWith('old');
     fireEvent.click(screen.getByRole('button', { name: 'Edit transaction Dinner' })); expect(edit).toHaveBeenCalledWith(tx[0]);
   });

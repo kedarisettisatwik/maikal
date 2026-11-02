@@ -1,0 +1,5 @@
+import {it,expect} from 'vitest';
+import {render,screen} from '@testing-library/react';
+import MoneyDonut from '../components/MoneyDonut';
+it('shows total income in the center and identifies remaining income and expense categories',()=>{render(<MoneyDonut period="today" transactions={[{kind:'income',amount:1000000},{kind:'expense',amount:300000,categoryId:'food'}]} records={{food:{id:'food',type:'category',kind:'expense',name:'Food'}}}/>);expect(screen.getByText('Total income')).toBeTruthy();expect(document.querySelector('.donut-hole strong').textContent).toBe('₹10,000');expect(screen.getByText('Remaining income')).toBeTruthy();expect(screen.getByRole('img').getAttribute('aria-label')).toContain('Remaining income ₹7,000');});
+it('renders a deficit explicitly and does not label expenses as savings',()=>{render(<MoneyDonut period="today" transactions={[{kind:'income',amount:10000},{kind:'expense',amount:15000,categoryId:'food'}]} records={{}}/>);expect(screen.getByRole('status').textContent).toContain('Deficit: ₹50');expect(screen.queryByText('Remaining income')).toBeNull();});
