@@ -1,3 +1,5 @@
+import {validateFrequentReminders} from '../frequent-reminders';
+import FrequentReminders from '../components/FrequentReminders';
 import toast, { Toaster } from 'react-hot-toast';
 import { assetUrl } from '../assets';
 import { useLayoutEffect, useRef, useState } from 'react';
@@ -50,6 +52,7 @@ export default function EntryDialog({ entry, categories, save, removeCategory, n
   const [error, setError] = useState('');
   const [notificationTimes, setNotificationTimes] = useState(editing?.notificationTimes || []);
   const [alarmTimes, setAlarmTimes] = useState(editing?.alarmTimes || []);
+  const [frequentReminders,setFrequentReminders]=useState(()=>editing?.frequentReminders||{enabled:false,start:'12:00',end:'00:00',intervalMinutes:60});
   const [saving, setSaving] = useState(false);
   const title = editing && type !== 'transaction' ? `Edit ${type}` : type === 'goal' ? 'Create a goal' : type === 'category' ? 'Create a category' : type === 'transaction' ? editing ? 'Edit transaction' : 'Add a transaction' : type === 'event' ? 'Create an event' : `Create a ${type}`;
   async function submit(e) {
@@ -63,7 +66,7 @@ export default function EntryDialog({ entry, categories, save, removeCategory, n
         const title = data.get('title').trim();
         if (!title) throw new Error('Enter a title.');
         record = { ...record, title, schedule: validateSchedule(schedule), createdDate: editing?.createdDate || localDate(), notificationTimes };
-        if (isNative()) record.alarmTimes = [...new Set(alarmTimes)].sort();
+        if (isNative()){record.alarmTimes = [...new Set(alarmTimes)].sort();record.frequentReminders=validateFrequentReminders(frequentReminders);}
         if (type === 'goal') {
           if (iconMode === 'emoji' && !emoji.trim()) throw new Error('Enter an emoji or choose another icon style.');
           record = { ...record, iconMode, icon: iconMode === 'select' ? icon : iconMode === 'emoji' ? emoji.trim() : '', goalType, trackerUnit: data.get('trackerUnit') || 'count' };
@@ -99,7 +102,7 @@ export default function EntryDialog({ entry, categories, save, removeCategory, n
       <Schedule value={schedule} onChange={setSchedule} />
       {type !== 'goal' && <><label className="field all-day-field"><input type="checkbox" checked={allDay} onChange={e => setAllDay(e.target.checked)} /> All day</label>{!allDay && <div className="row"><label className="field"><span>Start time</span><input name="startTime" defaultValue={editing?.startTime} type="time" required /></label><label className="field"><span>End time</span><input name="endTime" defaultValue={editing?.endTime} type="time" required /></label></div>}<p className="small" style={{ marginBottom: 20 }}>Times use your device’s local timezone. Notifications follow the times selected below.</p></>}
       <NotificationTimes times={notificationTimes} onChange={setNotificationTimes} />
-      {isNative() && <NotificationTimes mode="alarm" times={alarmTimes} onChange={setAlarmTimes} />}
+      {isNative() && <><NotificationTimes mode="alarm" times={alarmTimes} onChange={setAlarmTimes} /><FrequentReminders value={frequentReminders} onChange={setFrequentReminders}/></>}
     </>}
     {type === 'category' && <><div className="row"><label className="field"><span>Name</span><input name="name" defaultValue={editing?.name} maxLength={60} placeholder="e.g. Groceries" required /></label><label className="field"><span>Type</span><select value={kind} onChange={e => setKind(e.target.value)}><option value="expense">Expense</option><option value="income">Income</option></select></label></div><span className="label">Category icon</span><IconPicker paths={expenseIcons} value={iconMode === 'select' ? icon : ''} onChange={value => { setIcon(value); setIconMode('select'); }}><input className={`category-emoji-square ${iconMode === 'emoji' ? 'selected' : ''}`} aria-label="Your category emoji" title="Type or paste your own emoji" value={emoji} maxLength={16} autoComplete="off" onChange={e => { setEmoji(e.target.value); setIconMode('emoji'); }} /></IconPicker><p className="small category-emoji-help">Use the empty square to type or paste your own emoji.</p></>}
     {type === 'transaction' && <><div className="row"><label className="field"><span>Type</span><select value={kind} onChange={e => { setKind(e.target.value); setCategoryId(''); }}><option value="expense">Expense</option><option value="income">Income</option></select></label><label className="field"><span>Amount (INR)</span><input name="amount" type="number" min="0.01" max="999999999" step="0.01" defaultValue={editing ? (editing.amount / 100).toFixed(2) : ''} required placeholder="0.00" /></label></div><div className="row"><label className="field"><span>Category</span><select value={categoryId} onChange={e => setCategoryId(e.target.value)} required><option value="">Choose a category</option>{categories.filter(c => c.kind === kind).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label className="field"><span>Date</span><input name="date" type="date" defaultValue={editing?.date || localDate()} required /></label></div>{!categories.some(c => c.kind === kind) && <p className="report-text">Create an {kind} category using Menu → Create category first.</p>}<label className="field"><span>Note (optional)</span><input name="note" maxLength={200} defaultValue={editing?.note || ''} placeholder="What was it for?" /></label></>}

@@ -440,3 +440,5 @@ html[data-maikal-mobile] .notes-mobile-tags button[aria-pressed="true"]{backgrou
 html[data-maikal-mobile][data-theme="dark"] .notes-mobile-tags button[aria-pressed="true"]{background:#3c5d48;color:#effaf2;border-color:#86b593}
 
 html[data-maikal-mobile] .custom-widget-action{margin-bottom:28px}
+
+.frequent-reminders{margin:24px 0;padding-top:18px;border-top:1px solid var(--line)}.frequent-enable{display:flex;align-items:center;gap:10px;margin:14px 0}.frequent-enable input{width:20px!important;height:20px!important;min-height:20px!important;flex:0 0 20px}

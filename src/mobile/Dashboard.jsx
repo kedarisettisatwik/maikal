@@ -141,7 +141,7 @@ export default function Dashboard({ user, notify, onConnect, restoring }) {
     if ((entry?.record || entry?.transaction) && latest.current.records[record.id]?.deleted) throw Error('This item was deleted. Create a new entry instead.');
     if (record.alarmTimes?.length) await prepareAlarmAccess();
     const saved = save(record);
-    if (record.notificationTimes?.length && !record.alarmTimes?.length) enableNotifications().catch(e => notify(e.message));
+    if ((record.notificationTimes?.length || record.frequentReminders?.enabled) && !record.alarmTimes?.length) enableNotifications().catch(e => notify(e.message));
     try { await syncNotifications({ ...latest.current.records, [record.id]: saved }, user.uid); setSyncRevision(n => n + 1); } catch { notify('Entry saved. Check Time for Android alarm permissions.'); }
   }
   function removeCategory(id) { if (transactions.some(t => t.categoryId === id)) return notify('This category has transactions. Delete those entries first.'); remove(id); }
