@@ -30,18 +30,18 @@ public class TodayWidgetProvider extends AppWidgetProvider {
             .thenComparing(r -> r.optString("title")));
         return result;
     }
+    static String number(double n){return n==Math.rint(n)?String.valueOf((long)n):String.valueOf(n);}
     static RemoteViews row(Context c, JSONObject r) throws Exception {
         RemoteViews row = new RemoteViews(c.getPackageName(), R.layout.widget_today_row); MantraTheme.widget(c,row,R.layout.widget_today_row);
         String date = LocalDate.now().toString(); boolean goal = "goal".equals(r.optString("type"));
         boolean tracker = goal && "tracker".equals(r.optString("goalType"));
         boolean done = goal && !tracker && NativeDiaryStore.completed(c, r.getString("id"), date);
-        String detail;
-        if (tracker) {
-            double value = NativeDiaryStore.trackerValue(c,r.getString("id"),date);
-            detail = "Tracker · " + (value == Math.rint(value) ? String.valueOf((long)value) : String.valueOf(value)) + ("time".equals(r.optString("trackerUnit")) ? " mins" : " count");
-        } else detail = goal ? done ? "Goal · Completed" : "Goal · To do" : "Event" + " · " + (r.optBoolean("allDay") ? "All day" : r.optString("startTime"));
-        row.setTextViewText(R.id.widget_row_title, (done ? "✓ " : "") + r.optString("title"));
-        row.setTextViewText(R.id.widget_row_detail, detail);
+        String detail="";
+        if(tracker){double value=NativeDiaryStore.trackerValue(c,r.getString("id"),date);detail=number(value);if(r.has("target")&&!r.isNull("target"))detail+=" / "+number(r.optDouble("target"));}
+        else if(!goal){detail=r.optBoolean("allDay")?"All day":r.optString("startTime");String end=r.optString("endTime");if(!r.optBoolean("allDay")&&!end.isEmpty())detail+=" – "+end;}
+        row.setTextViewText(R.id.widget_row_title,r.optString("title"));
+        row.setTextViewText(R.id.widget_row_detail,detail);
+        row.setViewVisibility(R.id.widget_row_detail,detail.isEmpty()?android.view.View.GONE:android.view.View.VISIBLE);
         row.setTextColor(R.id.widget_row_title, MantraTheme.color(c,MantraTheme.color(c,Color.parseColor(done ? "#008B47" : "#253439"))));
         row.setOnClickFillInIntent(R.id.widget_row, new Intent());
         return row;

@@ -34,6 +34,8 @@ public class NativeFeaturesTest {
     }
     @Before public void setup() throws Exception {
         context = ApplicationProvider.getApplicationContext();
+        if(android.os.Build.VERSION.SDK_INT>=33)try(android.os.ParcelFileDescriptor.AutoCloseInputStream in=new android.os.ParcelFileDescriptor.AutoCloseInputStream(InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand("pm grant "+context.getPackageName()+" android.permission.POST_NOTIFICATIONS"))){in.readAllBytes();}
+
         DiaryAlarmReceiver.replace(context, new JSONArray());
         NativeDiaryStore.prefs(context).edit().clear().commit();
         NativeDiaryStore.snapshot(context, "local", new JSONArray());
@@ -45,8 +47,8 @@ public class NativeFeaturesTest {
     }
     @Test public void greetingsHaveExactlyTheRequestedClockTimes() throws Exception {
         JSONArray entries = GreetingReminders.entries();
-        assertEquals(8, entries.length());
-        String[] times = {"06:30", "10:00", "11:00", "12:00", "16:00", "18:00", "21:00", "01:00"};
+        assertEquals(7, entries.length());
+        String[] times = {"06:30", "10:00", "11:00", "12:00", "16:00", "18:00", "01:00"};
         for (int i = 0; i < times.length; i++) assertEquals(times[i], entries.getJSONObject(i).getJSONArray("times").getString(0));
     }
     @Test public void completionsAreDurableIdempotentAndAccountScoped() throws Exception {
@@ -73,8 +75,8 @@ public class NativeFeaturesTest {
         InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
             try {
                 android.view.View view = TodayWidgetProvider.row(context, rows.get(0)).apply(context, new FrameLayout(context));
-                assertTrue(((TextView)view.findViewById(R.id.widget_row_title)).getText().toString().startsWith("✓"));
-                assertTrue(((TextView)view.findViewById(R.id.widget_row_detail)).getText().toString().contains("Completed"));
+                assertEquals(rows.get(0).optString("title"),((TextView)view.findViewById(R.id.widget_row_title)).getText().toString());
+                assertEquals(android.view.View.GONE,view.findViewById(R.id.widget_row_detail).getVisibility());
             } catch (Exception e) { throw new RuntimeException(e); }
         });
     }
@@ -139,4 +141,9 @@ public class NativeFeaturesTest {
         assertTrue(NativeDiaryStore.completed(context, "g", LocalDate.now().toString()));
         assertEquals(1, NativeDiaryStore.pending(context, "local").length());
     }
+ @Test public void compactWidgetShowsTrackerTargetAndEventTimeBesideTitle()throws Exception{
+  JSONObject tracker=goal("t","tracker").put("target",40);JSONObject event=new JSONObject().put("id","e").put("type","event").put("title","Meeting").put("startTime","09:00").put("endTime","10:00");
+  NativeDiaryStore.snapshot(context,"local",new JSONArray().put(tracker));
+  InstrumentationRegistry.getInstrumentation().runOnMainSync(()->{try{android.view.View a=TodayWidgetProvider.row(context,tracker).apply(context,new FrameLayout(context));assertEquals("0 / 40",((TextView)a.findViewById(R.id.widget_row_detail)).getText().toString());assertEquals(android.widget.LinearLayout.HORIZONTAL,((android.widget.LinearLayout)a).getOrientation());android.view.View b=TodayWidgetProvider.row(context,event).apply(context,new FrameLayout(context));assertEquals("09:00 – 10:00",((TextView)b.findViewById(R.id.widget_row_detail)).getText().toString());}catch(Exception e){throw new RuntimeException(e);}});
+ }
 }

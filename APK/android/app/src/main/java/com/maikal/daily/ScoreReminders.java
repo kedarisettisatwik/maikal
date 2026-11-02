@@ -30,7 +30,6 @@ final class ScoreReminders {
         }return false;
     }
     static void clearIfNoReport(Context c) throws Exception {
-        if(shouldNotify(c,LocalDate.now()))return;
         NotificationManager manager=(NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE);
         for(android.service.notification.StatusBarNotification n:manager.getActiveNotifications())if("maikal_scores".equals(n.getNotification().getChannelId()))manager.cancel(n.getTag(),n.getId());
     }

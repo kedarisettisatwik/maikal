@@ -104,10 +104,12 @@ it('celebrates a completed checkbox only after its progress saves', () => {
   } finally { clearCelebration(); Element.prototype.animate = original; view.unmount(); }
 });
 
-it('opens yesterday report directly from its native notification', async () => {
+it('routes a retired report notification to scores in More', async () => {
  vi.mocked(consumeNativeLaunch).mockResolvedValueOnce({type:'quick',action:'report',requestId:'report-test'});
  render(<Dashboard user={{uid:'local'}} notify={notify} restoring={false}/>);
- expect(await screen.findByRole('heading',{name:'Yesterday’s report'})).toBeTruthy();
- expect(screen.getByRole('button',{name:'Skip'})).toBeTruthy();
+ expect(await screen.findByRole('heading',{name:'Score'})).toBeTruthy();
+ expect(screen.queryByRole('button',{name:'Skip'})).toBeNull();
  expect(acknowledgeNativeLaunch).toHaveBeenCalledWith('report-test');
 });
+
+it('shows score totals without a photo editor or report button',()=>{render(<Dashboard user={{uid:'local'}} notify={notify} restoring={false}/>);fireEvent.click(screen.getByRole('tab',{name:'More'}));expect(screen.getByRole('heading',{name:'Score'})).toBeTruthy();expect(screen.queryByRole('button',{name:/Yesterday.*report/})).toBeNull();expect(document.querySelector('[data-score-editor]')).toBeNull();expect(screen.queryByText(/report reminders/)).toBeNull();});

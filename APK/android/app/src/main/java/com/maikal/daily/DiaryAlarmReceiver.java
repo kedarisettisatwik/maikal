@@ -138,6 +138,7 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
             if (id < 1 || id > alarms.length()) return;
             JSONObject entry = alarms.getJSONObject(id - 1);
             boolean score="score".equals(entry.optString("kind"));
+            if(score)return; // Photo-report notifications were retired.
             boolean greeting = "greeting".equals(entry.optString("kind"));
             if(score){String receipt="scoreNotice_"+NativeDiaryStore.uid(c)+"_"+entry.optString("time");if(!ScoreReminders.deliveryTime(LocalTime.now(),entry.getString("time"))||!ScoreReminders.shouldNotify(c,LocalDate.now())||LocalDate.now().toString().equals(prefs(c).getString(receipt,""))){schedule(c,entry,id);return;}}
 

@@ -10,30 +10,6 @@ import org.json.JSONArray;
 
 @CapacitorPlugin(name = "DiaryAlarms")
 public class DiaryAlarmsPlugin extends Plugin {
-    @PluginMethod public void saveScoreCard(PluginCall call){
-        java.io.File export=null;
-        try{
-            String image=call.getString("image","");boolean jpeg=image.startsWith("data:image/jpeg;base64,");String mime=jpeg?"image/jpeg":"image/png",extension=jpeg?".jpg":".png";if((!jpeg&&!image.startsWith("data:image/png;base64,"))||image.length()>16*1024*1024){call.reject("Could not read score card image");return;}
-            java.io.File folder=new java.io.File(getContext().getCacheDir(),"score_exports");if(!folder.exists()&&!folder.mkdirs())throw new java.io.IOException("Device storage is full");
-            java.io.File[] old=folder.listFiles();if(old!=null)for(java.io.File f:old)if(f.getName().matches("score-[A-Za-z0-9-]+\\.(png|jpg)")&&f.lastModified()<System.currentTimeMillis()-86400000L)f.delete();
-            export=new java.io.File(folder,"score-"+java.util.UUID.randomUUID()+extension);
-            byte[] bytes=android.util.Base64.decode(image.substring(image.indexOf(',')+1),android.util.Base64.DEFAULT);try(java.io.FileOutputStream out=new java.io.FileOutputStream(export)){out.write(bytes);}
-            // Capacitor saves plugin-call options when the system picker stops this activity.
-            // Keep the image on private disk; a multi-megabyte data URL exceeds Binder's limit.
-            call.getData().remove("image");call.getData().put("exportFile",export.getName());
-            Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT).setType(mime).addCategory(Intent.CATEGORY_OPENABLE).putExtra(Intent.EXTRA_TITLE,call.getString("filename","MANTRA-score"+extension).replaceAll("[^A-Za-z0-9._-]","_"));startActivityForResult(call,intent,"scoreCardSaved");
-        }catch(Exception e){if(export!=null)export.delete();call.reject("Could not prepare score card download",e);}
-    }
-    @com.getcapacitor.annotation.ActivityCallback private void scoreCardSaved(PluginCall call,androidx.activity.result.ActivityResult result){
-        if(call==null)return;java.io.File export=null;
-        try{
-            String filename=call.getString("exportFile","");if(!filename.matches("score-[A-Za-z0-9-]+\\.(png|jpg)"))throw new java.io.IOException("Export expired. Please try again.");
-            export=new java.io.File(new java.io.File(getContext().getCacheDir(),"score_exports"),filename);
-            if(result.getResultCode()!=android.app.Activity.RESULT_OK||result.getData()==null||result.getData().getData()==null){call.resolve(new JSObject().put("cancelled",true));return;}
-            try(java.io.InputStream in=new java.io.FileInputStream(export);java.io.OutputStream out=getContext().getContentResolver().openOutputStream(result.getData().getData())){if(out==null)throw new java.io.IOException("No destination selected");byte[] buffer=new byte[16384];int count;while((count=in.read(buffer))!=-1)out.write(buffer,0,count);}
-            call.resolve(new JSObject().put("cancelled",false));
-        }catch(Exception e){call.reject("Could not save score card image",e);}finally{if(export!=null)export.delete();}
-    }
     @PluginMethod public void openCustomWidgetBuilder(PluginCall call){getActivity().startActivity(new Intent(getContext(),CustomWidgetConfigureActivity.class));call.resolve();}
     @PluginMethod public void timeTools(PluginCall call){try{call.resolve(new JSObject(TimeTools.control(getContext(),call.getString("command","status"),call.getInt("durationMs",0)).toString()));}catch(Exception e){call.reject(e.getMessage(),e);}}
     @PluginMethod public void setTheme(PluginCall call){MantraTheme.save(getContext(),call.getString("theme","system"));call.resolve();}
@@ -98,9 +74,8 @@ public class DiaryAlarmsPlugin extends Plugin {
             ClockAlarms.syncDiary(getContext(),call.getString("uid","local"),records==null?new JSONArray():records);
             NoteWidgetProvider.refresh(getContext());
             JSONArray greetings = GreetingReminders.entries();
-            if(call.getBoolean("scoreNudges",true)){JSONArray scores=ScoreReminders.entries();for(int i=0;i<scores.length();i++)entries.put(scores.getJSONObject(i));}
             ScoreReminders.clearIfNoReport(getContext());
-            for(int i=0;i<greetings.length();i++){org.json.JSONObject greeting=greetings.getJSONObject(i);String time=greeting.getJSONArray("times").getString(0);if(call.getBoolean("scoreNudges",true)&&java.util.Arrays.asList("00:30","01:00","06:00","08:00","10:00","11:00").contains(time))continue;entries.put(greeting); }
+            for(int i=0;i<greetings.length();i++)entries.put(greetings.getJSONObject(i));
             DiaryAlarmReceiver.replace(getContext(), entries);
             TodayWidgetProvider.refresh(getContext());
             call.resolve();
