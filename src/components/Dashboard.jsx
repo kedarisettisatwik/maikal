@@ -1,3 +1,4 @@
+import useMoneyFilter from '../useMoneyFilter';
 import AppInfo, { ThemeChoice } from './AppInfo';
 import { APP_VERSION } from '../version';
 import { reportUsage } from '../usage';
@@ -36,7 +37,8 @@ export default function Dashboard({ user, notify, onConnect, restoring }) {
   const { records, save, remove, error, status } = useRecords(user.uid, notify);
   const [date, setDate] = useState(localDate);
   const screenTime = useScreenTime(records, save, user.uid, restoring);
-  const [month, setMonth] = useState(() => localDate().slice(0, 7));
+  const [moneyFilter,setMoneyFilter] = useMoneyFilter(user.uid,'web',{month:localDate().slice(0,7)});
+  const month=moneyFilter.month,setMonth=month=>setMoneyFilter({month});
   const [entry, setEntry] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
