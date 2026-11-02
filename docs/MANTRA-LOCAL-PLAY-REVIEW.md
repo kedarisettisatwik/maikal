@@ -21,7 +21,7 @@ A signed release Android App Bundle and a signed release APK have been prepared.
 
 | Check | Result |
 |---|---|
-| Existing JS/UI suite | 152 passed before changes; 153 passed plus one test assertion-helper failure after changes; the two new privacy tests then both passed after correcting that test-only assertion. All 154 distinct tests have passing results. |
+| Existing JS/UI suite | 154 passed in the final full run (40 test files), including the new local privacy tests. |
 | Android unit tests | 5 ScreenTime tests passed |
 | Release lint | 0 errors, 136 warnings; initial review had 16 errors |
 | Release APK/AAB | `assembleLocalRelease` and `bundleLocalRelease` passed |
