@@ -6,7 +6,7 @@ $env:PATH="$env:JAVA_HOME/bin;$env:PATH"
 $signingFolder=Join-Path (Resolve-Path '.publish').Path 'mantra-play-signing'
 $env:MANTRA_UPLOAD_STORE=Join-Path $signingFolder 'mantra-upload.p12'
 if (-not (Test-Path -LiteralPath $env:MANTRA_UPLOAD_STORE)) { throw 'Existing upload key missing. Restore it; do not generate a replacement for an existing Play app.' }
-$protectedPassword=Get-Content -Raw -LiteralPath (Join-Path $signingFolder 'upload-password.dpapi') | ConvertTo-SecureString
+$protectedPassword=(Get-Content -Raw -LiteralPath (Join-Path $signingFolder 'upload-password.dpapi')).Trim() | ConvertTo-SecureString
 $env:MANTRA_UPLOAD_PASSWORD=[System.Net.NetworkCredential]::new('', $protectedPassword).Password
 try {
  if (-not $SkipWebBuild) { node scripts/build-android.mjs; if($LASTEXITCODE -ne 0){throw 'Web assets failed'} }
