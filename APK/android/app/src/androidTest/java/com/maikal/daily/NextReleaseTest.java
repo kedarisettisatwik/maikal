@@ -80,4 +80,14 @@ import static org.junit.Assert.*;
   TextView total=root.findViewById(R.id.widget_track_total);assertNotNull(total);assertFalse(total.getText().toString().isEmpty());
  }
 
+ @Test public void goalMinutesUseTwoDecimalsInWidgetAndNotificationWithoutChangingStoredValue()throws Exception{
+  java.util.Locale old=java.util.Locale.getDefault();try{java.util.Locale.setDefault(java.util.Locale.US);
+   String day=LocalDate.now().toString();JSONObject g=goal("precision").put("target",40),p=new JSONObject().put("id","progress_precision_"+day).put("type","progress").put("goalId","precision").put("date",day).put("value",12.345678);
+   NativeDiaryStore.snapshot(c,"local",new JSONArray().put(g).put(p));
+   android.view.View row=TodayWidgetProvider.row(c,g).apply(c,new FrameLayout(c));assertEquals("12.35 / 40.00",((TextView)row.findViewById(R.id.widget_row_detail)).getText().toString());
+   assertTrue(DiaryAlarmReceiver.trackerBody(c,g,day).contains("Current: 12.35 minutes"));assertEquals(12.345678,NativeDiaryStore.trackerValue(c,"precision",day),0.00000001);
+   assertEquals("0.00",TodayWidgetProvider.goalNumber(g,0));assertEquals("5",TodayWidgetProvider.goalNumber(g.put("trackerUnit","count"),5));
+  }finally{java.util.Locale.setDefault(old);}
+ }
+
 }

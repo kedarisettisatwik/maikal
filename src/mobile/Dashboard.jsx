@@ -1,3 +1,4 @@
+import {goalValueText} from '../goal-value-format';
 import {TaskEditor,TaskRow,TaskDetails} from './Tasks';
 import CalendarPage from './CalendarPage';
 import FocusPage from './FocusPage';
@@ -44,20 +45,21 @@ const tabs = [['home', homeIcon], ['money', moneyIcon], ['note', noteIcon], ['ti
 function initialTab() { const hash = window.location.hash.slice(1); return hash === 'notes' ? 'note' : tabs.some(([name]) => name === hash) ? hash : 'home'; }
 function Heading({ title, children }) { return <div className="section-heading"><h2>{title}</h2><div className="heading-actions">{children}</div></div>; }
 function Tracker({ goal, value, onSave, notify, entered,disabled }) {
-  const [draft, setDraft] = useState(String(Number(value) || 0));
-  const focus = useRef(false);
-  useEffect(() => { if (!focus.current) setDraft(String(Number(value) || 0)); }, [value]);
+  const [draft, setDraft] = useState(goalValueText(goal,value));
+  const focus = useRef(false), dirty=useRef(false);
+  useEffect(() => { if (!focus.current) setDraft(goalValueText(goal,value)); }, [value,goal.trackerUnit]);
   function commit() {
-    focus.current = false; const number = Number(draft);
-    if (!draft.trim() || !Number.isFinite(number) || number < 0 || number > 1e9) { setDraft(String(Number(value) || 0)); notify('Enter a value from 0 to 1,000,000,000.'); return; }
+    focus.current = false; if(!dirty.current){setDraft(goalValueText(goal,value));return;} dirty.current=false; const number = Number(draft);
+    if (!draft.trim() || !Number.isFinite(number) || number < 0 || number > 1e9) { setDraft(goalValueText(goal,value)); notify('Enter a value from 0 to 1,000,000,000.'); return; }
     if (number !== Number(value) || !entered) onSave(number);
+    setDraft(goalValueText(goal,number));
   }
-  return <input disabled={disabled} className="tracker-input" aria-label={`${goal.title} ${unit(goal)}`} type="number" min="0" max="1000000000" step="any" value={draft} onChange={e => setDraft(e.target.value)} onFocus={() => focus.current = true} onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} />;
+  return <input disabled={disabled} className="tracker-input" aria-label={`${goal.title} ${unit(goal)}`} type="number" min="0" max="1000000000" step="any" value={draft} onChange={e => {dirty.current=true;setDraft(e.target.value);}} onFocus={() => {focus.current=true;dirty.current=false;}} onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} />;
 }
 export function GoalRow({ goal, records, date, onProgress, onEdit, remove, notify, manage = false,onFocus }) {
   const value = progress(records, goal, date), tracker = goal.goalType === 'tracker', finished = goalComplete(records, goal, date);
   return <div className={`goal-row ${finished ? 'done' : ''}`}>
-    <div className="goal-visual"><Icon record={goal} /></div><div className="grow"><h3>{goal.focusEnabled?<button className="text-button" onClick={()=>onFocus(goal)}>{goal.title} · Focus</button>:goal.title}</h3><small>{manage ? describe(goal.schedule || { type: 'everyday' }) : tracker ? `Track in ${unit(goal)}${goal.target != null ? ` · ${goal.targetRule === 'atMost' ? 'At most' : 'At least'} ${goal.target}${finished ? ' · Target met' : ''}` : ''}` : value ? 'Completed today' : 'Daily progress'}</small></div>
+    <div className="goal-visual"><Icon record={goal} /></div><div className="grow"><h3>{goal.focusEnabled?<button className="text-button" onClick={()=>onFocus(goal)}>{goal.title} · Focus</button>:goal.title}</h3><small>{manage ? describe(goal.schedule || { type: 'everyday' }) : tracker ? `Track in ${unit(goal)}${goal.target != null ? ` · ${goal.targetRule === 'atMost' ? 'At most' : 'At least'} ${goalValueText(goal,goal.target)}${finished ? ' · Target met' : ''}` : ''}` : value ? 'Completed today' : 'Daily progress'}</small></div>
     {manage ? goal.managedBy==='screenTime'?<button className="text-button" onClick={()=>openTrack()}>Manage in Track ↗</button>:<div className="row-actions"><ActionIconButton action="edit" label={`Edit goal ${goal.title}`} onClick={() => onEdit(goal)} /><ActionIconButton action="delete" label={`Delete goal ${goal.title}`} onClick={() => goal.managedBy==='screenTime'?openTrack():remove(goal.id)} /></div> : <div className="goal-control">{tracker ? <Tracker disabled={goal.managedBy==='screenTime'} key={`${goal.id}-${date}`} goal={goal} value={value} entered={hasTrackerValue(records, goal, date)} onSave={v => onProgress(goal.id, v, date)} notify={notify} /> : <label className="goal-check"><input type="checkbox" aria-label={`Mark ${goal.title} done`} checked={Boolean(value)} onChange={e => { const checked = e.target.checked; const saved = onProgress(goal.id, checked, date); if (checked && saved !== false) celebrateGoal(e.currentTarget); else clearCelebration(); }} /></label>}</div>}
   </div>;
 }

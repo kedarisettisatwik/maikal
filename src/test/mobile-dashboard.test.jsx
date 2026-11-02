@@ -140,3 +140,13 @@ it('keeps Home tasks compact and opens time, target and actions in a separate ta
  fireEvent.click(within(detail).getByRole('button',{name:'Delete task'}));expect(mock.remove).toHaveBeenCalledWith('t');
  fireEvent.click(within(detail).getByRole('button',{name:'Edit task'}));expect(screen.getByDisplayValue('Build app')).toBeTruthy();expect(screen.getByRole('button',{name:'Save task'})).toBeTruthy();
 });
+
+it('shows goal minutes with exactly two decimals without rounding stored progress on focus/blur',()=>{
+ const goal={id:'time',type:'goal',title:'Study',goalType:'tracker',trackerUnit:'time',target:40};
+ const progress={progress_time_2026:{},'progress_time_2026-11-03':{value:12.345678}};const save=vi.fn();
+ const {rerender}=render(<GoalRow goal={goal} records={progress} date="2026-11-03" onProgress={save} notify={notify}/>);
+ let input=screen.getByRole('spinbutton',{name:'Study mins'});expect(input.value).toBe('12.35');expect(screen.getByText(/At least 40.00/)).toBeTruthy();
+ fireEvent.focus(input);fireEvent.blur(input);expect(save).not.toHaveBeenCalled();expect(progress['progress_time_2026-11-03'].value).toBe(12.345678);
+ fireEvent.focus(input);fireEvent.change(input,{target:{value:'15.6789'}});fireEvent.blur(input);expect(save).toHaveBeenCalledWith('time',15.6789,'2026-11-03');expect(input.value).toBe('15.68');
+ rerender(<GoalRow goal={{...goal,trackerUnit:'count'}} records={progress} date="2026-11-03" onProgress={save} notify={notify}/>);expect(screen.getByRole('spinbutton').value).toBe('12.345678');
+});
