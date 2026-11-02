@@ -1,0 +1,4 @@
+<resources>
+    <style name="AppTheme.NoActionBar" parent="AppTheme.NoActionBarBase"><item name="android:windowLightNavigationBar">true</item></style>
+    <style name="AlarmClockTheme" parent="AlarmClockThemeBase"><item name="android:windowLightNavigationBar">true</item></style>
+</resources>

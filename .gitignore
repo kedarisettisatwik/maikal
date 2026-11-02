@@ -34,3 +34,8 @@ APK/android/app/src/local/assets/
 APK/android/app/src/firebase/assets/
 *.jks
 *.keystore
+
+# Play deliverables and upload keys
+APK/*.aab
+*.p12
+*.dpapi

@@ -79,7 +79,7 @@ function TimePage(props){const [tool,setTool]=useState('alarms');return <><div c
 
 export default function Dashboard({ user, notify, onConnect, restoring }) {
   const { records, save, remove, error, status } = useRecords(user.uid, notify);
-  useEffect(()=>{if(restoring)return;const send=()=>reportUsage(records).catch(()=>{});const timer=setTimeout(send,2000),repeat=setInterval(send,15*60000);window.addEventListener('online',send);document.addEventListener('visibilitychange',send);return()=>{clearTimeout(timer);clearInterval(repeat);window.removeEventListener('online',send);document.removeEventListener('visibilitychange',send)}},[records,restoring]);
+  useEffect(()=>{if(localOnly){reportUsage({});return;}if(restoring)return;const send=()=>reportUsage(records).catch(()=>{});const timer=setTimeout(send,2000),repeat=setInterval(send,15*60000);window.addEventListener('online',send);document.addEventListener('visibilitychange',send);return()=>{clearTimeout(timer);clearInterval(repeat);window.removeEventListener('online',send);document.removeEventListener('visibilitychange',send)}},[records,restoring]);
   const screenTime = useScreenTime(records, save, user.uid, restoring);
   const [date, setDate] = useState(localDate), [tab, setTab] = useState(initialTab), [entry, setEntry] = useState(null), [list, setList] = useState(null);
   const [noteLaunch, setNoteLaunch] = useState(null), [sharedNote, setSharedNote] = useState(null), [syncRevision, setSyncRevision] = useState(0), [signingOut, setSigningOut] = useState(false);

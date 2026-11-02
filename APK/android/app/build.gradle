@@ -21,6 +21,8 @@ android {
         local {
             dimension "storage"
             applicationIdSuffix ".local"
+            versionCode 38
+            versionName "2.9.2"
             versionNameSuffix "-local"
             resValue "string", "app_name", "MANTRA"
             resValue "string", "title_activity_main", "MANTRA"
@@ -32,8 +34,19 @@ android {
             resValue "string", "title_activity_main", "MANTRA"
         }
     }
+    signingConfigs {
+        playUpload {
+            if (System.getenv('MANTRA_UPLOAD_STORE')) {
+                storeFile file(System.getenv('MANTRA_UPLOAD_STORE'))
+                storePassword System.getenv('MANTRA_UPLOAD_PASSWORD')
+                keyAlias 'mantra-upload'
+                keyPassword System.getenv('MANTRA_UPLOAD_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         release {
+            if (System.getenv('MANTRA_UPLOAD_STORE')) signingConfig signingConfigs.playUpload
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

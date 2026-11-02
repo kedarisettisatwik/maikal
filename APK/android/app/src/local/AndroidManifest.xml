@@ -1,4 +1,4 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
-    <!-- Used only for anonymous aggregate usage reports; personal records remain local. -->
-    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Local edition never accesses the network, including analytics. -->
+    <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
 </manifest>

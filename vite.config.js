@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 export default defineConfig(({ command, mode }) => {
   const localOnly = mode === 'android-local';
   const android = mode.startsWith('android');
+  const usageShim = fileURLToPath(new URL('./src/local-usage.js', import.meta.url));
   const localShim = fileURLToPath(new URL('./src/local-firebase.js', import.meta.url));
   if (command === 'build' && !localOnly) {
     const env = loadEnv(mode, process.cwd(), 'VITE_FIREBASE_');
@@ -15,7 +16,7 @@ export default defineConfig(({ command, mode }) => {
   return {
   base: android ? '/' : '/maikal/',
   optimizeDeps: { entries: ['index.html'] },
-  plugins: [android && { name: 'android-mobile-shell', enforce: 'pre', resolveId(source, importer) { if (importer?.replaceAll('\\', '/').endsWith('/src/App.jsx') && source === './components/Dashboard.jsx') return fileURLToPath(new URL('./src/mobile/Dashboard.jsx', import.meta.url)); } }, localOnly && { name: 'local-only-firebase', enforce: 'pre', resolveId(source) { if (source.startsWith('firebase/') || /^(?:\.\.?\/)+firebase(?:\.js)?$/.test(source)) return localShim; } }, react(), VitePWA({
+  plugins: [android && { name: 'android-mobile-shell', enforce: 'pre', resolveId(source, importer) { if (importer?.replaceAll('\\', '/').endsWith('/src/App.jsx') && source === './components/Dashboard.jsx') return fileURLToPath(new URL('./src/mobile/Dashboard.jsx', import.meta.url)); } }, localOnly && { name: 'local-only-firebase', enforce: 'pre', resolveId(source) { if (/^(?:\.\.?\/)+usage(?:\.js)?$/.test(source)) return usageShim; if (source.startsWith('firebase/') || /^(?:\.\.?\/)+firebase(?:\.js)?$/.test(source)) return localShim; } }, react(), VitePWA({
     disable: android,
     registerType: 'prompt',
     includeAssets: ['favicon.ico', 'app-icons/*.png'],
