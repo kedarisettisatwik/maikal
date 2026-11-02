@@ -24,6 +24,7 @@ public class ClockAlarmService extends Service {
             if(id!=null&&id.equals(activeId)){
                 if("SNOOZE".equals(command))try{ClockAlarms.snooze(this,id);}catch(Exception e){android.widget.Toast.makeText(this,"Could not snooze alarm",android.widget.Toast.LENGTH_LONG).show();return START_NOT_STICKY;}
                 sendBroadcast(new Intent(getPackageName()+".CLOCK_CLOSED").setPackage(getPackageName()).putExtra("id",id));
+                if("STOP".equals(command))ClockAlarms.completed(this,id);
                 release();activeId=null;
                 if(!queue.isEmpty()){java.util.Map.Entry<String,String> next=queue.entrySet().iterator().next();queue.remove(next.getKey());ring(next.getKey(),next.getValue());}
                 else{stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();}

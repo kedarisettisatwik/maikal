@@ -10,7 +10,7 @@ import org.json.JSONArray;
 
 @CapacitorPlugin(name = "DiaryAlarms")
 public class DiaryAlarmsPlugin extends Plugin {
-    @PluginMethod public void openCustomWidgetBuilder(PluginCall call){getActivity().startActivity(new Intent(getContext(),CustomWidgetConfigureActivity.class));call.resolve();}
+    @PluginMethod public void focus(PluginCall call){try{call.resolve(new JSObject(NativeFocus.control(getContext(),call.getString("command","status"),call.getString("id","")).toString()));}catch(Exception e){call.reject(e.getMessage(),e);}}
     @PluginMethod public void timeTools(PluginCall call){try{call.resolve(new JSObject(TimeTools.control(getContext(),call.getString("command","status"),call.getInt("durationMs",0)).toString()));}catch(Exception e){call.reject(e.getMessage(),e);}}
     @PluginMethod public void setTheme(PluginCall call){MantraTheme.save(getContext(),call.getString("theme","system"));call.resolve();}
     @PluginMethod public void prepareAlarmAccess(PluginCall call){getActivity().runOnUiThread(()->{
@@ -33,7 +33,7 @@ public class DiaryAlarmsPlugin extends Plugin {
     });}
     private final java.util.concurrent.ExecutorService usageWorker=java.util.concurrent.Executors.newSingleThreadExecutor();
     @PluginMethod public void openTrack(PluginCall call){getActivity().startActivity(new Intent(getContext(),TrackActivity.class));call.resolve();}
-    @PluginMethod public void screenTimeTotals(PluginCall call){usageWorker.execute(()->{try{org.json.JSONObject totals=ScreenTime.dailyTotals(getContext());JSObject result=new JSObject(totals.toString());call.resolve(result);TrackWidgetProvider.refresh(getContext());}catch(Exception e){call.reject("Could not read screen time. Check Usage access and unlock your phone.",e);}});}
+    @PluginMethod public void screenTimeTotals(PluginCall call){usageWorker.execute(()->{try{org.json.JSONObject totals=ScreenTime.dailyTotals(getContext());totals.put("goalConfig",ScreenGoalSettings.read(getContext()));JSObject result=new JSObject(totals.toString());call.resolve(result);TrackWidgetProvider.refresh(getContext());}catch(Exception e){call.reject("Could not read screen time. Check Usage access and unlock your phone.",e);}});}
     @Override protected void handleOnDestroy(){usageWorker.shutdownNow();super.handleOnDestroy();}
     @PluginMethod public void pendingShare(PluginCall call) {
         try { org.json.JSONObject share=SharedNotes.pending(getContext()); JSObject result=new JSObject(); if(share!=null)result.put("share",share);call.resolve(result); }
@@ -70,7 +70,7 @@ public class DiaryAlarmsPlugin extends Plugin {
             JSONArray entries = call.getArray("entries");
             if (entries == null) { call.reject("Missing entries"); return; }
             JSONArray records = call.getArray("records");
-            NativeDiaryStore.snapshot(getContext(), call.getString("uid", "local"), records == null ? new JSONArray() : records);CustomWidgetProvider.refresh(getContext());
+            NativeDiaryStore.snapshot(getContext(), call.getString("uid", "local"), records == null ? new JSONArray() : records);ShortcutWidgets.refresh(getContext());
             ClockAlarms.syncDiary(getContext(),call.getString("uid","local"),records==null?new JSONArray():records);
             NoteWidgetProvider.refresh(getContext());
             JSONArray greetings = GreetingReminders.entries();

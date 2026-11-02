@@ -9,15 +9,17 @@ export const activeRecords = (records, type) => Object.values(records).filter(r 
 export function due(g, date) {
   if (g.deleted || (g.createdDate && g.createdDate > date)) return false;
   const s = g.schedule || { type: 'everyday' };
-  return s.type === 'everyday' || s.type === 'days' && (s.days || []).includes(new Date(date + 'T12:00:00').getDay()) || s.type === 'dates' && (s.dates || []).includes(date) || s.type === 'range' && s.from <= date && date <= s.to;
+  return s.type === 'monthly' && Number(s.day) === Number(date.slice(8,10)) || s.type === 'everyday' || s.type === 'days' && (s.days || []).includes(new Date(date + 'T12:00:00').getDay()) || s.type === 'dates' && (s.dates || []).includes(date) || s.type === 'range' && s.from <= date && date <= s.to;
 }
 export function progress(records, g, date) {
   const p = records[`progress_${g.id}_${date}`];
   return p && !p.deleted ? p.value : g.goalType === 'tracker' ? Number(g.trackerValues?.[date] || 0) : (g.completedDates || []).includes(date);
 }
 export const unit = g => g.trackerUnit === 'time' ? 'mins' : 'count';
-export function describe(s) { return s.type === 'everyday' ? 'Every day' : s.type === 'days' ? s.days.map(d => weekdays[d]).join(', ') : s.type === 'dates' ? s.dates.join(', ') : `${s.from} → ${s.to}`; }
+export function describe(s) { return s.type === 'monthly' ? `Day ${s.day} of every month` : s.type === 'everyday' ? 'Every day' : s.type === 'days' ? s.days.map(d => weekdays[d]).join(', ') : s.type === 'dates' ? s.dates.join(', ') : `${s.from} → ${s.to}`; }
 export function validateSchedule(s) {
+  if(s.type==='monthly' && (!Number.isInteger(Number(s.day)) || Number(s.day)<1 || Number(s.day)>31)) throw new Error('Choose a monthly day from 1 to 31.');
+  if(s.type==='monthly') return {type:'monthly',day:Number(s.day)};
   if (s.type === 'days' && !s.days.length) throw new Error('Choose at least one weekday.');
   if (s.type === 'dates' && (!s.dates.length || s.dates.some(d => !d))) throw new Error('Choose your dates.');
   if (s.type === 'range' && (!s.from || !s.to || s.from > s.to)) throw new Error('Choose a valid start and end date.');
@@ -32,7 +34,7 @@ export function expenseCategories(tx) {
 export function mergeRecords(local, dirty, remote) {
   const records = { ...local }, pending = { ...dirty };
   for (const r of remote) {
-    if (!r || typeof r.id !== 'string' || !['goal', 'event', 'category', 'transaction', 'progress', 'note', 'screentime', 'score'].includes(r.type)) continue;
+    if (!r || typeof r.id !== 'string' || !['goal', 'task', 'event', 'category', 'transaction', 'progress', 'note', 'screentime', 'score', 'completionScore'].includes(r.type)) continue;
     if (!records[r.id] || r.updatedAt > records[r.id].updatedAt) { records[r.id] = r; delete pending[r.id]; }
     else if (r.updatedAt === records[r.id].updatedAt) delete pending[r.id];
   }

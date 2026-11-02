@@ -111,3 +111,7 @@ Home progress includes checkbox goals and trackers with configured targets, usin
 
 ### MANTRA Local 2.9.2 Google Play candidate
 Local analytics and Internet permission are removed. Personal diary data is never uploaded by the local edition. Release lint compatibility fixes support Android 8.0. Local versionCode is 38; the Firebase edition remains 2.9.1/code 37. `scripts/build-play-local.ps1` builds signed local release artifacts using the private upload key, whose password is Windows-protected in the ignored `.publish/mantra-play-signing` directory. See `docs/MANTRA-LOCAL-PLAY-REVIEW.md` for verification and remaining Play requirements. The Play candidate is signed differently from existing debug downloads: do not uninstall an existing local diary without a tested export/migration plan. No website or Firebase APK was deployed for this candidate.
+
+
+### MANTRA 2.10.0
+See docs/MANTRA-2.10.0-RELEASE.md. Both APKs add non-repeating tasks, weighted completion percentages, monthly schedules, native focus, managed screen-time goals, total notification replies and simplified fixed widgets. Version code 40. Local stays offline. scripts/build-play-apks.ps1 produces checked signed release APK/AABs for both editions; existing website update APKs retain debug signing to avoid forcing an uninstall.

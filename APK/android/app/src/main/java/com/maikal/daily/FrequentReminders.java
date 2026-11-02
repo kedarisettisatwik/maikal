@@ -15,6 +15,7 @@ final class FrequentReminders {
   return null;
  }
  static boolean goalMet(Context c,JSONObject entry,String date)throws Exception{
+  if("task".equals(entry.optString("kind"))){JSONObject t=NativeDiaryStore.goal(c,entry.getString("id"));if(t==null||t.optBoolean("completed"))return true;JSONArray a=NativeDiaryStore.actions(c);for(int i=0;i<a.length();i++){JSONObject x=a.getJSONObject(i);if(NativeDiaryStore.uid(c).equals(x.optString("uid"))&&entry.getString("id").equals(x.optString("goalId"))&&!x.has("value")&&!x.optBoolean("focusDelta"))return true;}return false;}
   if(!"goal".equals(entry.optString("kind")))return false;JSONObject goal=NativeDiaryStore.goal(c,entry.getString("id"));if(goal==null)return true;
   if(!"tracker".equals(goal.optString("goalType","checklist")))return NativeDiaryStore.completed(c,entry.getString("id"),date);
   if(!goal.has("target")||goal.isNull("target")||!Double.isFinite(goal.optDouble("target")))return false;
@@ -24,7 +25,7 @@ final class FrequentReminders {
   String key=new JSONArray().put(NativeDiaryStore.uid(c)).put(goal.getString("id")).put(date).toString();if(new JSONObject(NativeDiaryStore.prefs(c).getString("trackerTotals","{}")).has(key))entered=true;
   if(!entered)return false;double value=NativeDiaryStore.trackerValue(c,goal.getString("id"),date),target=goal.getDouble("target");return "atMost".equals(goal.optString("targetRule"))?value<=target:value>=target;
  }
- static Occurrence nextActive(Context c,JSONObject entry,ZonedDateTime now)throws Exception{Occurrence at=next(entry,now);while(at!=null&&goalMet(c,entry,at.anchor.toString())){if(NativeDiaryStore.goal(c,entry.optString("id"))==null)return null;at=next(entry,at.end.plusSeconds(1));}return at;}
+ static Occurrence nextActive(Context c,JSONObject entry,ZonedDateTime now)throws Exception{if("task".equals(entry.optString("kind"))&&goalMet(c,entry,now.toLocalDate().toString()))return null;Occurrence at=next(entry,now);while(at!=null&&goalMet(c,entry,at.anchor.toString())){if(NativeDiaryStore.goal(c,entry.optString("id"))==null)return null;at=next(entry,at.end.plusSeconds(1));}return at;}
  static boolean validDelivery(JSONObject entry,String anchor,long due,ZonedDateTime now)throws Exception{
   if(anchor==null||due<=0||due>now.toInstant().toEpochMilli()+1000)return false;LocalDate day=LocalDate.parse(anchor);if(!day.equals(DiaryAlarmReceiver.nextDate(entry,day)))return false;
   Occurrence expected=next(entry,Instant.ofEpochMilli(due).atZone(now.getZone()).minusNanos(1));return expected!=null&&expected.anchor.equals(day)&&expected.at.toInstant().toEpochMilli()==due&&!now.isAfter(expected.end.plusMinutes(1));

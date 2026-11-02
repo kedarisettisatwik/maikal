@@ -19,12 +19,12 @@ export async function enableNotifications() {
 }
 export async function syncNotifications(records, uid = 'local') {
   if (!isNative()) return;
-  const entries=Object.values(records).filter(r=>!r.deleted&&['goal','event'].includes(r.type)).flatMap(r=>{
-    const base={id:r.id,title:r.title,kind:r.type==='event'?'event':'goal',goalType:r.goalType||'checklist',schedule:r.schedule,createdDate:r.createdDate};
+  const entries=Object.values(records).filter(r=>!r.deleted&&!(r.type==='task'&&r.completed)&&['goal','event','task'].includes(r.type)).flatMap(r=>{
+    const base={id:r.id,title:r.title,kind:r.type,goalType:r.goalType||'checklist',schedule:r.schedule,createdDate:r.type==='task'?r.startDate:r.createdDate};
     const result=r.notificationTimes?.length?[{...base,times:[...new Set(r.notificationTimes)]}]:[];
     if(r.frequentReminders?.enabled)result.push({...base,frequent:true,frequentReminders:r.frequentReminders,times:['frequent']});return result;
   });
-  const snapshot = Object.values(records).filter(r => ['goal', 'event', 'progress', 'transaction', 'note', 'score'].includes(r.type));
+  const snapshot = Object.values(records).filter(r => ['goal', 'task', 'event', 'progress', 'transaction', 'note', 'score'].includes(r.type));
   await DiaryAlarms.replace({ entries, uid, records: snapshot, scoreNudges: false });
 }
 export const pendingNativeActions = uid => DiaryAlarms.pendingActions({ uid });
