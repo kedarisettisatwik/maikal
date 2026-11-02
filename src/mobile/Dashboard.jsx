@@ -127,7 +127,7 @@ export default function Dashboard({ user, notify, onConnect, restoring }) {
           await acknowledgeNativeLaunch(command.requestId);return;
         }
         if (command.type === 'transaction') { go('money'); setEntry(command); }
-        else if (command.type === 'entry') { const record = current[command.recordId]; if (!record) return; if (record.deleted) { await acknowledgeNativeLaunch(command.requestId); return; } setEntry({ type: record.type, record }); }
+        else if (command.type === 'entry') { const record = current[command.recordId]; if (!record) return; if (record.deleted) { await acknowledgeNativeLaunch(command.requestId); return; } if(record.managedBy==='screenTime'){await openTrack();await acknowledgeNativeLaunch(command.requestId);return;}setEntry({ type: record.type, record }); }
         else if (['note', 'notes'].includes(command.type)) { setEntry(null); setNoteLaunch(command.type === 'note' ? { id: command.noteId, requestId: command.requestId } : null); go('note'); }
         await acknowledgeNativeLaunch(command.requestId);
       } catch { /* Native requests remain queued until their next successful read. */ } finally { busy = false; }
@@ -142,6 +142,7 @@ export default function Dashboard({ user, notify, onConnect, restoring }) {
   function onProgress(goalId, value, day) { if (!latest.current.records[goalId] || latest.current.records[goalId].deleted) return false; if(latest.current.records[goalId].managedBy==='screenTime'){notify('Screen time updates automatically. Edit its target in Track.');return false;} try { save({ ...latest.current.records[`progress_${goalId}_${day}`],id: `progress_${goalId}_${day}`, type: 'progress', goalId, date: day, value,manualTotalAt:Date.now() }); return true; } catch (e) { notify(e.message); return false; } }
   function edit(record) { if(record.managedBy==='screenTime'){openTrack().catch(e=>notify(e.message));return;} setList(null); setEntry({ type: record.type, ...(record.type === 'transaction' ? { transaction: record } : { record }) }); }
   async function saveEntry(record) {
+    if(latest.current.records[record.id]?.managedBy==='screenTime')throw Error('Edit the screen-time goal in Track.');
     if ((entry?.record || entry?.transaction) && latest.current.records[record.id]?.deleted) throw Error('This item was deleted. Create a new entry instead.');
     if (record.alarmTimes?.length) await prepareAlarmAccess();
     const saved = save(record);

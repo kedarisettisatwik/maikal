@@ -28,7 +28,7 @@ See `MANTRA-LOCAL-PLAY-REVIEW.md` for the original review and official reference
 
 ## Verification completed on 3 November 2026
 
-- 164 JS/UI/model tests passed across 41 files; the website's edition-specific download tests also passed.
+- 164 JS/UI/model tests passed across 41 files; a subsequent 12-test dashboard run also passed, including a new managed screen-time deep-link regression; the website's edition-specific download tests also passed.
 - The 11 new-feature instrumentation tests passed on each APK variant (22 variant checks), using the API 37 development emulator. These cover monthly dates, Add/Set total idempotency including pending focus time, screen-time configuration, durable focus, task completion independence, delete-after-done, exactly seven widget registrations/dimensions, actual task/calendar WebView screens, screen-off versus leaving-app behavior, notification reply actions and the local network-permission restriction.
 - An additional 15 linked-alarm and frequent-reminder regressions passed on the local emulator run.
 - Both release lint checks passed with zero errors. Nonblocking warnings remain (174 Local / 176 Firebase in the initial 2.10.0 release check); final artifact verification records the current counts.

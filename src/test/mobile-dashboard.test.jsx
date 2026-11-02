@@ -1,6 +1,6 @@
-import { consumeNativeLaunch, acknowledgeNativeLaunch } from '../native-notifications';
+import { openTrack,consumeNativeLaunch, acknowledgeNativeLaunch } from '../native-notifications';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within,waitFor } from '@testing-library/react';
 const mock = vi.hoisted(() => ({ records: {}, save: vi.fn(), remove: vi.fn(), native: { setTheme:vi.fn().mockResolvedValue({}), listAlarms: vi.fn().mockResolvedValue({ alarms: [] }) } }));
 vi.mock('../firebase', () => ({ auth: {} }));
 vi.mock('firebase/auth', () => ({ signOut: vi.fn().mockResolvedValue() }));
@@ -115,3 +115,5 @@ it('routes a retired report notification to scores in More', async () => {
 it('shows score totals without a photo editor or report button',()=>{render(<Dashboard user={{uid:'local'}} notify={notify} restoring={false}/>);fireEvent.click(screen.getByRole('tab',{name:'More'}));expect(screen.getByRole('heading',{name:'Completion'})).toBeTruthy();expect(screen.queryByRole('button',{name:/Yesterday.*report/})).toBeNull();expect(document.querySelector('[data-score-editor]')).toBeNull();expect(screen.queryByText(/report reminders/)).toBeNull();});
 
 it('includes trackers with targets in the home progress bar',()=>{const d=new Date(),date=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;mock.records.t={id:'t',type:'goal',title:'Pushups',goalType:'tracker',target:40,schedule:{type:'everyday'}};mock.records.free={id:'free',type:'goal',title:'Steps',goalType:'tracker',schedule:{type:'everyday'}};mock.records['progress_g_'+date]={type:'progress',value:true};mock.records['progress_t_'+date]={type:'progress',value:40};render(<Dashboard user={{uid:'local'}} notify={notify} restoring={false}/>);const bar=within(screen.getByRole('tabpanel',{name:'home'})).getByRole('progressbar');expect(bar.getAttribute('aria-valuemax')).toBe('2');expect(bar.getAttribute('aria-valuenow')).toBe('2');expect(bar.firstChild.style.width).toBe('100%');});
+
+it('routes managed screen-time entry launches to Track instead of its goal editor',async()=>{mock.records.g={...mock.records.g,managedBy:'screenTime',goalType:'tracker',trackerUnit:'time',target:120};vi.mocked(consumeNativeLaunch).mockResolvedValueOnce({type:'entry',recordId:'g',uid:'local',requestId:'managed-launch'});render(<Dashboard user={{uid:'local'}} notify={notify} restoring={false}/>);await waitFor(()=>expect(openTrack).toHaveBeenCalled());expect(screen.queryByRole('button',{name:'Update goal'})).toBeNull();expect(acknowledgeNativeLaunch).toHaveBeenCalledWith('managed-launch');});
