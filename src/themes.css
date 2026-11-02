@@ -21,3 +21,5 @@ html[data-theme="dark"] .notes-mobile-tags button[aria-pressed="true"],html[data
 .money-summary{width:fit-content!important;max-width:100%;margin:18px auto!important;justify-content:center!important;text-align:center;display:flex;flex-wrap:wrap;gap:20px}.money-summary>div{background:transparent!important}
 
 .money-summary>div{flex:0 0 auto!important;min-width:0}.money-summary strong{white-space:nowrap}
+
+.money-summary{box-sizing:border-box;width:calc(100vw - 20px)!important;max-width:none!important;margin:18px 0!important;position:relative;left:50%;transform:translateX(-50%);display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px!important;justify-items:stretch;text-align:center;padding-inline:10px!important}.money-summary>div{width:auto!important;min-width:0;text-align:center}.money-summary strong{display:block;white-space:normal;overflow-wrap:anywhere}

@@ -438,3 +438,5 @@ html[data-maikal-mobile] .notes-editor .notes-suggestions button{font-size:10px;
 html[data-maikal-mobile] .notes-mobile-tags button,html[data-maikal-mobile][data-theme="dark"] .notes-mobile-tags button{background:#fff;color:#245436;border-color:#d1e4d6}
 html[data-maikal-mobile] .notes-mobile-tags button[aria-pressed="true"]{background:#cde8d5;color:#173e27;border-color:#729e80}
 html[data-maikal-mobile][data-theme="dark"] .notes-mobile-tags button[aria-pressed="true"]{background:#3c5d48;color:#effaf2;border-color:#86b593}
+
+html[data-maikal-mobile] .custom-widget-action{margin-bottom:28px}
