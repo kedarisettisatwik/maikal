@@ -4,6 +4,8 @@ Scope: both APKs; website changes only APK download targets. Application IDs rem
 
 ## Changes
 
+- Goal edit and delete icons are white in dark mode. Tracker notifications expire at day rollover (or the end of an overnight frequent-reminder window) and refresh silently after current-day progress changes, preventing yesterday's value from lingering.
+
 - One-time standalone alarms offer Delete after completion. Stop or the ten-minute ringing timeout removes an opted-in alarm. Snooze preserves it and rings again after five minutes. Dismissing the advance notification still skips just the upcoming occurrence.
 - Widget picker contains exactly seven MANTRA widgets: Today goals/events, Track screen time, chosen note, Add note 1x1, Add transaction 1x1, combined shortcuts 2x1 and 1x2. Dimensions are width x height. Combined widgets fill a low horizontal bar / narrow vertical bar with small padding, rounded background and green icons. Background follows light/dark/system. Money summary and custom widgets are retired; existing retired widgets must be removed and supported replacements re-added.
 - Tracker notifications offer Add progress and Set total. Both use idempotent, ordered native storage; pending focus time is included before calculating additions. Screen-time-managed goals do not accept notification/manual overrides.
@@ -30,6 +32,7 @@ See `MANTRA-LOCAL-PLAY-REVIEW.md` for the original review and official reference
 
 - 164 JS/UI/model tests passed across 41 files; a subsequent 12-test dashboard run also passed, including a new managed screen-time deep-link regression; the website's edition-specific download tests also passed.
 - The 11 new-feature instrumentation tests passed on each APK variant (22 variant checks), using the API 37 development emulator. These cover monthly dates, Add/Set total idempotency including pending focus time, screen-time configuration, durable focus, task completion independence, delete-after-done, exactly seven widget registrations/dimensions, actual task/calendar WebView screens, screen-off versus leaving-app behavior, notification reply actions and the local network-permission restriction.
+- Two additional regressions passed on each edition: stale tracker notification cleanup/current-value refresh, and rendered dark/light goal icon colors.
 - An additional 15 linked-alarm and frequent-reminder regressions passed on the local emulator run.
 - Both release lint checks passed with zero errors. Nonblocking warnings remain (174 Local / 176 Firebase in the initial 2.10.0 release check); final artifact verification records the current counts.
 - Existing five Android screen-time unit tests passed for both editions during release build checks.

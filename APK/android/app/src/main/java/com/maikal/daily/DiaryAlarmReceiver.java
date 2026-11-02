@@ -2,6 +2,7 @@ package com.maikal.daily;
 
 import android.Manifest;
 import android.app.AlarmManager;
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -63,7 +64,20 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
             if(("goal".equals(extras.getString("maikalKind"))||"task".equals(extras.getString("maikalKind")))&&FrequentReminders.goalMet(c,new JSONObject().put("kind",extras.getString("maikalKind")).put("id",extras.getString("maikalGoal")),extras.getString("maikalDate",LocalDate.now().toString())))keep=false;
             if (!keep || !present) notifications.cancel(active.getTag(), active.getId());
         }
+        refreshNotices(c,ZonedDateTime.now());
         reschedule(c);
+    }
+    static String trackerBody(Context c,JSONObject entry,String day)throws Exception{JSONObject goal=NativeDiaryStore.goal(c,entry.getString("id"));String unit=goal!=null&&"time".equals(goal.optString("trackerUnit"))?"minutes":"count";return "Current: "+java.text.NumberFormat.getNumberInstance(java.util.Locale.getDefault()).format(NativeDiaryStore.trackerValue(c,entry.getString("id"),day))+" "+unit+(day.equals(LocalDate.now().toString())?"":" · For "+day)+(goal!=null&&"screenTime".equals(goal.optString("managedBy"))?" · Updates from Track":" · Add progress or set total");}
+    static boolean currentNoticeDate(JSONObject entry,Bundle extras,ZonedDateTime now)throws Exception{String day=extras.getString("maikalDate","");if(now.toLocalDate().toString().equals(day))return true;return entry.optBoolean("frequent")&&FrequentReminders.validDelivery(entry,day,extras.getLong("maikalFrequentDue",0),now);}
+    static long noticeExpiry(JSONObject entry,long due,ZonedDateTime now)throws Exception{long expires=now.toLocalDate().plusDays(1).atStartOfDay(now.getZone()).toInstant().toEpochMilli();if(entry.optBoolean("frequent")&&due>0){FrequentReminders.Occurrence occurrence=FrequentReminders.next(entry,Instant.ofEpochMilli(due).atZone(now.getZone()).minusNanos(1));if(occurrence!=null)expires=occurrence.end.plusMinutes(1).toInstant().toEpochMilli();}return Math.max(1000,expires-now.toInstant().toEpochMilli());}
+    static void refreshNotices(Context c,ZonedDateTime now)throws Exception{
+        NotificationManager manager=(NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE);JSONArray entries=new JSONArray(prefs(c).getString("alarms","[]"));
+        for(StatusBarNotification active:manager.getActiveNotifications()){
+            Bundle extras=active.getNotification().extras;if(!"goal".equals(extras.getString("maikalKind")))continue;
+            JSONObject entry=null;String key=extras.getString("maikalEntry","");for(int i=0;i<entries.length();i++){JSONObject candidate=entries.getJSONObject(i);if(key.equals(candidate.optString("id")+"_"+candidate.optString("time"))){entry=candidate;break;}}
+            if(entry==null||!NativeDiaryStore.uid(c).equals(extras.getString("maikalUid"))||!currentNoticeDate(entry,extras,now)||FrequentReminders.goalMet(c,entry,extras.getString("maikalDate",now.toLocalDate().toString()))){manager.cancel(active.getTag(),active.getId());continue;}
+            if("tracker".equals(entry.optString("goalType"))){String body=trackerBody(c,entry,extras.getString("maikalDate"));if(active.getNotification().getTimeoutAfter()==0||!body.contentEquals(active.getNotification().extras.getCharSequence(Notification.EXTRA_TEXT,""))){Notification.Builder update=Notification.Builder.recoverBuilder(c,active.getNotification()).setContentTitle(entry.optString("title","MANTRA")).setContentText(body).setStyle(new Notification.BigTextStyle().bigText(body)).setOnlyAlertOnce(true).setTimeoutAfter(noticeExpiry(entry,extras.getLong("maikalFrequentDue",0),now));manager.notify(active.getTag(),active.getId(),update.build());}}
+        }
     }
     static LocalDate nextDate(JSONObject entry, LocalDate from) throws Exception {
         JSONObject s = entry.optJSONObject("schedule");
@@ -143,7 +157,7 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
                 }
                 return;
             }
-            if (!"com.maikal.daily.ALARM".equals(intent.getAction())) { reschedule(c); TodayWidgetProvider.refresh(c); return; }
+            if (!"com.maikal.daily.ALARM".equals(intent.getAction())) { refreshNotices(c,ZonedDateTime.now());reschedule(c); TodayWidgetProvider.refresh(c); return; }
             int id = intent.getIntExtra("alarmId", 0);
             JSONArray alarms = new JSONArray(prefs(c).getString("alarms", "[]"));
             if (id < 1 || id > alarms.length()) return;
@@ -167,7 +181,7 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
             boolean checkbox = ("goal".equals(entry.optString("kind"))||"task".equals(entry.optString("kind"))) && "checklist".equals(entry.optString("goalType", "checklist"));
             if (checkbox && NativeDiaryStore.completed(c, entry.getString("id"), day)) { schedule(c, entry, id); return; }
             boolean tracker="goal".equals(entry.optString("kind"))&&"tracker".equals(entry.optString("goalType"));
-            if(tracker){JSONObject goal=NativeDiaryStore.goal(c,entry.getString("id"));String unit=goal!=null&&"time".equals(goal.optString("trackerUnit"))?"minutes":"count";entry.put("body","Current: "+java.text.NumberFormat.getNumberInstance(java.util.Locale.getDefault()).format(NativeDiaryStore.trackerValue(c,entry.getString("id"),day))+" "+unit+" · Add progress or set total");}
+            if(tracker)entry.put("body",trackerBody(c,entry,day));
             NotificationManager manager = (NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE);
             manager.createNotificationChannel(new NotificationChannel("maikal_reminders", "Goals, events & tasks", NotificationManager.IMPORTANCE_HIGH));
             manager.createNotificationChannel(new NotificationChannel("maikal_scores", "Yesterday report reminders", NotificationManager.IMPORTANCE_DEFAULT));
@@ -177,7 +191,7 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
             if (Build.VERSION.SDK_INT < 33 || c.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
                 Bundle extras = new Bundle();extras.putString("maikalKind",entry.optString("kind"));
                 extras.putString("maikalUid", NativeDiaryStore.uid(c)); extras.putString("maikalEntry", entry.getString("id") + "_" + entry.getString("time"));
-                extras.putString("maikalGoalType",entry.optString("goalType"));if(tracker)extras.putString("maikalReplyMode","delta");extras.putString("maikalGoal", entry.getString("id")); extras.putString("maikalDate", day);
+                if(frequent)extras.putLong("maikalFrequentDue",due);extras.putString("maikalGoalType",entry.optString("goalType"));if(tracker)extras.putString("maikalReplyMode","delta");extras.putString("maikalGoal", entry.getString("id")); extras.putString("maikalDate", day);
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(c, score ? "maikal_scores" : greeting ? "maikal_greetings" : "maikal_reminders").setSmallIcon(R.drawable.ic_stat_maikal)
                     .addExtras(extras)
                     .setLargeIcon(BitmapFactory.decodeResource(c.getResources(), R.drawable.maikal_logo))
@@ -185,6 +199,7 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
                     .setContentText(entry.optString("body", entry.optString("kind", "Reminder") + " · " + entry.optString("time")))
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(entry.optString("body", entry.optString("kind", "Reminder") + " · " + entry.optString("time"))))
                     .setPriority((greeting || score) ? NotificationCompat.PRIORITY_DEFAULT : NotificationCompat.PRIORITY_HIGH).setContentIntent(open).setAutoCancel(true);
+                if("goal".equals(entry.optString("kind")))builder.setTimeoutAfter(noticeExpiry(entry,due,ZonedDateTime.now()));
                 if (checkbox) {
                     String uid = NativeDiaryStore.uid(c), goalId = entry.getString("id");
                     Intent complete = new Intent(c, DiaryAlarmReceiver.class).setAction("com.maikal.daily.COMPLETE")

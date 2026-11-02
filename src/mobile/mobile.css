@@ -450,3 +450,5 @@ html[data-maikal-mobile] .custom-widget-action{margin-bottom:28px}
 html[data-maikal-mobile] dialog.native-form-page .calendar-grid button{padding:0;min-height:44px;border:1px solid var(--line)!important;border-radius:6px;background:transparent!important}
 html[data-maikal-mobile] dialog.native-form-page .calendar-grid button[aria-pressed="true"]{background:#376e53!important;color:#fff!important;border-color:#76ac8a!important}
 html[data-maikal-mobile] dialog.native-form-page .calendar-nav button{min-width:44px;min-height:44px}
+
+html[data-maikal-mobile][data-theme="dark"] .goal-row .action-icon img{filter:brightness(0) invert(1);opacity:1}

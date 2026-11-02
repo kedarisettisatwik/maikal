@@ -100,7 +100,7 @@ export default function Dashboard({ user, notify, onConnect, restoring }) {
     if (restoring) return; let live = true;
     const timer = setTimeout(() => syncNotifications(records, user.uid).then(() => { if (live) setSyncRevision(n => n + 1); }).catch(() => { if (live) notify('Android alerts need attention. Check Time for alarm permissions.'); }), 500);
     return () => { live = false; clearTimeout(timer); };
-  }, [records, user.uid, restoring]);
+  }, [records, user.uid, restoring,date]);
   useEffect(() => {
     if (restoring) return; let live = true, busy = false;
     const consume = async () => {
