@@ -32,9 +32,10 @@ export default defineConfig(({ command, mode }) => {
       ],
     },
     workbox: {
+      globIgnores: ['launch/**'],
       globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
       navigateFallback: '/maikal/index.html',
-      navigateFallbackDenylist: [/^\/api\//, /\/analytics\.html$/],
+      navigateFallbackDenylist: [/^\/api\//, /\/analytics\.html$/, /\/launch(?:\/|$)/],
       cleanupOutdatedCaches: true,
     },
   })],
