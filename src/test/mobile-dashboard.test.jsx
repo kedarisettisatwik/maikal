@@ -150,3 +150,5 @@ it('shows goal minutes with exactly two decimals without rounding stored progres
  fireEvent.focus(input);fireEvent.change(input,{target:{value:'15.6789'}});fireEvent.blur(input);expect(save).toHaveBeenCalledWith('time',15.6789,'2026-11-03');expect(input.value).toBe('15.68');
  rerender(<GoalRow goal={{...goal,trackerUnit:'count'}} records={progress} date="2026-11-03" onProgress={save} notify={notify}/>);expect(screen.getByRole('spinbutton').value).toBe('12.345678');
 });
+
+it('places Note of the day above Today’s goals',()=>{render(<Dashboard user={{uid:'local'}} notify={notify} restoring={false}/>);const note=screen.getByRole('heading',{name:'Note of the day'}),goals=screen.getByRole('heading',{name:'Today’s goals'});expect(note.compareDocumentPosition(goals)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();expect(screen.getByRole('textbox',{name:'Write about your day'})).toBeTruthy();});

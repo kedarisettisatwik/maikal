@@ -1,5 +1,5 @@
 import {localDate,progress} from './model';
-export const validDay=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(new Date(s+'T12:00:00').getTime())&&new Date(s+'T12:00:00').toISOString().slice(0,10)===s;
+export const validDay=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(new Date(s+'T12:00:00Z').getTime())&&new Date(s+'T12:00:00Z').toISOString().slice(0,10)===s;
 export function prepareTask(record,old){
  if(!record.title?.trim())throw Error('Enter a task title.');
  if(!validDay(record.startDate))throw Error('Choose a start date.');

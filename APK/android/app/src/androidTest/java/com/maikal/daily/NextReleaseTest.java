@@ -42,12 +42,16 @@ import static org.junit.Assert.*;
  }
  @Test public void focusKeepsCountingThroughScreenOffButPausesOnLeaving()throws Exception{
   try(androidx.test.core.app.ActivityScenario<MainActivity> screen=androidx.test.core.app.ActivityScenario.launch(MainActivity.class)){
-   waitJs(screen,"!!document.querySelector('.mobile-app')");Thread.sleep(1000);
-   screen.onActivity(a->{try{NativeDiaryStore.snapshot(c,"local",new JSONArray().put(goal("lifecycle")));NativeFocus.control(c,"start","lifecycle");}catch(Exception e){throw new RuntimeException(e);}});
-   shell("input keyevent KEYCODE_SLEEP");Thread.sleep(1200);assertFalse(((android.os.PowerManager)c.getSystemService(Context.POWER_SERVICE)).isInteractive());assertTrue(NativeFocus.control(c,"status","").getBoolean("running"));long locked=NativeFocus.control(c,"status","").getLong("elapsedMs");assertTrue(locked>=1000);
-   shell("input keyevent KEYCODE_WAKEUP");shell("wm dismiss-keyguard");Thread.sleep(800);
-   screen.onActivity(a->a.onUserLeaveHint());assertFalse(NativeFocus.control(c,"status","").getBoolean("running"));NativeFocus.control(c,"stop","");
-  }finally{shell("input keyevent KEYCODE_WAKEUP");shell("wm dismiss-keyguard");}
+   waitJs(screen,"!!document.querySelector('.mobile-app')");String cache=js(screen,"localStorage.getItem('maikal-v2-local')");
+   try{
+    js(screen,"let data=JSON.parse(localStorage.getItem('maikal-v2-local')||'{}');data.records=data.records||{};data.records.lifecycle="+goal("lifecycle").toString()+";localStorage.setItem('maikal-v2-local',JSON.stringify(data))");screen.onActivity(a->a.getBridge().getWebView().reload());Thread.sleep(900);waitJs(screen,"[...document.querySelectorAll('.goal-row h3')].some(h=>h.textContent.includes('lifecycle'))");
+    for(int i=0;i<40&&NativeDiaryStore.goal(c,"lifecycle")==null;i++)Thread.sleep(100);assertNotNull(NativeDiaryStore.goal(c,"lifecycle"));
+    screen.onActivity(a->{try{NativeFocus.control(c,"start","lifecycle");}catch(Exception e){throw new RuntimeException(e);}});
+    shell("input keyevent KEYCODE_SLEEP");Thread.sleep(1200);assertFalse(((android.os.PowerManager)c.getSystemService(Context.POWER_SERVICE)).isInteractive());assertTrue(NativeFocus.control(c,"status","").getBoolean("running"));long locked=NativeFocus.control(c,"status","").getLong("elapsedMs");assertTrue(locked>=1000);
+    shell("input keyevent KEYCODE_WAKEUP");shell("wm dismiss-keyguard");Thread.sleep(800);
+    screen.onActivity(a->a.onUserLeaveHint());assertFalse(NativeFocus.control(c,"status","").getBoolean("running"));NativeFocus.control(c,"stop","");
+   }finally{shell("input keyevent KEYCODE_WAKEUP");shell("wm dismiss-keyguard");js(screen,"let old="+cache+";if(old===null)localStorage.removeItem('maikal-v2-local');else localStorage.setItem('maikal-v2-local',old)");}
+  }
  }
 
  @Test public void notificationOffersAdditionalAndAbsoluteReplyActions()throws Exception{String day=LocalDate.now().toString(),time=LocalTime.now().withSecond(0).withNano(0).toString();JSONObject g=goal("reply-actions");NativeDiaryStore.snapshot(c,"local",new JSONArray().put(g));JSONObject entry=new JSONObject(g.toString()).put("kind","goal").put("times",new JSONArray().put(time));DiaryAlarmReceiver.replace(c,new JSONArray().put(entry));new DiaryAlarmReceiver().onReceive(c,new Intent("com.maikal.daily.ALARM").putExtra("alarmId",1));android.app.Notification notice=null;for(android.service.notification.StatusBarNotification n:((android.app.NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE)).getActiveNotifications())if(n.getTag()!=null&&n.getTag().startsWith("reply-actions"))notice=n.getNotification();assertNotNull(notice);assertEquals(2,notice.actions.length);assertEquals("Add progress",notice.actions[0].title);assertEquals("Set total",notice.actions[1].title);assertNotNull(notice.actions[1].getRemoteInputs());((android.app.NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE)).cancelAll();DiaryAlarmReceiver.replace(c,new JSONArray());}

@@ -465,3 +465,11 @@ html[data-maikal-mobile] .task-list-row>input[type=checkbox]{width:23px;height:2
 html[data-maikal-mobile] .task-details h2{margin:20px 0 12px;overflow-wrap:anywhere}
 html[data-maikal-mobile] .task-time-details{margin-top:24px}
 html[data-maikal-mobile] .task-detail-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+
+html[data-maikal-mobile] .day-note-section{margin:24px 0 32px}
+html[data-maikal-mobile] .day-note-section h2{margin-bottom:12px}
+html[data-maikal-mobile] .day-note-section textarea{display:block;width:100%;box-sizing:border-box;resize:vertical;min-height:96px;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;line-height:1.6}
+html[data-maikal-mobile] .day-note-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:8px}
+html[data-maikal-mobile] .day-note-actions small{color:var(--muted);font-size:11px}
+html[data-maikal-mobile] .calendar-day-note{margin:20px 0 28px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+html[data-maikal-mobile] .day-note-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7}

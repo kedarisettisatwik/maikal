@@ -15,7 +15,7 @@ import java.util.*;
 
 /** Native alarm editor, available in both APKs even without Firebase or WebView connectivity. */
 public class AlarmsActivity extends Activity {
-    private LinearLayout root;private FrameLayout frame;private LocalTime draftTime=LocalTime.now().plusMinutes(2).withSecond(0).withNano(0);
+    private boolean listing=true;private LinearLayout root;private FrameLayout frame;private LocalTime draftTime=LocalTime.now().plusMinutes(2).withSecond(0).withNano(0);
 
     private int ink(){return MantraTheme.color(AlarmsActivity.this,0xff253439);}
     private int accent(){return MantraTheme.color(AlarmsActivity.this,0xff25704d);}
@@ -23,11 +23,11 @@ public class AlarmsActivity extends Activity {
     private int dp(int value){return Math.round(value*getResources().getDisplayMetrics().density);}
     private TextView text(String value,int size){TextView t=new TextView(this);t.setText(value);t.setTextSize(size);t.setTextColor(ink());t.setPadding(0,dp(7),0,dp(7));return t;}
     private Button button(String value,LinearLayout parent,Runnable action){Button b=new Button(this);b.setText(value);b.setTextColor(accent());b.setAllCaps(false);b.setBackgroundColor(android.graphics.Color.TRANSPARENT);if(value.startsWith("‹")){b.setGravity(Gravity.LEFT|Gravity.CENTER_VERTICAL);parent.addView(b,new LinearLayout.LayoutParams(-2,-2));}else parent.addView(b);b.setOnClickListener(v->action.run());return b;}
-    private void page(String title){frame=new FrameLayout(this);frame.setBackgroundColor(MantraTheme.color(AlarmsActivity.this,0xffffffff));ScrollView scroll=new ScrollView(this);root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(dp(22),dp(18),dp(22),dp(110));scroll.addView(root);frame.addView(scroll);frame.setOnApplyWindowInsetsListener((v,insets)->{v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());return insets;});setContentView(frame);button("‹ Back",root,title.equals("Alarms")?this::finish:this::showList);root.addView(text(title,27));}
+    private void page(String title){listing=title.equals("Alarms");frame=new FrameLayout(this);frame.setBackgroundColor(MantraTheme.color(AlarmsActivity.this,0xffffffff));ScrollView scroll=new ScrollView(this);root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(dp(22),dp(18),dp(22),dp(110));scroll.addView(root);frame.addView(scroll);frame.setOnApplyWindowInsetsListener((v,insets)->{v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());return insets;});setContentView(frame);button("‹ Back",root,title.equals("Alarms")?this::finish:this::showList);root.addView(text(title,27));}
     private TimePicker wheel(LocalTime time){TimePicker picker=(TimePicker)getLayoutInflater().inflate(R.layout.alarm_time_picker,root,false);picker.setIs24HourView(false);picker.setHour(time.getHour());picker.setMinute(time.getMinute());picker.setBackground(background(MantraTheme.color(AlarmsActivity.this,0xfff1f7f3),14));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,dp(190));p.setMargins(0,dp(10),0,dp(20));root.addView(picker,p);return picker;}
     private void error(Exception e){new AlertDialog.Builder(this).setTitle("Check your alarm").setMessage(e.getMessage()).setPositiveButton("OK",null).show();}
     @Override public void onCreate(Bundle state){MantraTheme.activity(this);super.onCreate(state);showList();}
-    @Override protected void onResume(){super.onResume();ClockAlarms.restore(this);}
+    @Override protected void onResume(){super.onResume();ClockAlarms.restore(this);if(listing)showList();}
     private void permissions(){
         if(Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED){requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},33);return;}
         if(!ClockAlarms.canSchedule(this)){startActivity(new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,Uri.parse("package:"+getPackageName())));return;}

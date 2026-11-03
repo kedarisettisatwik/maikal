@@ -118,3 +118,6 @@ See docs/MANTRA-2.10.0-RELEASE.md. Both APKs add non-repeating tasks, weighted c
 
 ## 2.10.1
 Deleted goals are excluded from percentages; Start over restarts the scoring period today without clearing diary data. The screen-time widget is total-only, 2 x 1.
+
+## 2.11.0
+Both editions use exact version 2.11.0/code 43. Note of the day appears above goals and in Calendar. More includes an offline privacy policy. Website APKs are non-debuggable release variants re-signed with the existing website key via scripts/package-website-apks.py. Only the Local AAB belongs in the Play upload kit; see docs/MANTRA-LOCAL-PLAY-2.11.0-GUIDE.md.

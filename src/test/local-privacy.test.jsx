@@ -1,3 +1,4 @@
+import PrivacyPolicy from '../mobile/PrivacyPolicy';
 import {afterEach,expect,it,vi} from 'vitest';
 import {render,screen} from '@testing-library/react';
 vi.mock('../build-mode',()=>({localOnly:true}));
@@ -14,3 +15,5 @@ it('local usage never fetches and clears only retired analytics state',async()=>
 it('local guide describes on-device privacy without claiming uploads',()=>{
  render(<AppInfo onBack={()=>{}}/>);expect(screen.getByRole('heading',{name:'On-device privacy'})).toBeTruthy();expect(screen.queryByRole('heading',{name:'Anonymous usage information'})).toBeNull();
 });
+
+it('includes a complete offline Local privacy policy with the public support contact',()=>{const fetcher=vi.fn();vi.stubGlobal('fetch',fetcher);render(<PrivacyPolicy/>);expect(screen.getByRole('heading',{name:'MANTRA Local privacy policy'})).toBeTruthy();expect(screen.getByRole('heading',{name:'Optional Usage access'})).toBeTruthy();expect(screen.getByRole('heading',{name:'Retention, deletion and security'})).toBeTruthy();expect(screen.getAllByText(/satwik1330@gmail.com/).length).toBeGreaterThan(0);expect(fetcher).not.toHaveBeenCalled();});
